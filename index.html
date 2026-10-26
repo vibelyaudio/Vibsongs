@@ -220,7 +220,7 @@
       </div>
     </div>
 
-    <!-- INSTAGRAM POPUP DOWNLOADER MODAL (Connected with Cobalt & Qewert Logic) -->
+    <!-- INSTAGRAM POPUP DOWNLOADER MODAL (Connected to Render Backend) -->
     <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
         <div class="flex justify-between items-center border-b border-gray-800 pb-2">
@@ -415,7 +415,7 @@
     function updateProfileDisplay() {
       if (currentUser) {
         document.getElementById('display-name').innerText = currentUser.name || currentUser.username;
-        let formattedUsername = currentUser.username.startsWith('@' ) ? currentUser.username : '@' + currentUser.username;
+        let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
         document.getElementById('display-username').innerText = formattedUsername;
         document.getElementById('display-email').innerText = currentUser.email;
         document.getElementById('display-profile-img').src = currentUser.img;
@@ -468,7 +468,7 @@
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
-    // Integrated Cobalt + Qewert Downloader Logic
+    // Connected to Render Backend API
     async function handleInstaDownload(){
       let u = document.getElementById('insta-link-input').value.trim();
       let r = document.getElementById('result');
@@ -480,40 +480,30 @@
       }
       
       container.classList.remove('hidden');
-      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching...</p>';
+      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching via Backend...</p>';
 
       try {
-        // Method 1: Cobalt
-        let res = await fetch('https://api.cobalt.tools/api/json', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','Accept':'application/json'},
-          body: JSON.stringify({url: u})
-        });
-        let data = await res.json();
-        if(data.url){
+        let res = await fetch(`https://insta-api-45a7.onrender.com/api?url=${encodeURIComponent(u)}`);
+        let contentType = res.headers.get("content-type");
+        let videoUrl = "";
+        
+        if (contentType && contentType.includes("application/json")) {
+          let data = await res.json();
+          videoUrl = data.url || data.videoUrl || data.medias?.[0]?.url;
+        } else {
+          videoUrl = res.url;
+        }
+
+        if(videoUrl){
           r.innerHTML = `
-            <video controls src="${data.url}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
-            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${data.url}" download target="_blank">📥 SAVE TO GALLERY</a>
+            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
           `;
           return;
         }
-        throw 'cobalt fail';
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch video. Try another link.</p>';
       } catch(e) {
-        // Fallback 2: Qewert
-        try {
-          let res2 = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(u)}`);
-          let d2 = await res2.json();
-          let v = d2.medias?.[0]?.url || d2.url;
-          if(v){
-            r.innerHTML = `
-              <video controls src="${v}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
-              <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${v}" download target="_blank">📥 SAVE TO GALLERY</a>
-            `;
-            return;
-          }
-        } catch(err){}
-        
-        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed. Private account aano ennu nokku, atho vere link try cheyyu.</p>';
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server connection error. Please try again later.</p>';
       }
     }
 
