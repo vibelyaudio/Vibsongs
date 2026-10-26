@@ -325,39 +325,6 @@
         likes: 8900,
         comments: 156,
         liked: false
-      },
-      {
-        author: 'Kerala Foodies Club',
-        username: '@kerala_food_lovers',
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
-        caption: 'നാടൻ രുചികളുടെ കൂട്ട്! ചായയും പരിപ്പുവടയും ☕ #ShareChatFood #NaadanTaste',
-        image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80',
-        time: '2 hours ago',
-        likes: 23400,
-        comments: 890,
-        liked: false
-      },
-      {
-        author: 'Gods Own Country Vlogs',
-        username: '@kerala_vlogger',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
-        caption: 'മഴക്കാലത്തെ ഇടുക്കി കാഴ്ചകൾ... ഒടുക്കത്തെ vibe! 🌧️💚 #Idukki #KeralaRain #ShareChat',
-        image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
-        time: '3 hours ago',
-        likes: 31200,
-        comments: 1240,
-        liked: false
-      },
-      {
-        author: 'Malayalam Quotes Daily',
-        username: '@mallu_quotes',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80',
-        caption: 'ആഗ്രഹങ്ങൾ നമ്മളെ തളർത്തരുത്, നമ്മൾ അവയെ കീഴടക്കണം. 💪 #Motivation #MalayalamQuotes',
-        image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-        time: '5 hours ago',
-        likes: 9850,
-        comments: 210,
-        liked: false
       }
     ];
 
@@ -365,7 +332,7 @@
       {
         id: 1,
         author: 'kerala_vibes_ig',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1195-large.mp4',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
         caption: 'Nature vibes in God\'s Own Country 🌴✨ #instagram #reels #kerala',
         likes: '34.5k',
         comments: '1.2k',
@@ -374,7 +341,7 @@
       {
         id: 2,
         author: 'mallu_traveller',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-seashore-with-foamy-waves-1196-large.mp4',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
         caption: 'Sunset serenity at Varkala cliff 🌊 #sunset #varkala #trending',
         likes: '52.1k',
         comments: '2.8k',
@@ -383,7 +350,7 @@
       {
         id: 3,
         author: 'kochi_street_life',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-silhouette-of-a-person-at-sunset-4161-large.mp4',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
         caption: 'Evening drive through marine drive ✨ #kochi #mallureels',
         likes: '19.8k',
         comments: '940',
@@ -570,12 +537,12 @@
 
       instagramReelsPool.forEach((reel, index) => {
         let reelEl = document.createElement('div');
-        reelEl.className = "post-card relative w-full h-full flex items-center justify-center bg-gray-900";
+        reelEl.className = "post-card relative w-full h-full flex items-center justify-center bg-gray-950";
         reelEl.style.minHeight = "100%";
         reelEl.innerHTML = `
-          <video src="${reel.videoUrl}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
-          <div class="absolute bottom-16 left-4 right-16 z-10 text-white">
-            <div class="flex items-center gap-2 mb-2">
+          <video src="${reel.videoUrl}" class="w-full h-full object-cover" autoplay loop muted playsinline controls></video>
+          <div class="absolute bottom-16 left-4 right-16 z-10 text-white pointer-events-none">
+            <div class="flex items-center gap-2 mb-2 pointer-events-auto">
               <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white shadow">
                 <i class="fa-brands fa-instagram"></i>
               </div>
