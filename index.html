@@ -15,7 +15,7 @@
     }
     .post-card {
       scroll-snap-align: start;
-      height: 100%;
+      flex-shrink: 0;
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -69,10 +69,10 @@
     </header>
 
     <!-- Dynamic Content Area -->
-    <main class="flex-1 feed-container no-scrollbar relative overflow-y-auto" id="main-content" onscroll="handleInfiniteScroll(event)">
+    <main class="flex-1 relative overflow-hidden flex flex-col" id="main-content">
       
       <!-- AUTH SECTION (Login & Signup) -->
-      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-6 bg-gray-950">
+      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-6 bg-gray-950 absolute inset-0 z-20">
         
         <!-- LOGIN FORM -->
         <div id="login-box" class="flex flex-col gap-4">
@@ -126,8 +126,8 @@
 
       </div>
 
-      <!-- HOME FEED (ShareChat Live Trending Auto-Feed with Infinite Scroll) -->
-      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto">
+      <!-- HOME FEED -->
+      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto" onscroll="handleInfiniteScroll(event)">
         <div class="flex items-center justify-between mb-3">
           <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase"><i class="fa-solid fa-fire mr-1"></i> ShareChat Live Trending Feed</span>
           <span class="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">Auto-Infinite</span>
@@ -140,8 +140,8 @@
       </div>
 
       <!-- INSTAGRAM TRENDING REELS VIEW -->
-      <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black">
-        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-scroll" style="scroll-snap-type: y mandatory;"></div>
+      <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden">
+        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-auto" style="scroll-snap-type: y mandatory; height: 100%;"></div>
       </div>
 
       <!-- QUOTES SECTION -->
@@ -271,7 +271,6 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
 
-    // Theme Switcher Logic
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
 
     function applyTheme() {
@@ -300,7 +299,6 @@
       applyTheme();
     }
 
-    // Run theme check on load
     window.addEventListener('DOMContentLoaded', () => {
       applyTheme();
     });
@@ -572,27 +570,28 @@
 
       instagramReelsPool.forEach((reel, index) => {
         let reelEl = document.createElement('div');
-        reelEl.className = "post-card relative h-full w-full flex items-center justify-center bg-gray-900 snap-start";
+        reelEl.className = "post-card relative w-full h-full flex items-center justify-center bg-gray-900";
+        reelEl.style.minHeight = "100%";
         reelEl.innerHTML = `
           <video src="${reel.videoUrl}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
           <div class="absolute bottom-16 left-4 right-16 z-10 text-white">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white shadow">
                 <i class="fa-brands fa-instagram"></i>
               </div>
-              <span class="font-semibold text-sm">${reel.author}</span>
+              <span class="font-semibold text-sm drop-shadow">${reel.author}</span>
               <button class="border border-white/40 text-xs px-2.5 py-0.5 rounded-full hover:bg-white/20 transition">Follow</button>
             </div>
-            <p class="text-xs text-gray-200">${reel.caption}</p>
+            <p class="text-xs text-gray-200 drop-shadow">${reel.caption}</p>
           </div>
           <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-10 text-white">
             <button onclick="toggleReelLike(${index})" class="flex flex-col items-center ${reel.liked ? 'text-red-500' : 'text-white'} transition">
-              <i class="${reel.liked ? 'fa-solid' : 'fa-regular'} fa-heart text-2xl mb-1"></i>
-              <span class="text-[10px]">${reel.likes}</span>
+              <i class="${reel.liked ? 'fa-solid' : 'fa-regular'} fa-heart text-2xl mb-1 drop-shadow"></i>
+              <span class="text-[10px] drop-shadow">${reel.likes}</span>
             </button>
-            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1"></i><span class="text-[10px]">${reel.comments}</span></button>
-            <button class="flex flex-col items-center"><i class="fa-regular fa-bookmark text-2xl mb-1"></i><span class="text-[10px]">Save</span></button>
-            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(reel.caption + ' ' + reel.videoUrl)}" target="_blank" class="flex flex-col items-center text-emerald-400"><i class="fa-brands fa-whatsapp text-2xl mb-1"></i><span class="text-[10px]">Share</span></a>
+            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">${reel.comments}</span></button>
+            <button class="flex flex-col items-center"><i class="fa-regular fa-bookmark text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">Save</span></button>
+            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(reel.caption + ' ' + reel.videoUrl)}" target="_blank" class="flex flex-col items-center text-emerald-400"><i class="fa-brands fa-whatsapp text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">Share</span></a>
           </div>
         `;
         container.appendChild(reelEl);
