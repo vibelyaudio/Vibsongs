@@ -139,7 +139,7 @@
         </div>
       </div>
 
-      <!-- YOUTUBE SHORTS TRENDING VIEW -->
+      <!-- YOUTUBE SHORTS / STATUS TRENDING VIEW -->
       <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden">
         <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-auto" style="scroll-snap-type: y mandatory; height: 100%;" onscroll="handleReelsScroll(event)"></div>
       </div>
@@ -328,48 +328,15 @@
       }
     ];
 
-    // YouTube Shorts Master Pool for Infinite Scroll
+    // Extended Large Pool for Endless Infinite Scrolling (WhatsApp Status Style)
     const youtubeShortsMasterPool = [
-      {
-        author: 'Kerala Trending Shorts',
-        videoId: 'dQw4w9WgXcQ',
-        caption: 'Gods Own Country incredible nature shorts 🌴✨ #shorts #kerala #trending',
-        likes: '45.2k',
-        comments: '1.5k',
-        liked: false
-      },
-      {
-        author: 'Mallu Vlogs Official',
-        videoId: '9bZkp7q19f0', 
-        caption: 'Evening vibes and food journey in Kochi ☕ #shorts #malayalam #foodie',
-        likes: '62.8k',
-        comments: '3.1k',
-        liked: false
-      },
-      {
-        author: 'Status Hub Malayalam',
-        videoId: 'jfKfPfyJRdk', 
-        caption: 'Motivational lines for your daily energy 💪🔥 #shorts #motivation',
-        likes: '28.4k',
-        comments: '890',
-        liked: false
-      },
-      {
-        author: 'Gods Own Country Vlogs',
-        videoId: '3JZ_D3ELwOQ', 
-        caption: 'Alappuzha backwaters boat ride vibe 🛶💚 #alappuzha #keralatourism',
-        likes: '51.3k',
-        comments: '2.1k',
-        liked: false
-      },
-      {
-        author: 'Mallu Comedy Reels',
-        videoId: 'kJQP7kiw5Fk', 
-        caption: 'Classic naadan comedy scene 😂 #mallucomedy #trending',
-        likes: '89.4k',
-        comments: '4.5k',
-        liked: false
-      }
+      { author: 'Kerala Trending Shorts', videoId: 'dQw4w9WgXcQ', caption: 'Gods Own Country incredible nature shorts 🌴✨ #shorts #kerala #trending', likes: '45.2k', comments: '1.5k', liked: false },
+      { author: 'Mallu Vlogs Official', videoId: '9bZkp7q19f0', caption: 'Evening vibes and food journey in Kochi ☕ #shorts #malayalam #foodie', likes: '62.8k', comments: '3.1k', liked: false },
+      { author: 'Status Hub Malayalam', videoId: 'jfKfPfyJRdk', caption: 'Motivational lines for your daily energy 💪🔥 #shorts #motivation', likes: '28.4k', comments: '890', liked: false },
+      { author: 'Gods Own Country Vlogs', videoId: '3JZ_D3ELwOQ', caption: 'Alappuzha backwaters boat ride vibe 🛶💚 #alappuzha #keralatourism', likes: '51.3k', comments: '2.1k', liked: false },
+      { author: 'Mallu Comedy Reels', videoId: 'kJQP7kiw5Fk', caption: 'Classic naadan comedy scene 😂 #mallucomedy #trending', likes: '89.4k', comments: '4.5k', liked: false },
+      { author: 'Kerala Status Hub', videoId: 'L_LUpnjgPso', caption: 'Sunset vibes at Kozhikode beach 🌊✨ #kozhikode #sunset', likes: '34.1k', comments: '780', liked: false },
+      { author: 'Malayalam Quotes', videoId: '5qap5aO4i9A', caption: 'Peaceful lofi music and rain status 🌧️🎶 #lofi #malayalamstatus', likes: '76.5k', comments: '3.4k', liked: false }
     ];
 
     let currentYouTubeShorts = [];
@@ -592,17 +559,16 @@
         if (!isReelsLoading) {
           isReelsLoading = true;
           setTimeout(() => {
-            // Append random new shorts continuously to make it endless infinite scroll
             const randomItem = youtubeShortsMasterPool[Math.floor(Math.random() * youtubeShortsMasterPool.length)];
             const newItem = { 
               ...randomItem, 
-              likes: (Math.random() * 50).toFixed(1) + 'k', 
-              comments: Math.floor(Math.random() * 2000) + ' ' 
+              likes: (Math.random() * 80).toFixed(1) + 'k', 
+              comments: Math.floor(Math.random() * 3000) + ' ' 
             };
             currentYouTubeShorts.push(newItem);
             renderYouTubeShorts();
             isReelsLoading = false;
-          }, 600);
+          }, 500);
         }
       }
     }
