@@ -255,17 +255,17 @@
           <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1 p-3 bg-gray-950 rounded-xl border border-gray-800">
             <!-- Branding / Indicator -->
             <div class="text-[10px] text-pink-400 font-semibold flex items-center justify-between">
-              <span><i class="fa-solid fa-bolt mr-1"></i> Free API Downloader</span>
+              <span><i class="fa-solid fa-bolt mr-1"></i> Multi-API Downloader</span>
               <span class="text-[9px] text-gray-500">HD Video</span>
             </div>
             
-            <!-- Video Preview Box -->
-            <div id="video-preview-box" class="w-full h-36 bg-black rounded-lg overflow-hidden relative flex items-center justify-center border border-gray-800 text-gray-400 text-xs">
+            <!-- Video Preview Box / Result -->
+            <div id="video-preview-box" class="w-full min-h-32 bg-black rounded-lg overflow-hidden relative flex flex-col items-center justify-center border border-gray-800 text-gray-400 text-xs">
               <i class="fa-solid fa-video text-xl text-gray-600 mb-1"></i>
             </div>
 
             <!-- Download Button -->
-            <a id="final-download-btn" href="#" download target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
+            <a id="final-download-btn" href="#" download target="_blank" class="hidden w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
               <i class="fa-solid fa-download"></i> SAVE TO GALLERY
             </a>
           </div>
@@ -429,7 +429,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
       }
     }
 
@@ -488,15 +488,60 @@
       document.getElementById('insta-downloader-modal').classList.remove('hidden');
       document.getElementById('insta-link-input').value = '';
       document.getElementById('insta-result-container').classList.add('hidden');
+      document.getElementById('final-download-btn').classList.add('hidden');
     }
 
     function closeInstaDownloader() {
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
-    // Direct Free API Downloader Logic Integration
+    // 12-API Fallback Downloader Logic
+    const APIS = [
+      async (url) => {
+        let r = await fetch('https://api.cobalt.tools/api/json', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({url: url})
+        });
+        let j = await r.json();
+        return j.url;
+      },
+      async (url) => {
+        let r = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(url)}`);
+        let j = await r.json();
+        return j.medias?.[0]?.url;
+      },
+      async (url) => {
+        let r = await fetch(`https://snapinsta.app/api/convert`,{
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:`url=${encodeURIComponent(url)}`
+        });
+        let j = await r.json();
+        return j.url?.[0]?.url;
+      },
+      async (url) => {
+        let r = await fetch(`https://v3.saveig.app/api/ajaxSearch`,{
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:`q=${encodeURIComponent(url)}&t=media&lang=en`
+        });
+        let j = await r.json();
+        let match = j.data?.match(/href="([^"]+\.mp4[^"]*)"/);
+        return match ? match[1] : null;
+      },
+      async (url) => { let r=await fetch(`https://igram.io/api/convert?url=${url}`); let j=await r.json(); return j.video_url; },
+      async (url) => { let r=await fetch(`https://sssinstagram.com/api/convert?url=${url}`); let j=await r.json(); return j.url; },
+      async (url) => { let r=await fetch(`https://fastdl.app/api/convert?url=${url}`); let j=await r.json(); return j.url; },
+      async (url) => { let r=await fetch(`https://instasupersave.com/api/convert?url=${url}`); let j=await r.json(); return j.sd || j.hd; },
+      async (url) => { let r=await fetch(`https://saveitfrom.com/api/convert?url=${url}`); let j=await r.json(); return j.video; },
+      async (url) => { let r=await fetch(`https://downloadgram.org/api/convert?url=${url}`); let j=await r.json(); return j.video_url; },
+      async (url) => { let r=await fetch(`https://inflact.com/api/convert?url=${url}`); let j=await r.json(); return j.video; },
+      async (url) => { let r=await fetch(`https://snapinsta.app/api2/convert?url=${url}`); let j=await r.json(); return j.video_url; },
+    ];
+
     async function handleInstaDownload() {
-      const reelUrl = document.getElementById('insta-link-input').value.trim();
+      let reelUrl = document.getElementById('insta-link-input').value.trim();
       if(!reelUrl || !reelUrl.includes('instagram.com')) {
         alert('Correct link paste cheyyu');
         return;
@@ -507,25 +552,31 @@
       const downloadBtn = document.getElementById('final-download-btn');
       
       resultContainer.classList.remove('hidden');
-      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Loading... ⏳</span>`;
+      downloadBtn.classList.add('hidden');
+      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Trying servers... ⏳</span>`;
 
-      try {
-        let res = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(reelUrl)}`);
-        let data = await res.json();
-
-        if(data.medias && data.medias[0]){
-          let videoUrl = data.medias[0].url;
-          previewBox.innerHTML = `
-            <video controls src="${videoUrl}" class="w-full h-full object-cover"></video>
-          `;
-          downloadBtn.href = videoUrl;
-          downloadBtn.setAttribute('download', 'instagram_video.mp4');
-        } else {
-          previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">Video kittiyilla, vere link try cheyyu. Private account aano ennu nokku.</span>';
+      for (let i = 0; i < APIS.length; i++) {
+        try {
+          let videoUrl = await Promise.race([
+            APIS[i](reelUrl),
+            new Promise((_, rej) => setTimeout(() => rej('timeout'), 7000))
+          ]);
+          
+          if (videoUrl && videoUrl.includes('http')) {
+            previewBox.innerHTML = `
+              <video controls src="${videoUrl}" class="w-full h-full object-cover"></video>
+            `;
+            downloadBtn.href = videoUrl;
+            downloadBtn.setAttribute('download', 'instagram_video.mp4');
+            downloadBtn.classList.remove('hidden');
+            return; 
+          }
+        } catch (e) {
+          continue; 
         }
-      } catch(e) {
-        previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">Error! API busy aanu, 1 min kazhinju try cheyyu.</span>';
       }
+      
+      previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">All servers busy, 30 sec kazhinju try cheyyu 🙏</span>';
     }
 
     function openEditProfileModal() {
