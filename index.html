@@ -284,7 +284,7 @@
         <!-- INSTAGRAM DOWNLOAD BUTTON -->
         <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
         <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
-        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
         <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
       </div>
     </div>
@@ -429,7 +429,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
       }
     }
 
@@ -508,7 +508,7 @@
       resultContainer.classList.remove('hidden');
       previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Fetching via Save Insta...</span>`;
 
-      // Simulating the fetch process
+      // Simulating the fetch process and linking to downloader site
       setTimeout(() => {
         previewBox.innerHTML = `
           <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-300 text-xs">
@@ -516,7 +516,8 @@
             <span>Instagram Video Ready</span>
           </div>
         `;
-        downloadBtn.href = link; 
+        // Downloader site-ilekku direct aayittu link pass cheyyunnu
+        downloadBtn.href = `https://saveinsta.app/?url=${encodeURIComponent(link)}`; 
       }, 1000);
     }
 
