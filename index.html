@@ -220,9 +220,9 @@
       </div>
     </div>
 
-    <!-- INSTAGRAM POPUP DOWNLOADER MODAL -->
+    <!-- INSTAGRAM POPUP DOWNLOADER MODAL (Connected with Cobalt & Qewert Logic) -->
     <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
         <div class="flex justify-between items-center border-b border-gray-800 pb-2">
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-sm">
@@ -235,26 +235,15 @@
         
         <div class="flex flex-col gap-3">
           <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Paste Instagram Link</label>
+            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste Instagram Reel Link</label>
             <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/reel/...">
           </div>
           
-          <button onclick="handleInstaDownload()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs py-2 rounded-xl transition">Fetch Video</button>
+          <button onclick="handleInstaDownload()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
 
-          <!-- RESULT POPUP CONTAINER -->
-          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1 p-3 bg-gray-950 rounded-xl border border-gray-800">
-            <div class="text-[10px] text-pink-400 font-semibold flex items-center justify-between">
-              <span id="api-status-text"><i class="fa-solid fa-bolt mr-1"></i> Multi-API Parallel</span>
-              <span class="text-[9px] text-gray-500">HD Video</span>
-            </div>
-            
-            <div id="video-preview-box" class="w-full h-36 bg-black rounded-lg overflow-hidden relative flex flex-col items-center justify-center border border-gray-800 text-gray-400 text-xs">
-              <i class="fa-solid fa-video text-xl text-gray-600 mb-1"></i>
-            </div>
-
-            <a id="final-download-btn" href="#" download target="_blank" class="hidden w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
-              <i class="fa-solid fa-download"></i> SAVE TO GALLERY
-            </a>
+          <!-- RESULT CONTAINER -->
+          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1">
+            <div id="result"></div>
           </div>
         </div>
       </div>
@@ -270,7 +259,7 @@
         <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
         <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
         <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
-        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
         <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
       </div>
     </div>
@@ -426,7 +415,7 @@
     function updateProfileDisplay() {
       if (currentUser) {
         document.getElementById('display-name').innerText = currentUser.name || currentUser.username;
-        let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
+        let formattedUsername = currentUser.username.startsWith('@' ) ? currentUser.username : '@' + currentUser.username;
         document.getElementById('display-username').innerText = formattedUsername;
         document.getElementById('display-email').innerText = currentUser.email;
         document.getElementById('display-profile-img').src = currentUser.img;
@@ -472,114 +461,59 @@
       document.getElementById('insta-downloader-modal').classList.remove('hidden');
       document.getElementById('insta-link-input').value = '';
       document.getElementById('insta-result-container').classList.add('hidden');
-      document.getElementById('final-download-btn').classList.add('hidden');
+      document.getElementById('result').innerHTML = '';
     }
 
     function closeInstaDownloader() {
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
-    // Optimized Multi-API Parallel Downloader List
-    const APIS = [
-      {
-        name: "Cobalt",
-        fetch: async (url) => {
-          let r = await fetch("https://api.cobalt.tools/api/json", {
-            method: "POST",
-            headers: {"Content-Type":"application/json", "Accept":"application/json"},
-            body: JSON.stringify({url: url})
-          });
-          let j = await r.json();
-          return j.url;
-        }
-      },
-      {
-        name: "Qewert",
-        fetch: async (url) => {
-          let r = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(url)}`);
-          let j = await r.json();
-          return j.medias?.[0]?.url || j.video;
-        }
-      },
-      {
-        name: "SaveIG",
-        fetch: async (url) => {
-          let r = await fetch("https://v3.saveig.app/api/ajaxSearch", {
-            method: "POST",
-            headers: {"Content-Type":"application/x-www-form-urlencoded"},
-            body: `q=${encodeURIComponent(url)}&t=media&lang=en`
-          });
-          let j = await r.json();
-          let match = j.data?.match(/href="(https:\/\/[^"]+\.mp4[^"]*)"/);
-          return match?.[1];
-        }
-      },
-      {
-        name: "SnapInsta",
-        fetch: async (url) => {
-          let r = await fetch(`https://snapinsta.app/api/convert`, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({url})
-          });
-          let j = await r.json();
-          return j.url || j.medias?.[0]?.url;
-        }
-      },
-      {
-        name: "FastDL",
-        fetch: async (url) => {
-          let r = await fetch(`https://fastdl.app/api/convert`, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({url})
-          });
-          let j = await r.json();
-          return j.url;
-        }
-      }
-    ];
-
-    async function handleInstaDownload() {
-      let reelUrl = document.getElementById('insta-link-input').value.trim();
-      if(!reelUrl || !reelUrl.includes('instagram.com')) {
+    // Integrated Cobalt + Qewert Downloader Logic
+    async function handleInstaDownload(){
+      let u = document.getElementById('insta-link-input').value.trim();
+      let r = document.getElementById('result');
+      let container = document.getElementById('insta-result-container');
+      
+      if(!u || !u.includes('instagram.com')){
         alert('Correct Insta link paste cheyyu');
         return;
       }
       
-      const resultContainer = document.getElementById('insta-result-container');
-      const previewBox = document.getElementById('video-preview-box');
-      const downloadBtn = document.getElementById('final-download-btn');
-      const apiStatusText = document.getElementById('api-status-text');
-      
-      resultContainer.classList.remove('hidden');
-      downloadBtn.classList.add('hidden');
-      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Trying servers parallelly... ⏳</span>`;
-
-      let promises = APIS.map(api => 
-        api.fetch(reelUrl).then(videoUrl => {
-          if(videoUrl) throw {success: true, url: videoUrl, api: api.name};
-          return null;
-        }).catch(e => {
-          if(e.success) throw e;
-          return null;
-        })
-      );
+      container.classList.remove('hidden');
+      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching...</p>';
 
       try {
-        await Promise.all(promises);
-        previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">All servers busy, 1 min kazhinju try cheyyu 😥</span>';
-      } catch (successData) {
-        if(successData.success) {
-          let videoUrl = successData.url;
-          apiStatusText.innerHTML = `<i class="fa-solid fa-bolt mr-1"></i> Found via ${successData.api}`;
-          previewBox.innerHTML = `
-            <video controls autoplay muted playsinline src="${videoUrl}" class="w-full h-full object-cover"></video>
+        // Method 1: Cobalt
+        let res = await fetch('https://api.cobalt.tools/api/json', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({url: u})
+        });
+        let data = await res.json();
+        if(data.url){
+          r.innerHTML = `
+            <video controls src="${data.url}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${data.url}" download target="_blank">📥 SAVE TO GALLERY</a>
           `;
-          downloadBtn.href = videoUrl;
-          downloadBtn.setAttribute('download', 'instagram_video.mp4');
-          downloadBtn.classList.remove('hidden');
+          return;
         }
+        throw 'cobalt fail';
+      } catch(e) {
+        // Fallback 2: Qewert
+        try {
+          let res2 = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(u)}`);
+          let d2 = await res2.json();
+          let v = d2.medias?.[0]?.url || d2.url;
+          if(v){
+            r.innerHTML = `
+              <video controls src="${v}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+              <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${v}" download target="_blank">📥 SAVE TO GALLERY</a>
+            `;
+            return;
+          }
+        } catch(err){}
+        
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed. Private account aano ennu nokku, atho vere link try cheyyu.</p>';
       }
     }
 
