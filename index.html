@@ -34,7 +34,7 @@
     }
   </style>
 </head>
-<body class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0">
+<body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
 
   <!-- INTRO ANIMATION SCREEN -->
   <div id="intro-screen" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-700">
@@ -48,10 +48,10 @@
   </div>
 
   <!-- Mobile Outer Frame Container -->
-  <div class="w-full max-w-md h-full bg-black flex flex-col justify-between relative shadow-2xl border-x border-gray-800">
+  <div id="app-container" class="w-full max-w-md h-full bg-black flex flex-col justify-between relative shadow-2xl border-x border-gray-800 transition-colors duration-300">
     
     <!-- Top Header -->
-    <header class="h-14 bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-4 border-b border-gray-800/80 shrink-0 z-10">
+    <header id="app-header" class="h-14 bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-4 border-b border-gray-800/80 shrink-0 z-10 transition-colors duration-300">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
           <i class="fa-solid fa-infinity text-sm"></i>
@@ -59,6 +59,10 @@
         <h1 id="app-title" class="text-xl font-extrabold tracking-wider text-emerald-400">LOOP</h1>
       </div>
       <div class="flex items-center gap-4 text-gray-300">
+        <!-- Theme Toggle Button -->
+        <button onclick="toggleTheme()" class="hover:text-emerald-400 transition">
+          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+        </button>
         <button><i class="fa-solid fa-search text-lg"></i></button>
         <button><i class="fa-solid fa-bell text-lg"></i></button>
       </div>
@@ -123,7 +127,7 @@
       </div>
 
       <!-- HOME FEED (ShareChat Live Trending Auto-Feed with Infinite Scroll) -->
-      <div id="home-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 p-4 overflow-y-auto">
+      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto">
         <div class="flex items-center justify-between mb-3">
           <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase"><i class="fa-solid fa-fire mr-1"></i> ShareChat Live Trending Feed</span>
           <span class="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">Auto-Infinite</span>
@@ -137,13 +141,11 @@
 
       <!-- INSTAGRAM TRENDING REELS VIEW -->
       <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black">
-        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-scroll" style="scroll-snap-type: y mandatory;">
-          <!-- Instagram Trending Reels injected dynamically -->
-        </div>
+        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-scroll" style="scroll-snap-type: y mandatory;"></div>
       </div>
 
       <!-- QUOTES SECTION -->
-      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 p-4 gap-4 overflow-y-auto">
+      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto">
         <div class="bg-gradient-to-br from-indigo-900/80 to-purple-950 border border-indigo-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
           <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
           <div>
@@ -160,7 +162,7 @@
       </div>
 
       <!-- PROFILE SECTION -->
-      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 p-4 overflow-y-auto">
+      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col items-center text-center relative shadow-lg">
           <div class="relative mb-3">
             <img id="display-profile-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md">
@@ -269,6 +271,40 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
 
+    // Theme Switcher Logic
+    let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
+
+    function applyTheme() {
+      const container = document.getElementById('app-container');
+      const header = document.getElementById('app-header');
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (isDarkMode) {
+        container.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        container.classList.add('bg-black', 'text-white', 'border-gray-800');
+        header.classList.remove('bg-white/90', 'border-gray-200');
+        header.classList.add('bg-gray-900/90', 'border-gray-800/80');
+        themeIcon.className = "fa-solid fa-moon text-lg text-emerald-400";
+      } else {
+        container.classList.remove('bg-black', 'text-white', 'border-gray-800');
+        container.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        header.classList.remove('bg-gray-900/90', 'border-gray-800/80');
+        header.classList.add('bg-white/90', 'border-gray-200');
+        themeIcon.className = "fa-solid fa-sun text-lg text-amber-500";
+      }
+    }
+
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('loop_dark_mode', JSON.stringify(isDarkMode));
+      applyTheme();
+    }
+
+    // Run theme check on load
+    window.addEventListener('DOMContentLoaded', () => {
+      applyTheme();
+    });
+
     const shareChatMasterPool = [
       {
         author: 'ShareChat Malayalam Official',
@@ -327,7 +363,6 @@
       }
     ];
 
-    // Instagram Trending Reels Master Pool
     const instagramReelsPool = [
       {
         id: 1,
