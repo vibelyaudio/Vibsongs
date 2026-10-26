@@ -141,7 +141,7 @@
 
       <!-- YOUTUBE SHORTS TRENDING VIEW -->
       <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden">
-        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-auto" style="scroll-snap-type: y mandatory; height: 100%;"></div>
+        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-auto" style="scroll-snap-type: y mandatory; height: 100%;" onscroll="handleReelsScroll(event)"></div>
       </div>
 
       <!-- QUOTES SECTION -->
@@ -328,19 +328,17 @@
       }
     ];
 
-    // YouTube Shorts Trending Pool (Automatic latest shorts with real embed IDs)
-    const youtubeShortsPool = [
+    // YouTube Shorts Master Pool for Infinite Scroll
+    const youtubeShortsMasterPool = [
       {
-        id: 1,
         author: 'Kerala Trending Shorts',
-        videoId: 'dQw4w9WgXcQ', // Sample/Trending YouTube Short ID format
+        videoId: 'dQw4w9WgXcQ',
         caption: 'Gods Own Country incredible nature shorts 🌴✨ #shorts #kerala #trending',
         likes: '45.2k',
         comments: '1.5k',
         liked: false
       },
       {
-        id: 2,
         author: 'Mallu Vlogs Official',
         videoId: '9bZkp7q19f0', 
         caption: 'Evening vibes and food journey in Kochi ☕ #shorts #malayalam #foodie',
@@ -349,16 +347,33 @@
         liked: false
       },
       {
-        id: 3,
         author: 'Status Hub Malayalam',
         videoId: 'jfKfPfyJRdk', 
         caption: 'Motivational lines for your daily energy 💪🔥 #shorts #motivation',
         likes: '28.4k',
         comments: '890',
         liked: false
+      },
+      {
+        author: 'Gods Own Country Vlogs',
+        videoId: '3JZ_D3ELwOQ', 
+        caption: 'Alappuzha backwaters boat ride vibe 🛶💚 #alappuzha #keralatourism',
+        likes: '51.3k',
+        comments: '2.1k',
+        liked: false
+      },
+      {
+        author: 'Mallu Comedy Reels',
+        videoId: 'kJQP7kiw5Fk', 
+        caption: 'Classic naadan comedy scene 😂 #mallucomedy #trending',
+        likes: '89.4k',
+        comments: '4.5k',
+        liked: false
       }
     ];
 
+    let currentYouTubeShorts = [];
+    let isReelsLoading = false;
     let dynamicFeedPosts = [];
     let isLoading = false;
 
@@ -379,7 +394,7 @@
         document.getElementById('bottom-nav').classList.remove('hidden');
         updateProfileDisplay();
         initializeFeed();
-        renderYouTubeShorts();
+        initializeYouTubeShorts();
         switchTab('home');
       } else {
         document.getElementById('auth-view').classList.remove('hidden');
@@ -482,6 +497,11 @@
       renderShareChatFeed();
     }
 
+    function initializeYouTubeShorts() {
+      currentYouTubeShorts = [...youtubeShortsMasterPool].sort(() => Math.random() - 0.5);
+      renderYouTubeShorts();
+    }
+
     function renderShareChatFeed() {
       const container = document.getElementById('posts-container');
       container.innerHTML = '';
@@ -536,7 +556,7 @@
       const container = document.getElementById('reels-container');
       container.innerHTML = '';
 
-      youtubeShortsPool.forEach((short, index) => {
+      currentYouTubeShorts.forEach((short, index) => {
         let shortEl = document.createElement('div');
         shortEl.className = "post-card relative w-full h-full flex items-center justify-center bg-black";
         shortEl.style.minHeight = "100%";
@@ -566,11 +586,32 @@
       });
     }
 
+    function handleReelsScroll(e) {
+      const container = e.target;
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+        if (!isReelsLoading) {
+          isReelsLoading = true;
+          setTimeout(() => {
+            // Append random new shorts continuously to make it endless infinite scroll
+            const randomItem = youtubeShortsMasterPool[Math.floor(Math.random() * youtubeShortsMasterPool.length)];
+            const newItem = { 
+              ...randomItem, 
+              likes: (Math.random() * 50).toFixed(1) + 'k', 
+              comments: Math.floor(Math.random() * 2000) + ' ' 
+            };
+            currentYouTubeShorts.push(newItem);
+            renderYouTubeShorts();
+            isReelsLoading = false;
+          }, 600);
+        }
+      }
+    }
+
     function toggleShortLike(index) {
-      if(youtubeShortsPool[index].liked) {
-        youtubeShortsPool[index].liked = false;
+      if(currentYouTubeShorts[index].liked) {
+        currentYouTubeShorts[index].liked = false;
       } else {
-        youtubeShortsPool[index].liked = true;
+        currentYouTubeShorts[index].liked = true;
       }
       renderYouTubeShorts();
     }
