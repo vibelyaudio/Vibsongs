@@ -59,13 +59,13 @@
         <h1 id="app-title" class="text-xl font-extrabold tracking-wider text-emerald-400">LOOP</h1>
       </div>
       <div class="flex items-center gap-4 text-gray-300">
-        <button><i class="fa-solid search text-lg"></i></button>
+        <button><i class="fa-solid fa-search text-lg"></i></button>
         <button><i class="fa-solid fa-bell text-lg"></i></button>
       </div>
     </header>
 
     <!-- Dynamic Content Area -->
-    <main class="flex-1 feed-container no-scrollbar relative overflow-y-auto" id="main-content">
+    <main class="flex-1 feed-container no-scrollbar relative overflow-y-auto" id="main-content" onscroll="handleInfiniteScroll(event)">
       
       <!-- AUTH SECTION (Login & Signup) -->
       <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-6 bg-gray-950">
@@ -122,16 +122,19 @@
 
       </div>
 
-      <!-- HOME FEED (ShareChat Trending Auto-Feed) -->
+      <!-- HOME FEED (ShareChat Live Trending Auto-Feed with Infinite Scroll) -->
       <div id="home-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 p-4 overflow-y-auto">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase"><i class="fa-solid fa-fire mr-1"></i> ShareChat Trending Feed</span>
-          <span class="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">Auto-Synced</span>
+          <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase"><i class="fa-solid fa-fire mr-1"></i> ShareChat Live Trending Feed</span>
+          <span class="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">Auto-Infinite</span>
         </div>
 
         <!-- Trending Posts Container -->
         <div id="posts-container" class="flex flex-col gap-4 pb-20">
-          <!-- Automatically loaded ShareChat trending posts -->
+          <!-- Dynamically loaded posts -->
+        </div>
+        <div id="loading-spinner" class="text-center py-4 text-xs text-emerald-400 hidden">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading more trending posts...
         </div>
       </div>
 
@@ -142,7 +145,7 @@
           <div class="absolute bottom-16 left-4 right-16 z-10 text-white">
             <div class="flex items-center gap-2 mb-2">
               <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-xs">SC</div>
-              <span class="font-semibold text-sm">ShareChat_Official</span>
+              <span class="font-semibold text-sm">ShareChat_Reels</span>
               <button class="border border-white/40 text-xs px-2.5 py-0.5 rounded-full">Follow</button>
             </div>
             <p class="text-xs text-gray-200">God's Own Country Kerala vibes 🌴 #ShareChat #MalayalamStatus</p>
@@ -283,10 +286,9 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
 
-    // Automatically loaded ShareChat trending Malayalam posts
-    let shareChatTrendingPosts = [
+    // Master list of ShareChat Malayalam trending items to simulate infinite scrolling
+    const shareChatMasterPool = [
       {
-        id: 101,
         author: 'ShareChat Malayalam Official',
         username: '@sharechat_malayalam',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
@@ -294,10 +296,10 @@
         image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
         time: '10 mins ago',
         likes: 14200,
+        comments: 342,
         liked: false
       },
       {
-        id: 102,
         author: 'Mallu Trending Status',
         username: '@mallu_status_hub',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
@@ -305,10 +307,10 @@
         image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80',
         time: '45 mins ago',
         likes: 8900,
+        comments: 156,
         liked: false
       },
       {
-        id: 103,
         author: 'Kerala Foodies Club',
         username: '@kerala_food_lovers',
         avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
@@ -316,9 +318,35 @@
         image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80',
         time: '2 hours ago',
         likes: 23400,
+        comments: 890,
+        liked: false
+      },
+      {
+        author: 'Gods Own Country Vlogs',
+        username: '@kerala_vlogger',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+        caption: 'മഴക്കാലത്തെ ഇടുക്കി കാഴ്ചകൾ... ഒടുക്കത്തെ vibe! 🌧️💚 #Idukki #KeralaRain #ShareChat',
+        image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+        time: '3 hours ago',
+        likes: 31200,
+        comments: 1240,
+        liked: false
+      },
+      {
+        author: 'Malayalam Quotes Daily',
+        username: '@mallu_quotes',
+        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80',
+        caption: 'ആഗ്രഹങ്ങൾ നമ്മളെ തളർത്തരുത്, നമ്മൾ അവയെ കീഴടക്കണം. 💪 #Motivation #MalayalamQuotes',
+        image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+        time: '5 hours ago',
+        likes: 9850,
+        comments: 210,
         liked: false
       }
     ];
+
+    let dynamicFeedPosts = [];
+    let isLoading = false;
 
     window.addEventListener('load', () => {
       setTimeout(() => {
@@ -336,7 +364,7 @@
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('bottom-nav').classList.remove('hidden');
         updateProfileDisplay();
-        renderShareChatFeed();
+        initializeFeed();
         switchTab('home');
       } else {
         document.getElementById('auth-view').classList.remove('hidden');
@@ -434,11 +462,17 @@
       }
     }
 
+    function initializeFeed() {
+      // Shuffle or clone pool on fresh load so posts vary every time app opens
+      dynamicFeedPosts = [...shareChatMasterPool].sort(() => Math.random() - 0.5);
+      renderShareChatFeed();
+    }
+
     function renderShareChatFeed() {
       const container = document.getElementById('posts-container');
       container.innerHTML = '';
 
-      shareChatTrendingPosts.forEach((post, index) => {
+      dynamicFeedPosts.forEach((post, index) => {
         let postEl = document.createElement('div');
         postEl.className = "bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col gap-3 shadow-md";
         postEl.innerHTML = `
@@ -468,7 +502,7 @@
             </button>
             <button class="flex items-center gap-1.5 text-gray-300 hover:text-blue-400 transition">
               <i class="fa-regular fa-comment text-base"></i>
-              <span class="text-[11px] font-semibold">142</span>
+              <span class="text-[11px] font-semibold">${post.comments}</span>
             </button>
             <button class="flex items-center gap-1.5 text-gray-300 hover:text-amber-400 transition">
               <i class="fa-regular fa-bookmark text-base"></i>
@@ -484,13 +518,35 @@
       });
     }
 
+    function handleInfiniteScroll(e) {
+      const container = e.target;
+      // Check if scrolled near bottom
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+        if (!isLoading) {
+          isLoading = true;
+          document.getElementById('loading-spinner').classList.remove('hidden');
+          
+          setTimeout(() => {
+            // Append more simulated items from master pool to make it infinite
+            const randomItem = shareChatMasterPool[Math.floor(Math.random() * shareChatMasterPool.length)];
+            const duplicatedItem = { ...randomItem, likes: randomItem.likes + Math.floor(Math.random() * 100), comments: randomItem.comments + Math.floor(Math.random() * 20), time: 'Just now' };
+            dynamicFeedPosts.push(duplicatedItem);
+            
+            renderShareChatFeed();
+            document.getElementById('loading-spinner').classList.add('hidden');
+            isLoading = false;
+          }, 1000);
+        }
+      }
+    }
+
     function toggleLike(index) {
-      if(shareChatTrendingPosts[index].liked) {
-        shareChatTrendingPosts[index].liked = false;
-        shareChatTrendingPosts[index].likes -= 1;
+      if(dynamicFeedPosts[index].liked) {
+        dynamicFeedPosts[index].liked = false;
+        dynamicFeedPosts[index].likes -= 1;
       } else {
-        shareChatTrendingPosts[index].liked = true;
-        shareChatTrendingPosts[index].likes += 1;
+        dynamicFeedPosts[index].liked = true;
+        dynamicFeedPosts[index].likes += 1;
       }
       renderShareChatFeed();
     }
