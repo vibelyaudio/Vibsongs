@@ -129,33 +129,16 @@
           <span class="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">Auto-Infinite</span>
         </div>
 
-        <!-- Trending Posts Container -->
-        <div id="posts-container" class="flex flex-col gap-4 pb-20">
-          <!-- Dynamically loaded posts -->
-        </div>
+        <div id="posts-container" class="flex flex-col gap-4 pb-20"></div>
         <div id="loading-spinner" class="text-center py-4 text-xs text-emerald-400 hidden">
           <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading more trending posts...
         </div>
       </div>
 
-      <!-- TRENDING REELS VIEW -->
+      <!-- INSTAGRAM TRENDING REELS VIEW -->
       <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black">
-        <div class="post-card relative h-full w-full flex items-center justify-center bg-gray-900 snap-start">
-          <video src="https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1195-large.mp4" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
-          <div class="absolute bottom-16 left-4 right-16 z-10 text-white">
-            <div class="flex items-center gap-2 mb-2">
-              <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-xs">SC</div>
-              <span class="font-semibold text-sm">ShareChat_Reels</span>
-              <button class="border border-white/40 text-xs px-2.5 py-0.5 rounded-full">Follow</button>
-            </div>
-            <p class="text-xs text-gray-200">God's Own Country Kerala vibes 🌴 #ShareChat #MalayalamStatus</p>
-          </div>
-          <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-10 text-white">
-            <button class="flex flex-col items-center"><i class="fa-solid fa-heart text-2xl text-red-500 mb-1"></i><span class="text-[10px]">48.2k</span></button>
-            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1"></i><span class="text-[10px]">3.4k</span></button>
-            <button class="flex flex-col items-center"><i class="fa-regular fa-bookmark text-2xl mb-1"></i><span class="text-[10px]">Save</span></button>
-            <button class="flex flex-col items-center"><i class="fa-solid fa-share text-2xl mb-1"></i><span class="text-[10px]">Share</span></button>
-          </div>
+        <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-scroll" style="scroll-snap-type: y mandatory;">
+          <!-- Instagram Trending Reels injected dynamically -->
         </div>
       </div>
 
@@ -286,7 +269,6 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
 
-    // Master list of ShareChat Malayalam trending items to simulate infinite scrolling
     const shareChatMasterPool = [
       {
         author: 'ShareChat Malayalam Official',
@@ -345,6 +327,37 @@
       }
     ];
 
+    // Instagram Trending Reels Master Pool
+    const instagramReelsPool = [
+      {
+        id: 1,
+        author: 'kerala_vibes_ig',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1195-large.mp4',
+        caption: 'Nature vibes in God\'s Own Country 🌴✨ #instagram #reels #kerala',
+        likes: '34.5k',
+        comments: '1.2k',
+        liked: false
+      },
+      {
+        id: 2,
+        author: 'mallu_traveller',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-seashore-with-foamy-waves-1196-large.mp4',
+        caption: 'Sunset serenity at Varkala cliff 🌊 #sunset #varkala #trending',
+        likes: '52.1k',
+        comments: '2.8k',
+        liked: false
+      },
+      {
+        id: 3,
+        author: 'kochi_street_life',
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-silhouette-of-a-person-at-sunset-4161-large.mp4',
+        caption: 'Evening drive through marine drive ✨ #kochi #mallureels',
+        likes: '19.8k',
+        comments: '940',
+        liked: false
+      }
+    ];
+
     let dynamicFeedPosts = [];
     let isLoading = false;
 
@@ -365,6 +378,7 @@
         document.getElementById('bottom-nav').classList.remove('hidden');
         updateProfileDisplay();
         initializeFeed();
+        renderInstagramReels();
         switchTab('home');
       } else {
         document.getElementById('auth-view').classList.remove('hidden');
@@ -463,7 +477,6 @@
     }
 
     function initializeFeed() {
-      // Shuffle or clone pool on fresh load so posts vary every time app opens
       dynamicFeedPosts = [...shareChatMasterPool].sort(() => Math.random() - 0.5);
       renderShareChatFeed();
     }
@@ -518,16 +531,56 @@
       });
     }
 
+    function renderInstagramReels() {
+      const container = document.getElementById('reels-container');
+      container.innerHTML = '';
+
+      instagramReelsPool.forEach((reel, index) => {
+        let reelEl = document.createElement('div');
+        reelEl.className = "post-card relative h-full w-full flex items-center justify-center bg-gray-900 snap-start";
+        reelEl.innerHTML = `
+          <video src="${reel.videoUrl}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+          <div class="absolute bottom-16 left-4 right-16 z-10 text-white">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+              <span class="font-semibold text-sm">${reel.author}</span>
+              <button class="border border-white/40 text-xs px-2.5 py-0.5 rounded-full hover:bg-white/20 transition">Follow</button>
+            </div>
+            <p class="text-xs text-gray-200">${reel.caption}</p>
+          </div>
+          <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-10 text-white">
+            <button onclick="toggleReelLike(${index})" class="flex flex-col items-center ${reel.liked ? 'text-red-500' : 'text-white'} transition">
+              <i class="${reel.liked ? 'fa-solid' : 'fa-regular'} fa-heart text-2xl mb-1"></i>
+              <span class="text-[10px]">${reel.likes}</span>
+            </button>
+            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1"></i><span class="text-[10px]">${reel.comments}</span></button>
+            <button class="flex flex-col items-center"><i class="fa-regular fa-bookmark text-2xl mb-1"></i><span class="text-[10px]">Save</span></button>
+            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(reel.caption + ' ' + reel.videoUrl)}" target="_blank" class="flex flex-col items-center text-emerald-400"><i class="fa-brands fa-whatsapp text-2xl mb-1"></i><span class="text-[10px]">Share</span></a>
+          </div>
+        `;
+        container.appendChild(reelEl);
+      });
+    }
+
+    function toggleReelLike(index) {
+      if(instagramReelsPool[index].liked) {
+        instagramReelsPool[index].liked = false;
+      } else {
+        instagramReelsPool[index].liked = true;
+      }
+      renderInstagramReels();
+    }
+
     function handleInfiniteScroll(e) {
       const container = e.target;
-      // Check if scrolled near bottom
       if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
         if (!isLoading) {
           isLoading = true;
           document.getElementById('loading-spinner').classList.remove('hidden');
           
           setTimeout(() => {
-            // Append more simulated items from master pool to make it infinite
             const randomItem = shareChatMasterPool[Math.floor(Math.random() * shareChatMasterPool.length)];
             const duplicatedItem = { ...randomItem, likes: randomItem.likes + Math.floor(Math.random() * 100), comments: randomItem.comments + Math.floor(Math.random() * 20), time: 'Just now' };
             dynamicFeedPosts.push(duplicatedItem);
@@ -570,7 +623,7 @@
       } else if(tab === 'trending') {
         document.getElementById('trending-view').classList.remove('hidden');
         document.getElementById('nav-trending').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
-        document.getElementById('app-title').innerText = "Trending Reels";
+        document.getElementById('app-title').innerText = "Instagram Reels";
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
