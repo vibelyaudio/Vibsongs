@@ -253,20 +253,20 @@
 
           <!-- RESULT POPUP CONTAINER -->
           <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1 p-3 bg-gray-950 rounded-xl border border-gray-800">
-            <!-- Save Insta Branding / Indicator -->
+            <!-- Branding / Indicator -->
             <div class="text-[10px] text-pink-400 font-semibold flex items-center justify-between">
-              <span><i class="fa-solid fa-bolt mr-1"></i> Fetched via Save Insta</span>
+              <span><i class="fa-solid fa-bolt mr-1"></i> Free API Downloader</span>
               <span class="text-[9px] text-gray-500">HD Video</span>
             </div>
             
             <!-- Video Preview Box -->
-            <div id="video-preview-box" class="w-full h-32 bg-black rounded-lg overflow-hidden relative flex items-center justify-center border border-gray-800 text-gray-400 text-xs">
+            <div id="video-preview-box" class="w-full h-36 bg-black rounded-lg overflow-hidden relative flex items-center justify-center border border-gray-800 text-gray-400 text-xs">
               <i class="fa-solid fa-video text-xl text-gray-600 mb-1"></i>
             </div>
 
             <!-- Download Button -->
-            <a id="final-download-btn" href="#" target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
-              <i class="fa-solid fa-download"></i> Download Video
+            <a id="final-download-btn" href="#" download target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
+              <i class="fa-solid fa-download"></i> SAVE TO GALLERY
             </a>
           </div>
         </div>
@@ -429,7 +429,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
       }
     }
 
@@ -494,10 +494,11 @@
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
-    function handleInstaDownload() {
-      const link = document.getElementById('insta-link-input').value.trim();
-      if(!link || !link.includes('instagram.com')) {
-        alert('Please enter a valid Instagram link.');
+    // Direct Free API Downloader Logic Integration
+    async function handleInstaDownload() {
+      const reelUrl = document.getElementById('insta-link-input').value.trim();
+      if(!reelUrl || !reelUrl.includes('instagram.com')) {
+        alert('Correct link paste cheyyu');
         return;
       }
       
@@ -506,19 +507,25 @@
       const downloadBtn = document.getElementById('final-download-btn');
       
       resultContainer.classList.remove('hidden');
-      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Fetching via Save Insta...</span>`;
+      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Loading... ⏳</span>`;
 
-      // Simulating the fetch process and linking to downloader site
-      setTimeout(() => {
-        previewBox.innerHTML = `
-          <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-300 text-xs">
-            <i class="fa-solid fa-circle-play text-2xl text-pink-500 mb-1"></i>
-            <span>Instagram Video Ready</span>
-          </div>
-        `;
-        // Downloader site-ilekku direct aayittu link pass cheyyunnu
-        downloadBtn.href = `https://saveinsta.app/?url=${encodeURIComponent(link)}`; 
-      }, 1000);
+      try {
+        let res = await fetch(`https://api.qewert.com/instagram?url=${encodeURIComponent(reelUrl)}`);
+        let data = await res.json();
+
+        if(data.medias && data.medias[0]){
+          let videoUrl = data.medias[0].url;
+          previewBox.innerHTML = `
+            <video controls src="${videoUrl}" class="w-full h-full object-cover"></video>
+          `;
+          downloadBtn.href = videoUrl;
+          downloadBtn.setAttribute('download', 'instagram_video.mp4');
+        } else {
+          previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">Video kittiyilla, vere link try cheyyu. Private account aano ennu nokku.</span>';
+        }
+      } catch(e) {
+        previewBox.innerHTML = '<span class="text-xs text-red-400 p-2 text-center">Error! API busy aanu, 1 min kazhinju try cheyyu.</span>';
+      }
     }
 
     function openEditProfileModal() {
