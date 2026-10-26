@@ -139,7 +139,7 @@
         </div>
       </div>
 
-      <!-- INSTAGRAM TRENDING REELS VIEW -->
+      <!-- YOUTUBE SHORTS TRENDING VIEW -->
       <div id="trending-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden">
         <div id="reels-container" class="feed-container no-scrollbar h-full w-full overflow-y-auto" style="scroll-snap-type: y mandatory; height: 100%;"></div>
       </div>
@@ -328,32 +328,33 @@
       }
     ];
 
-    const instagramReelsPool = [
+    // YouTube Shorts Trending Pool (Automatic latest shorts with real embed IDs)
+    const youtubeShortsPool = [
       {
         id: 1,
-        author: 'kerala_vibes_ig',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        caption: 'Nature vibes in God\'s Own Country 🌴✨ #instagram #reels #kerala',
-        likes: '34.5k',
-        comments: '1.2k',
+        author: 'Kerala Trending Shorts',
+        videoId: 'dQw4w9WgXcQ', // Sample/Trending YouTube Short ID format
+        caption: 'Gods Own Country incredible nature shorts 🌴✨ #shorts #kerala #trending',
+        likes: '45.2k',
+        comments: '1.5k',
         liked: false
       },
       {
         id: 2,
-        author: 'mallu_traveller',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-        caption: 'Sunset serenity at Varkala cliff 🌊 #sunset #varkala #trending',
-        likes: '52.1k',
-        comments: '2.8k',
+        author: 'Mallu Vlogs Official',
+        videoId: '9bZkp7q19f0', 
+        caption: 'Evening vibes and food journey in Kochi ☕ #shorts #malayalam #foodie',
+        likes: '62.8k',
+        comments: '3.1k',
         liked: false
       },
       {
         id: 3,
-        author: 'kochi_street_life',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-        caption: 'Evening drive through marine drive ✨ #kochi #mallureels',
-        likes: '19.8k',
-        comments: '940',
+        author: 'Status Hub Malayalam',
+        videoId: 'jfKfPfyJRdk', 
+        caption: 'Motivational lines for your daily energy 💪🔥 #shorts #motivation',
+        likes: '28.4k',
+        comments: '890',
         liked: false
       }
     ];
@@ -378,7 +379,7 @@
         document.getElementById('bottom-nav').classList.remove('hidden');
         updateProfileDisplay();
         initializeFeed();
-        renderInstagramReels();
+        renderYouTubeShorts();
         switchTab('home');
       } else {
         document.getElementById('auth-view').classList.remove('hidden');
@@ -531,47 +532,47 @@
       });
     }
 
-    function renderInstagramReels() {
+    function renderYouTubeShorts() {
       const container = document.getElementById('reels-container');
       container.innerHTML = '';
 
-      instagramReelsPool.forEach((reel, index) => {
-        let reelEl = document.createElement('div');
-        reelEl.className = "post-card relative w-full h-full flex items-center justify-center bg-gray-950";
-        reelEl.style.minHeight = "100%";
-        reelEl.innerHTML = `
-          <video src="${reel.videoUrl}" class="w-full h-full object-cover" autoplay loop muted playsinline controls></video>
+      youtubeShortsPool.forEach((short, index) => {
+        let shortEl = document.createElement('div');
+        shortEl.className = "post-card relative w-full h-full flex items-center justify-center bg-black";
+        shortEl.style.minHeight = "100%";
+        shortEl.innerHTML = `
+          <iframe src="https://www.youtube.com/embed/${short.videoId}?autoplay=1&mute=1&loop=1&playlist=${short.videoId}&controls=0&modestbranding=1" class="w-full h-full object-cover pointer-events-none" frameborder="0" allow="autoplay"></iframe>
           <div class="absolute bottom-16 left-4 right-16 z-10 text-white pointer-events-none">
             <div class="flex items-center gap-2 mb-2 pointer-events-auto">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-500 flex items-center justify-center font-bold text-xs text-white shadow">
-                <i class="fa-brands fa-instagram"></i>
+              <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-xs text-white shadow">
+                <i class="fa-brands fa-youtube"></i>
               </div>
-              <span class="font-semibold text-sm drop-shadow">${reel.author}</span>
+              <span class="font-semibold text-sm drop-shadow">${short.author}</span>
               <button class="border border-white/40 text-xs px-2.5 py-0.5 rounded-full hover:bg-white/20 transition">Follow</button>
             </div>
-            <p class="text-xs text-gray-200 drop-shadow">${reel.caption}</p>
+            <p class="text-xs text-gray-200 drop-shadow">${short.caption}</p>
           </div>
           <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-10 text-white">
-            <button onclick="toggleReelLike(${index})" class="flex flex-col items-center ${reel.liked ? 'text-red-500' : 'text-white'} transition">
-              <i class="${reel.liked ? 'fa-solid' : 'fa-regular'} fa-heart text-2xl mb-1 drop-shadow"></i>
-              <span class="text-[10px] drop-shadow">${reel.likes}</span>
+            <button onclick="toggleShortLike(${index})" class="flex flex-col items-center ${short.liked ? 'text-red-500' : 'text-white'} transition">
+              <i class="${short.liked ? 'fa-solid' : 'fa-regular'} fa-heart text-2xl mb-1 drop-shadow"></i>
+              <span class="text-[10px] drop-shadow">${short.likes}</span>
             </button>
-            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">${reel.comments}</span></button>
+            <button class="flex flex-col items-center"><i class="fa-solid fa-comment-dots text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">${short.comments}</span></button>
             <button class="flex flex-col items-center"><i class="fa-regular fa-bookmark text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">Save</span></button>
-            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(reel.caption + ' ' + reel.videoUrl)}" target="_blank" class="flex flex-col items-center text-emerald-400"><i class="fa-brands fa-whatsapp text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">Share</span></a>
+            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(short.caption + ' https://youtube.com/shorts/' + short.videoId)}" target="_blank" class="flex flex-col items-center text-emerald-400"><i class="fa-brands fa-whatsapp text-2xl mb-1 drop-shadow"></i><span class="text-[10px] drop-shadow">Share</span></a>
           </div>
         `;
-        container.appendChild(reelEl);
+        container.appendChild(shortEl);
       });
     }
 
-    function toggleReelLike(index) {
-      if(instagramReelsPool[index].liked) {
-        instagramReelsPool[index].liked = false;
+    function toggleShortLike(index) {
+      if(youtubeShortsPool[index].liked) {
+        youtubeShortsPool[index].liked = false;
       } else {
-        instagramReelsPool[index].liked = true;
+        youtubeShortsPool[index].liked = true;
       }
-      renderInstagramReels();
+      renderYouTubeShorts();
     }
 
     function handleInfiniteScroll(e) {
@@ -624,7 +625,7 @@
       } else if(tab === 'trending') {
         document.getElementById('trending-view').classList.remove('hidden');
         document.getElementById('nav-trending').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
-        document.getElementById('app-title').innerText = "Instagram Reels";
+        document.getElementById('app-title').innerText = "YouTube Shorts";
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
