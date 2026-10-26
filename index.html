@@ -9,14 +9,6 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    .feed-container {
-      scroll-snap-type: y mandatory;
-      overflow-y: scroll;
-    }
-    .post-card {
-      scroll-snap-align: start;
-      flex-shrink: 0;
-    }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -238,7 +230,7 @@
       </div>
     </div>
 
-    <!-- INSTAGRAM STORY DOWNLOADER MODAL -->
+    <!-- INSTAGRAM POPUP DOWNLOADER MODAL -->
     <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
         <div class="flex justify-between items-center border-b border-gray-800 pb-2">
@@ -246,22 +238,37 @@
             <div class="w-7 h-7 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-sm">
               <i class="fa-brands fa-instagram"></i>
             </div>
-            <h3 class="text-xs font-bold text-pink-400">Insta Story Downloader</h3>
+            <h3 class="text-xs font-bold text-pink-400">Instagram Downloader</h3>
           </div>
           <button onclick="closeInstaDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
         </div>
+        
         <div class="flex flex-col gap-3">
           <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Paste Instagram Story/Reel Link</label>
-            <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/stories/...">
+            <label class="block text-[10px] text-gray-400 mb-1">Paste Instagram Link</label>
+            <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/reel/...">
           </div>
-          <div id="insta-result-area" class="hidden text-center p-2 bg-gray-950 rounded-xl border border-gray-800 text-[11px] text-emerald-400">
-            <i class="fa-solid fa-circle-check mr-1"></i> Ready to download!
+          
+          <button onclick="handleInstaDownload()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs py-2 rounded-xl transition">Fetch Video</button>
+
+          <!-- RESULT POPUP CONTAINER -->
+          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1 p-3 bg-gray-950 rounded-xl border border-gray-800">
+            <!-- Save Insta Branding / Indicator -->
+            <div class="text-[10px] text-pink-400 font-semibold flex items-center justify-between">
+              <span><i class="fa-solid fa-bolt mr-1"></i> Fetched via Save Insta</span>
+              <span class="text-[9px] text-gray-500">HD Video</span>
+            </div>
+            
+            <!-- Video Preview Box -->
+            <div id="video-preview-box" class="w-full h-32 bg-black rounded-lg overflow-hidden relative flex items-center justify-center border border-gray-800 text-gray-400 text-xs">
+              <i class="fa-solid fa-video text-xl text-gray-600 mb-1"></i>
+            </div>
+
+            <!-- Download Button -->
+            <a id="final-download-btn" href="#" target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1.5 mt-1">
+              <i class="fa-solid fa-download"></i> Download Video
+            </a>
           </div>
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button onclick="closeInstaDownloader()" class="flex-1 bg-gray-800 text-gray-300 font-semibold text-xs py-2 rounded-xl">Cancel</button>
-          <button onclick="handleInstaDownload()" class="flex-1 bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs py-2 rounded-xl transition">Fetch Story</button>
         </div>
       </div>
     </div>
@@ -297,7 +304,6 @@
   <script>
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
 
     function applyTheme() {
@@ -423,7 +429,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
       }
     }
 
@@ -481,7 +487,7 @@
     function openInstaDownloader() {
       document.getElementById('insta-downloader-modal').classList.remove('hidden');
       document.getElementById('insta-link-input').value = '';
-      document.getElementById('insta-result-area').classList.add('hidden');
+      document.getElementById('insta-result-container').classList.add('hidden');
     }
 
     function closeInstaDownloader() {
@@ -490,15 +496,27 @@
 
     function handleInstaDownload() {
       const link = document.getElementById('insta-link-input').value.trim();
-      if(!link) {
+      if(!link || !link.includes('instagram.com')) {
         alert('Please enter a valid Instagram link.');
         return;
       }
-      const resultArea = document.getElementById('insta-result-area');
-      resultArea.classList.remove('hidden');
-      resultArea.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Fetching story...`;
+      
+      const resultContainer = document.getElementById('insta-result-container');
+      const previewBox = document.getElementById('video-preview-box');
+      const downloadBtn = document.getElementById('final-download-btn');
+      
+      resultContainer.classList.remove('hidden');
+      previewBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-500 text-lg"></i><span class="ml-2 text-xs">Fetching via Save Insta...</span>`;
+
+      // Simulating the fetch process
       setTimeout(() => {
-        resultArea.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Story fetched successfully! <br><a href="${link}" target="_blank" class="text-pink-400 underline font-bold mt-1 inline-block">Download File</a>`;
+        previewBox.innerHTML = `
+          <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-300 text-xs">
+            <i class="fa-solid fa-circle-play text-2xl text-pink-500 mb-1"></i>
+            <span>Instagram Video Ready</span>
+          </div>
+        `;
+        downloadBtn.href = link; 
       }, 1000);
     }
 
