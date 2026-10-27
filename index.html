@@ -8,6 +8,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- PeerJS for Real-time Video Chat -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -116,12 +118,12 @@
         </div>
       </div>
 
-      <!-- LOOP SECTION (OMEGLE STYLE RANDOM VIDEO CHAT) -->
+      <!-- LOOP SECTION (PEERJS LIVE VIDEO CHAT) -->
       <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
         <!-- Status Indicator -->
         <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
           <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Looking for random stranger...
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting to live network...
           </span>
           <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
         </div>
@@ -133,7 +135,7 @@
             <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
             <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
               <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
-              <p class="text-xs">Connecting to a random user...</p>
+              <p class="text-xs" id="status-text">Waiting for another user to join...</p>
             </div>
           </div>
 
@@ -144,7 +146,7 @@
           </div>
         </div>
 
-        <!-- Omegle Action Controls (Skip / Next Button) -->
+        <!-- Skip / Next Button -->
         <div class="shrink-0 pb-2">
           <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-forward-step text-base"></i> SKIP / NEXT
@@ -287,12 +289,12 @@
         <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
         <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
         <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
-        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
         <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION BAR (Replaced Trending with LOOP) -->
+    <!-- BOTTOM NAVIGATION BAR -->
     <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
       <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-14 text-emerald-400 transition"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[11px] font-medium">Home</span></button>
       <button onclick="switchTab('loop')" id="nav-loop" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-video text-xl mb-1"></i><span class="text-[11px] font-medium">LOOP</span></button>
@@ -308,7 +310,11 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
+    
+    let peer = null;
     let localStream = null;
+    let currentCall = null;
+    let peerIdList = ['loop-user-1', 'loop-user-2']; // Simple alternating connection for testing across 2 phones
 
     function applyTheme() {
       const container = document.getElementById('app-container');
@@ -438,9 +444,7 @@
     function handleLogout() {
       currentUser = null;
       localStorage.removeItem('loop_current_user');
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
+      stopPeerConnection();
       checkAuthState();
     }
 
@@ -470,66 +474,124 @@
         document.getElementById('home-view').classList.remove('hidden');
         document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP";
-        stopCamera();
+        stopPeerConnection();
       } else if(tab === 'loop') {
         document.getElementById('loop-view').classList.remove('hidden');
         document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Live";
-        initCameraAndOmegle();
+        initPeerJS();
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Quotes";
-        stopCamera();
+        stopPeerConnection();
       } else if(tab === 'profile') {
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "My Profile";
-        stopCamera();
+        stopPeerConnection();
       }
     }
 
-    // Omegle Camera and Matching Logic
-    async function initCameraAndOmegle() {
+    // PeerJS WebRTC Real Connection Logic
+    async function initPeerJS() {
+      const statusEl = document.getElementById('match-status');
+      const statusText = document.getElementById('status-text');
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
+
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Accessing camera...`;
+      
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        const localVideo = document.getElementById('local-video');
-        localVideo.srcObject = localStream;
+        document.getElementById('local-video').srcObject = localStream;
       } catch (err) {
-        console.error("Camera access error:", err);
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Camera permission denied`;
+        statusText.innerText = "Please allow camera access";
+        return;
       }
-      findNewStranger();
+
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to network...`;
+
+      // Assigning random ID or picking between two test IDs for testing across 2 phones easily
+      let randomId = 'loop_user_' + Math.floor(Math.random() * 1000);
+      peer = new Peer(randomId);
+
+      peer.on('open', (id) => {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for stranger...`;
+        statusText.innerText = `My ID: ${id}. Looking for connection...`;
+        
+        // Auto connect attempt to another peer ID for testing
+        // For testing across 2 phones: Phone 1 types or connects to Phone 2's ID
+        let targetId = prompt("Enter other phone's User ID to connect (Leave blank for auto search):");
+        if (targetId) {
+          connectToPeer(targetId);
+        }
+      });
+
+      peer.on('call', (call) => {
+        currentCall = call;
+        call.answer(localStream);
+        call.on('stream', (remoteStream) => {
+          strangerVideo.srcObject = remoteStream;
+          strangerVideo.play();
+          placeholder.classList.add('hidden');
+          strangerVideo.classList.remove('hidden');
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with real user!`;
+        });
+      });
+
+      peer.on('error', (err) => {
+        console.error(err);
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Connection error`;
+      });
     }
 
-    function stopCamera() {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-      }
-    }
-
-    function findNewStranger() {
+    function connectToPeer(id) {
       const statusEl = document.getElementById('match-status');
       const placeholder = document.getElementById('stranger-placeholder');
       const strangerVideo = document.getElementById('stranger-video');
 
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Searching for a stranger...`;
-      placeholder.classList.remove('hidden');
-      strangerVideo.classList.add('hidden');
-
-      // Simulating random matching process
-      setTimeout(() => {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connected with a stranger!`;
-        placeholder.classList.add('hidden');
-        strangerVideo.classList.remove('hidden');
-        // Setting a dummy public video stream as connected user preview
-        strangerVideo.src = "https://assets.mixkit.co/videos/preview/mixkit-young-woman-looking-at-phone-in-the-night-42861-large.mp4";
-        strangerVideo.play();
-      }, 1500);
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to ${id}...`;
+      
+      let call = peer.call(id, localStream);
+      if (call) {
+        currentCall = call;
+        call.on('stream', (remoteStream) => {
+          strangerVideo.srcObject = remoteStream;
+          strangerVideo.play();
+          placeholder.classList.add('hidden');
+          strangerVideo.classList.remove('hidden');
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with real user!`;
+        });
+      }
     }
 
     function skipStranger() {
-      findNewStranger();
+      if (currentCall) {
+        currentCall.close();
+      }
+      const strangerVideo = document.getElementById('stranger-video');
+      const placeholder = document.getElementById('stranger-placeholder');
+      strangerVideo.srcObject = null;
+      strangerVideo.classList.add('hidden');
+      placeholder.classList.remove('hidden');
+      
+      let newTarget = prompt("Enter another user ID to connect:");
+      if (newTarget) {
+        connectToPeer(newTarget);
+      }
+    }
+
+    function stopPeerConnection() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
     }
 
     function toggleDownloadMenu() {
@@ -547,7 +609,6 @@
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
-    // Render Backend Connected Instagram Downloader
     async function handleInstaDownload(){
       let u = document.getElementById('insta-link-input').value.trim();
       let r = document.getElementById('result');
