@@ -118,14 +118,20 @@
         </div>
       </div>
 
-      <!-- LOOP SECTION (AUTOMATIC PEERJS MATCHMAKING) -->
+      <!-- LOOP SECTION (ROOM BASED INSTANT LIVE VIDEO) -->
       <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
         <!-- Status Indicator -->
         <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
           <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for live user...
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Ready to connect
           </span>
           <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
+        </div>
+
+        <!-- Room Input Box for instant testing -->
+        <div class="flex gap-2 items-center bg-gray-900 p-2 rounded-xl border border-gray-800 shrink-0">
+          <input type="text" id="room-code-input" placeholder="Enter Room Name (e.g. room123)" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+          <button onclick="joinRoom()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-4 py-1.5 rounded-lg transition">Connect</button>
         </div>
 
         <!-- Video Container Area -->
@@ -135,7 +141,7 @@
             <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
             <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
               <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
-              <p class="text-xs" id="status-text">Searching for someone online...</p>
+              <p class="text-xs" id="status-text">Enter room code and tap Connect</p>
             </div>
           </div>
 
@@ -149,7 +155,7 @@
         <!-- Skip / Next Button -->
         <div class="shrink-0 pb-2">
           <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-forward-step text-base"></i> SKIP / NEXT
+            <i class="fa-solid fa-forward-step text-base"></i> DISCONNECT / LEAVE
           </button>
         </div>
       </div>
@@ -314,7 +320,6 @@
     let peer = null;
     let localStream = null;
     let currentCall = null;
-    let myId = '';
 
     function applyTheme() {
       const container = document.getElementById('app-container');
@@ -424,7 +429,7 @@
 
       if (!identifier || !password) {
         errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
         return;
       }
 
@@ -437,7 +442,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
       }
     }
 
@@ -479,7 +484,7 @@
         document.getElementById('loop-view').classList.remove('hidden');
         document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Live";
-        initPeerJS();
+        initCameraOnly();
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
@@ -493,92 +498,91 @@
       }
     }
 
-    // Automatic PeerJS Matchmaking Logic (No manual ID prompt)
-    async function initPeerJS() {
+    async function initCameraOnly() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('local-video').srcObject = localStream;
+      } catch (err) {
+        alert("Camera permission required!");
+      }
+    }
+
+    // Room connection for testing between 2 phones instantly
+    function joinRoom() {
+      let roomName = document.getElementById('room-code-input').value.trim();
+      if(!roomName) {
+        alert("Please enter a room code!");
+        return;
+      }
+
       const statusEl = document.getElementById('match-status');
       const statusText = document.getElementById('status-text');
       const placeholder = document.getElementById('stranger-placeholder');
       const strangerVideo = document.getElementById('stranger-video');
 
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Accessing camera...`;
-      
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        document.getElementById('local-video').srcObject = localStream;
-      } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Camera permission denied`;
-        statusText.innerText = "Please allow camera access";
-        return;
-      }
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Joining room: ${roomName}...`;
 
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to live pool...`;
+      if(peer) { peer.destroy(); }
 
-      // Create peer with a unique user prefix
-      myId = 'loop_live_' + Math.floor(Math.random() * 90000 + 10000);
-      peer = new Peer(myId);
+      // We use roomName as peer ID for user 1, and caller for user 2
+      let myPeerId = roomName + "_user1";
+      let targetPeerId = roomName + "_user2";
+
+      // Try creating as user 1, if taken, become user 2
+      peer = new Peer(myPeerId);
 
       peer.on('open', (id) => {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for online stranger...`;
-        statusText.innerText = `Searching available users...`;
-        
-        // Automatically try connecting to another user ID range or partner
-        autoMatchWithSomeone();
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Waiting in room...`;
+        statusText.innerText = `Joined ${roomName}. Connecting...`;
+
+        // Attempt calling user 2 if they are already there
+        let call = peer.call(targetPeerId, localStream);
+        if(call) {
+          setupCallHandlers(call);
+        }
+      });
+
+      peer.on('error', (err) => {
+        // If user 1 ID is already taken, connect as user 2
+        if(err.type === 'unavailable-id') {
+          peer = new Peer(targetPeerId);
+          peer.on('open', (id) => {
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Calling room partner...`;
+            let call = peer.call(myPeerId, localStream);
+            if(call) {
+              setupCallHandlers(call);
+            }
+          });
+        }
       });
 
       peer.on('call', (call) => {
         currentCall = call;
         call.answer(localStream);
-        call.on('stream', (remoteStream) => {
-          strangerVideo.srcObject = remoteStream;
-          strangerVideo.play();
-          placeholder.classList.add('hidden');
-          strangerVideo.classList.remove('hidden');
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with stranger!`;
-        });
-      });
-
-      peer.on('error', (err) => {
-        console.error(err);
+        setupCallHandlers(call);
       });
     }
 
-    function autoMatchWithSomeone() {
-      // Trying to connect to a partner automatically
-      let partnerNumber = Math.floor(Math.random() * 90000 + 10000);
-      let targetId = 'loop_live_' + partnerNumber;
-      
-      if(targetId === myId) {
-        setTimeout(autoMatchWithSomeone, 1000);
-        return;
-      }
-
+    function setupCallHandlers(call) {
+      currentCall = call;
       const statusEl = document.getElementById('match-status');
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Matching with someone...`;
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
 
-      let call = peer.call(targetId, localStream);
-      if (call) {
-        currentCall = call;
-        call.on('stream', (remoteStream) => {
-          const strangerVideo = document.getElementById('stranger-video');
-          const placeholder = document.getElementById('stranger-placeholder');
-          strangerVideo.srcObject = remoteStream;
-          strangerVideo.play();
-          placeholder.classList.add('hidden');
-          strangerVideo.classList.remove('hidden');
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with stranger!`;
-        });
-        
-        call.on('close', () => {
-          skipStranger();
-        });
-      }
+      call.on('stream', (remoteStream) => {
+        strangerVideo.srcObject = remoteStream;
+        strangerVideo.play();
+        placeholder.classList.add('hidden');
+        strangerVideo.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected successfully!`;
+      });
 
-      // If call doesn't connect within 3 seconds, retry matching automatically
-      setTimeout(() => {
-        if (!currentCall || !currentCall.open) {
-          autoMatchWithSomeone();
-        }
-      }, 3000);
+      call.on('close', () => {
+        strangerVideo.srcObject = null;
+        strangerVideo.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Partner disconnected`;
+      });
     }
 
     function skipStranger() {
@@ -591,8 +595,7 @@
       strangerVideo.srcObject = null;
       strangerVideo.classList.add('hidden');
       placeholder.classList.remove('hidden');
-      
-      autoMatchWithSomeone();
+      document.getElementById('match-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Disconnected`;
     }
 
     function stopPeerConnection() {
@@ -661,9 +664,7 @@
 
     function openEditProfileModal() {
       document.getElementById('input-name').value = currentUser.name || '';
-      document.getElementById('input-username').value = currentUser.username || '';
-      document.getElementById('input-email').value = currentUser.email || '';
-      document.getElementById('input-img').value = currentUser.img || '';
+      updateProfileDisplay();
       document.getElementById('edit-profile-modal').classList.remove('hidden');
     }
 
