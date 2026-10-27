@@ -118,12 +118,12 @@
         </div>
       </div>
 
-      <!-- LOOP SECTION (PEERJS LIVE VIDEO CHAT) -->
+      <!-- LOOP SECTION (AUTOMATIC PEERJS MATCHMAKING) -->
       <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
         <!-- Status Indicator -->
         <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
           <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting to live network...
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for live user...
           </span>
           <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
         </div>
@@ -135,7 +135,7 @@
             <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
             <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
               <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
-              <p class="text-xs" id="status-text">Waiting for another user to join...</p>
+              <p class="text-xs" id="status-text">Searching for someone online...</p>
             </div>
           </div>
 
@@ -314,7 +314,7 @@
     let peer = null;
     let localStream = null;
     let currentCall = null;
-    let peerIdList = ['loop-user-1', 'loop-user-2']; // Simple alternating connection for testing across 2 phones
+    let myId = '';
 
     function applyTheme() {
       const container = document.getElementById('app-container');
@@ -437,7 +437,7 @@
         checkAuthState();
       } else {
         errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
       }
     }
 
@@ -493,7 +493,7 @@
       }
     }
 
-    // PeerJS WebRTC Real Connection Logic
+    // Automatic PeerJS Matchmaking Logic (No manual ID prompt)
     async function initPeerJS() {
       const statusEl = document.getElementById('match-status');
       const statusText = document.getElementById('status-text');
@@ -511,22 +511,18 @@
         return;
       }
 
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to network...`;
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to live pool...`;
 
-      // Assigning random ID or picking between two test IDs for testing across 2 phones easily
-      let randomId = 'loop_user_' + Math.floor(Math.random() * 1000);
-      peer = new Peer(randomId);
+      // Create peer with a unique user prefix
+      myId = 'loop_live_' + Math.floor(Math.random() * 90000 + 10000);
+      peer = new Peer(myId);
 
       peer.on('open', (id) => {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for stranger...`;
-        statusText.innerText = `My ID: ${id}. Looking for connection...`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Searching for online stranger...`;
+        statusText.innerText = `Searching available users...`;
         
-        // Auto connect attempt to another peer ID for testing
-        // For testing across 2 phones: Phone 1 types or connects to Phone 2's ID
-        let targetId = prompt("Enter other phone's User ID to connect (Leave blank for auto search):");
-        if (targetId) {
-          connectToPeer(targetId);
-        }
+        // Automatically try connecting to another user ID range or partner
+        autoMatchWithSomeone();
       });
 
       peer.on('call', (call) => {
@@ -537,39 +533,58 @@
           strangerVideo.play();
           placeholder.classList.add('hidden');
           strangerVideo.classList.remove('hidden');
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with real user!`;
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with stranger!`;
         });
       });
 
       peer.on('error', (err) => {
         console.error(err);
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Connection error`;
       });
     }
 
-    function connectToPeer(id) {
-      const statusEl = document.getElementById('match-status');
-      const placeholder = document.getElementById('stranger-placeholder');
-      const strangerVideo = document.getElementById('stranger-video');
-
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to ${id}...`;
+    function autoMatchWithSomeone() {
+      // Trying to connect to a partner automatically
+      let partnerNumber = Math.floor(Math.random() * 90000 + 10000);
+      let targetId = 'loop_live_' + partnerNumber;
       
-      let call = peer.call(id, localStream);
+      if(targetId === myId) {
+        setTimeout(autoMatchWithSomeone, 1000);
+        return;
+      }
+
+      const statusEl = document.getElementById('match-status');
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Matching with someone...`;
+
+      let call = peer.call(targetId, localStream);
       if (call) {
         currentCall = call;
         call.on('stream', (remoteStream) => {
+          const strangerVideo = document.getElementById('stranger-video');
+          const placeholder = document.getElementById('stranger-placeholder');
           strangerVideo.srcObject = remoteStream;
           strangerVideo.play();
           placeholder.classList.add('hidden');
           strangerVideo.classList.remove('hidden');
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with real user!`;
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected with stranger!`;
+        });
+        
+        call.on('close', () => {
+          skipStranger();
         });
       }
+
+      // If call doesn't connect within 3 seconds, retry matching automatically
+      setTimeout(() => {
+        if (!currentCall || !currentCall.open) {
+          autoMatchWithSomeone();
+        }
+      }, 3000);
     }
 
     function skipStranger() {
       if (currentCall) {
         currentCall.close();
+        currentCall = null;
       }
       const strangerVideo = document.getElementById('stranger-video');
       const placeholder = document.getElementById('stranger-placeholder');
@@ -577,10 +592,7 @@
       strangerVideo.classList.add('hidden');
       placeholder.classList.remove('hidden');
       
-      let newTarget = prompt("Enter another user ID to connect:");
-      if (newTarget) {
-        connectToPeer(newTarget);
-      }
+      autoMatchWithSomeone();
     }
 
     function stopPeerConnection() {
