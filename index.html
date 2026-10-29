@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieBox Pro Web</title>
+  <title>MovieBox Pro - Multilingual</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
   <style>
     :root {
@@ -31,39 +31,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 5%;
-      background: rgba(11, 12, 16, 0.9);
+      padding: 14px 5%;
+      background: rgba(11, 12, 16, 0.95);
       backdrop-filter: blur(15px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .logo {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: 0.5px;
       cursor: pointer;
     }
     .logo span { color: var(--accent); }
-
-    .nav-tabs {
-      display: flex;
-      gap: 15px;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 6px 14px;
-      border-radius: 20px;
-      transition: all 0.3s;
-    }
-    .tab-btn.active, .tab-btn:hover {
-      color: #fff;
-      background: rgba(0, 210, 255, 0.15);
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
 
     .search-box {
       background: #1c1f2b;
@@ -86,10 +66,41 @@
       font-size: 0.85rem;
     }
 
+    /* Language Category Bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      padding: 12px 5%;
+      background: #10121a;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      background: #181c28;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 18px;
+      border-radius: 20px;
+      transition: all 0.25s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      color: #0b0c10;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Hero Banner */
     .hero {
       position: relative;
-      height: 60vh;
-      min-height: 420px;
+      height: 55vh;
+      min-height: 380px;
       display: flex;
       align-items: flex-end;
       padding: 5%;
@@ -109,14 +120,14 @@
       font-size: 0.75rem;
       font-weight: 700;
       display: inline-block;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .hero h1 { font-size: 2.4rem; margin-bottom: 10px; line-height: 1.2; }
+    .hero h1 { font-size: 2.2rem; margin-bottom: 8px; line-height: 1.2; }
     .hero p {
       color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.5;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
@@ -127,7 +138,7 @@
       color: #0b0c10;
       font-weight: 700;
       border: none;
-      padding: 12px 28px;
+      padding: 10px 24px;
       border-radius: 25px;
       cursor: pointer;
       box-shadow: 0 4px 15px var(--accent-glow);
@@ -135,9 +146,10 @@
     }
     .play-btn:hover { transform: scale(1.05); }
 
-    main { padding: 30px 5%; }
+    /* Grid */
+    main { padding: 25px 5%; }
     .section-title {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 20px;
       border-left: 4px solid var(--accent);
@@ -146,8 +158,8 @@
 
     .movie-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 18px;
     }
     .movie-card {
       background: var(--card-bg);
@@ -159,12 +171,12 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
     .movie-card:hover {
-      transform: translateY(-8px);
+      transform: translateY(-7px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 12px var(--accent-glow);
     }
     .movie-card img {
       width: 100%;
-      height: 255px;
+      height: 240px;
       object-fit: cover;
       display: block;
     }
@@ -177,8 +189,20 @@
       color: var(--star);
       font-size: 0.75rem;
       font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 5px;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .lang-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0, 210, 255, 0.85);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
     }
     .movie-info { padding: 10px; }
     .movie-title {
@@ -194,6 +218,7 @@
       margin-top: 3px;
     }
 
+    /* Modal Player */
     .modal {
       position: fixed;
       top: 0; left: 0;
@@ -262,18 +287,24 @@
 
   <header>
     <div class="logo" onclick="location.reload()">Movie<span>Box</span></div>
-    <div class="nav-tabs">
-      <button class="tab-btn active" id="tabMovies">Movies</button>
-      <button class="tab-btn" id="tabSeries">TV Series</button>
-    </div>
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search any movie/show...">
+      <input type="text" id="searchInput" placeholder="Search any movie...">
     </div>
   </header>
 
+  <!-- Multi-Language Bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="loadByLanguage('all', 'Trending All')">🔥 All Trending</button>
+    <button class="filter-btn" onclick="loadByLanguage('ml', 'Malayalam Movies')">🌴 Malayalam</button>
+    <button class="filter-btn" onclick="loadByLanguage('ta', 'Tamil Movies')">🎬 Tamil</button>
+    <button class="filter-btn" onclick="loadByLanguage('te', 'Telugu Movies')">⚡ Telugu</button>
+    <button class="filter-btn" onclick="loadByLanguage('hi', 'Hindi Movies')">🌟 Hindi</button>
+    <button class="filter-btn" onclick="loadByLanguage('en', 'Hollywood Movies')">🍿 Hollywood</button>
+  </div>
+
   <section class="hero" id="heroBanner">
     <div class="hero-content">
-      <div class="hero-tag" id="heroTag">TRENDING #1</div>
+      <div class="hero-tag" id="heroTag">FEATURED</div>
       <h1 id="heroTitle">Loading...</h1>
       <p id="heroDesc"></p>
       <button class="play-btn" id="heroPlayBtn">▶ Stream Now</button>
@@ -285,6 +316,7 @@
     <div class="movie-grid" id="movieGrid"></div>
   </main>
 
+  <!-- Video Modal -->
   <div class="modal" id="videoModal">
     <div class="modal-content">
       <span class="modal-close" id="closeModal">&times;</span>
@@ -293,22 +325,19 @@
       </div>
       <div class="server-switcher">
         <span>Server:</span>
-        <button class="server-btn active" onclick="switchServer(1)">Server 1 (AutoEmbed)</button>
-        <button class="server-btn" onclick="switchServer(2)">Server 2 (VidSrc)</button>
-        <button class="server-btn" onclick="switchServer(3)">Server 3 (Smashy)</button>
+        <button class="server-btn active" onclick="switchServer(1)">Server 1</button>
+        <button class="server-btn" onclick="switchServer(2)">Server 2</button>
+        <button class="server-btn" onclick="switchServer(3)">Server 3</button>
       </div>
     </div>
   </div>
 
   <script>
-    // നൽകിയ TMDB API Key ഇവിടെ ചേർത്തു
-    const TMDB_API_KEY = "4202ab5f0ea390e81172b29cceca6795"; 
-
+    const TMDB_API_KEY = "4202ab5f0ea390e81172b29cceca6795";
     const BASE_URL = "https://api.themoviedb.org/3";
     const IMG_URL = "https://image.tmdb.org/t/p/w500";
     const BACKDROP_URL = "https://image.tmdb.org/t/p/original";
 
-    let currentType = 'movie';
     let activeMediaId = null;
     let featuredMedia = null;
 
@@ -326,32 +355,45 @@
 
     async function fetchData(endpoint) {
       try {
-        const separator = endpoint.includes('?') ? '&' : '?';
-        const res = await fetch(`${BASE_URL}${endpoint}${separator}api_key=${TMDB_API_KEY}`);
+        const sep = endpoint.includes('?') ? '&' : '?';
+        const res = await fetch(`${BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
         const data = await res.json();
         return data.results || [];
       } catch (e) {
-        console.error("API Fetch Error:", e);
+        console.error("API Error:", e);
         return [];
       }
     }
 
-    async function loadTrending(type = 'movie') {
-      currentType = type;
-      sectionHeading.textContent = type === 'movie' ? 'Trending Movies' : 'Trending TV Series';
-      const items = await fetchData(`/trending/${type}/day?language=en-US`);
-      
+    async function loadByLanguage(langCode, label) {
+      // Update UI active buttons
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(label.split(' ')[0].toLowerCase()));
+      });
+
+      sectionHeading.textContent = label;
+
+      let items = [];
+      if (langCode === 'all') {
+        items = await fetchData(`/trending/movie/day?language=en-US`);
+      } else {
+        // Fetch by original language sorted by popularity/rating
+        items = await fetchData(`/discover/movie?with_original_language=${langCode}&sort_by=popularity.desc`);
+      }
+
       if (items.length > 0) {
-        setHero(items[0]);
+        setHero(items[0], label);
         renderList(items);
+      } else {
+        movieGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No movies found.</p>`;
       }
     }
 
-    function setHero(item) {
+    function setHero(item, label) {
       featuredMedia = item;
       heroTitle.textContent = item.title || item.name;
-      heroDesc.textContent = item.overview || "No plot synopsis available.";
-      heroTag.textContent = currentType === 'movie' ? "TRENDING MOVIE" : "POPULAR SHOW";
+      heroDesc.textContent = item.overview || "No plot summary available.";
+      heroTag.textContent = label.toUpperCase();
       if (item.backdrop_path) {
         heroBanner.style.backgroundImage = `linear-gradient(180deg, rgba(11,12,16,0.3) 0%, var(--bg) 98%), url('${BACKDROP_URL + item.backdrop_path}')`;
       }
@@ -364,19 +406,20 @@
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.innerHTML = `
-          <img src="${IMG_URL + item.poster_path}" alt="${item.title || item.name}" loading="lazy">
+          <img src="${IMG_URL + item.poster_path}" alt="${item.title}" loading="lazy">
+          <div class="lang-badge">${item.original_language || 'EN'}</div>
           <div class="rating-badge">★ ${(item.vote_average || 0).toFixed(1)}</div>
           <div class="movie-info">
-            <div class="movie-title">${item.title || item.name}</div>
-            <div class="movie-year">${(item.release_date || item.first_air_date || '').split('-')[0]}</div>
+            <div class="movie-title">${item.title}</div>
+            <div class="movie-year">${(item.release_date || '').split('-')[0]}</div>
           </div>
         `;
-        card.addEventListener('click', () => openStreaming(item.id, currentType));
+        card.addEventListener('click', () => openStreaming(item.id));
         movieGrid.appendChild(card);
       });
     }
 
-    function openStreaming(id, type) {
+    function openStreaming(id) {
       activeMediaId = id;
       switchServer(1);
       videoModal.style.display = 'flex';
@@ -390,22 +433,16 @@
       if (!activeMediaId) return;
 
       if (serverNum === 1) {
-        videoPlayer.src = currentType === 'movie' 
-          ? `https://player.autoembed.cc/embed/movie/${activeMediaId}` 
-          : `https://player.autoembed.cc/embed/tv/${activeMediaId}/1/1`;
+        videoPlayer.src = `https://player.autoembed.cc/embed/movie/${activeMediaId}`;
       } else if (serverNum === 2) {
-        videoPlayer.src = currentType === 'movie' 
-          ? `https://vidsrc.to/embed/movie/${activeMediaId}` 
-          : `https://vidsrc.to/embed/tv/${activeMediaId}/1/1`;
+        videoPlayer.src = `https://vidsrc.to/embed/movie/${activeMediaId}`;
       } else if (serverNum === 3) {
-        videoPlayer.src = currentType === 'movie' 
-          ? `https://embed.smashystream.com/playere.php?tmdb=${activeMediaId}` 
-          : `https://embed.smashystream.com/playere.php?tmdb=${activeMediaId}&season=1&episode=1`;
+        videoPlayer.src = `https://embed.smashystream.com/playere.php?tmdb=${activeMediaId}`;
       }
     }
 
     heroPlayBtn.addEventListener('click', () => {
-      if (featuredMedia) openStreaming(featuredMedia.id, currentType);
+      if (featuredMedia) openStreaming(featuredMedia.id);
     });
 
     closeModal.addEventListener('click', () => {
@@ -420,18 +457,6 @@
       }
     });
 
-    document.getElementById('tabMovies').addEventListener('click', (e) => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      loadTrending('movie');
-    });
-
-    document.getElementById('tabSeries').addEventListener('click', (e) => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      loadTrending('tv');
-    });
-
     let searchTimer;
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimer);
@@ -439,16 +464,16 @@
       searchTimer = setTimeout(async () => {
         if (query) {
           sectionHeading.textContent = `Search results for "${query}"`;
-          const results = await fetchData(`/search/${currentType}?query=${encodeURIComponent(query)}`);
+          const results = await fetchData(`/search/movie?query=${encodeURIComponent(query)}`);
           renderList(results);
         } else {
-          loadTrending(currentType);
+          loadByLanguage('all', 'Trending All');
         }
       }, 400);
     });
 
-    // Start loading movies
-    loadTrending('movie');
+    // Default: All trending movies
+    loadByLanguage('all', 'Trending All');
   </script>
 </body>
 </html>
