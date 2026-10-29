@@ -1,1669 +1,396 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q BILL - Smart Billing & Inventory</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf Library for PDF Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Firebase App, Auth & Firestore CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .font-premium { font-family: 'Plus Jakarta Sans', sans-serif; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieBox Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: #141721;
+      --accent: #00d2ff;
+      --accent-glow: rgba(0, 210, 255, 0.4);
+      --text-main: #f0f3f8;
+      --text-muted: #8a99ad;
+      --star: #ffb703;
+    }
 
-        /* Premium Button Click Animation Effect */
-        button, a, input, select { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        button:active { transform: scale(0.96); filter: brightness(0.9); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+    }
 
-        @keyframes floatGlow {
-            0%, 100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.4)); }
-            50% { transform: translateY(-8px) scale(1.04); filter: drop-shadow(0 0 28px rgba(14, 165, 233, 0.8)); }
-        }
-        @keyframes loadProgress {
-            0% { width: 0%; }
-            50% { width: 70%; }
-            100% { width: 100%; }
-        }
-        @keyframes ringPulse {
-            0% { transform: scale(0.9); opacity: 0.7; }
-            100% { transform: scale(1.6); opacity: 0; }
-        }
-        .animate-float-glow { animation: floatGlow 2.2s ease-in-out infinite; }
-        .animate-progress { animation: loadProgress 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        .animate-ring { animation: ringPulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
+    /* Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      background: rgba(9, 10, 15, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+    .logo span { color: var(--accent); }
+    .search-bar {
+      background: #191c28;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      width: 280px;
+      transition: all 0.3s;
+    }
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      width: 100%;
+      font-size: 0.9rem;
+    }
 
-        @media print {
-            body * { visibility: hidden; }
-            #printable-invoice, #printable-invoice * { visibility: visible; }
-            #printable-invoice { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
-            .no-print { display: none !important; }
-        }
-    </style>
+    /* Hero Banner */
+    .hero {
+      position: relative;
+      height: 60vh;
+      min-height: 400px;
+      display: flex;
+      align-items: flex-end;
+      padding: 5%;
+      background: linear-gradient(180deg, rgba(9, 10, 15, 0.2) 0%, var(--bg) 98%), 
+                  url('https://image.tmdb.org/t/p/original/tElnmtQ6yszej5G9vAdtc49cBEg.jpg') center/cover no-drop;
+    }
+    .hero-content {
+      max-width: 600px;
+      z-index: 2;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: var(--accent);
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #050a14;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px var(--accent-glow);
+      transition: transform 0.2s;
+    }
+    .hero-btn:hover { transform: scale(1.05); }
+
+    /* Content Area */
+    main { padding: 30px 5%; }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      position: relative;
+      padding-left: 12px;
+    }
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15%;
+      height: 70%;
+      width: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Movie Grid */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+    .movie-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .movie-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 12px var(--accent-glow);
+    }
+    .movie-card img {
+      width: 100%;
+      height: 270px;
+      object-fit: cover;
+      display: block;
+    }
+    .rating-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(14, 16, 24, 0.85);
+      backdrop-filter: blur(5px);
+      color: var(--star);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .movie-info {
+      padding: 12px;
+    }
+    .movie-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .movie-year {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
+    /* Video Player Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 860px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 1.8rem;
+      color: #fff;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .player-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    .player-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body>
 
-<!-- ==========================================
-     0. ANIMATED SPLASH SCREEN
-=========================================== -->
-<div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-between p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 text-white transition-opacity duration-500">
-    <div></div>
-    <div class="flex flex-col items-center">
-        <div class="relative flex items-center justify-center mb-6">
-            <div class="w-28 h-28 rounded-3xl bg-sky-500/30 absolute animate-ring"></div>
-            <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center shadow-2xl animate-float-glow relative z-10 border border-white/20">
-                <svg class="w-14 h-14 text-white" viewBox="0 0 64 64" fill="none">
-                    <circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-                    <path d="M23 25H37M23 31H33" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M41 41L53 53" stroke="#BAE6FD" stroke-width="7" stroke-linecap="round"/>
-                    <circle cx="46" cy="18" r="4" fill="#38BDF8"/>
-                </svg>
-            </div>
-        </div>
-        <h1 class="text-4xl font-extrabold tracking-wider bg-gradient-to-r from-white via-sky-200 to-cyan-400 bg-clip-text text-transparent">
-            Q BILL
-        </h1>
-        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400 mt-2">
-            Smart GST Billing & Inventory
-        </p>
-        <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-8 border border-slate-700">
-            <div class="h-full bg-gradient-to-r from-sky-500 to-cyan-300 rounded-full animate-progress"></div>
-        </div>
+  <header>
+    <div class="logo">Movie<span>Box</span></div>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search movies, series...">
     </div>
-    <div class="text-center">
-        <p class="text-xs text-slate-400">⚡ Powered by Firebase Cloud Sync</p>
+  </header>
+
+  <section class="hero" id="heroBanner">
+    <div class="hero-content">
+      <div class="hero-badge">FEATURED</div>
+      <h1 id="heroTitle">Featured Movie</h1>
+      <p id="heroDesc">Explore high-quality movies and trending series right now.</p>
+      <button class="hero-btn" id="heroPlayBtn">▶ Play Now</button>
     </div>
-</div>
+  </section>
 
-<!-- ==========================================
-     1. LOGIN / SIGNUP SCREEN
-=========================================== -->
-<div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
-        <div class="bg-gradient-to-r from-sky-600 to-cyan-600 p-6 text-center text-white">
-            <div class="w-16 h-16 bg-white/15 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner border border-white/20">
-                <svg class="w-10 h-10 text-white" viewBox="0 0 64 64" fill="none">
-                    <circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="6"/>
-                    <path d="M23 25H37M23 31H33" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M41 41L53 53" stroke="#BAE6FD" stroke-width="7" stroke-linecap="round"/>
-                    <circle cx="46" cy="18" r="4" fill="#38BDF8"/>
-                </svg>
-            </div>
-            <h1 class="text-2xl font-extrabold tracking-wide">Q BILL</h1>
-            <p class="text-xs text-sky-100 mt-1">Firebase Cloud Sync Active</p>
-        </div>
-        <div class="p-6">
-            <div class="flex rounded-lg bg-slate-100 p-1 mb-6">
-                <button type="button" onclick="toggleAuthMode('login')" id="tab-login" class="flex-1 py-2 text-sm font-bold rounded-md bg-white text-sky-700 shadow-sm transition">Login</button>
-                <button type="button" onclick="toggleAuthMode('signup')" id="tab-signup" class="flex-1 py-2 text-sm font-bold rounded-md text-slate-500 hover:text-slate-700 transition">Create Account</button>
-            </div>
+  <main>
+    <div class="section-title" id="sectionHeading">Popular Movies</div>
+    <div class="movie-grid" id="movieGrid"></div>
+  </main>
 
-            <form onsubmit="handleAuth(event)" class="space-y-4">
-                <div id="business-name-field" class="hidden">
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Business / Shop Name</label>
-                    <input type="text" id="auth-business" placeholder="e.g. My Store" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Email Address</label>
-                    <input type="email" id="auth-email" required placeholder="yourname@gmail.com" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Password</label>
-                    <input type="password" id="auth-password" required minlength="6" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-sky-500">
-                </div>
-                <div id="auth-error" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200 font-medium"></div>
-                <button type="submit" id="auth-submit-btn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-                    <span>Login to Q BILL</span>
-                </button>
-            </form>
-        </div>
+  <div class="modal" id="videoModal">
+    <div class="modal-content">
+      <span class="modal-close" id="closeModal">&times;</span>
+      <div class="player-wrapper">
+        <iframe id="videoPlayer" src="" allowfullscreen></iframe>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- ==========================================
-     2. MAIN APPLICATION SCREEN
-=========================================== -->
-<div id="app-screen" class="hidden flex h-screen overflow-hidden relative">
-    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+  <script>
+    // TMDB API credentials (themoviedb.org-ൽ നിന്ന് ഫ്രീയായി ലഭിക്കുന്നത്)
+    const API_KEY = "830c25ad27c9cbe778b7d903aa51e605"; // ഡെമോ API കീ
+    const BASE_URL = "https://api.themoviedb.org/3";
+    const IMG_URL = "https://image.tmdb.org/t/p/w500";
+    const BACKDROP_URL = "https://image.tmdb.org/t/p/original";
 
-    <!-- LEFT SIDEBAR -->
-    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out">
-        <div class="p-5 flex items-center justify-between border-b border-slate-800">
-            <div class="flex items-center gap-3 overflow-hidden">
-                <div class="bg-gradient-to-tr from-sky-600 to-cyan-400 text-white p-2 rounded-xl font-bold flex-shrink-0 shadow">
-                    <svg class="w-6 h-6" viewBox="0 0 64 64" fill="none">
-                        <circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="6"/>
-                        <path d="M23 25H37M23 31H33" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M41 41L53 53" stroke="#BAE6FD" stroke-width="7" stroke-linecap="round"/>
-                        <circle cx="46" cy="18" r="4" fill="#38BDF8"/>
-                    </svg>
-                </div>
-                <div class="overflow-hidden">
-                    <h1 id="sidebar-shop-name" class="font-extrabold text-base leading-none truncate tracking-wide">Q BILL</h1>
-                    <span id="sidebar-user-email" class="text-[11px] text-sky-400 truncate block mt-1">user@email.com</span>
-                    <button onclick="updateCompanyName()" class="text-[10px] text-sky-300 hover:text-white underline block mt-1">✏️ Change Company Name</button>
-                </div>
-            </div>
-            <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div class="p-4">
-            <button onclick="switchTab('create-bill'); closeSidebarOnMobile();" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2.5 px-4 rounded-lg shadow flex items-center justify-center gap-2 transition text-sm">
-                <span>+ Create Sales Invoice</span>
-            </button>
-        </div>
-        <nav class="flex-1 px-3 space-y-1 overflow-y-auto text-sm">
-            <a href="#" onclick="switchTab('dashboard'); closeSidebarOnMobile();" id="nav-dashboard" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sky-600 text-white font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="#" onclick="switchTab('parties'); closeSidebarOnMobile();" id="nav-parties" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span>Parties (Customers)</span>
-            </a>
-            <a href="#" onclick="switchTab('inventory'); closeSidebarOnMobile();" id="nav-inventory" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span>Items (Inventory)</span>
-            </a>
-            <a href="#" onclick="switchTab('sales'); closeSidebarOnMobile();" id="nav-sales" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
-                <span>Sales Invoices</span>
-            </a>
-        </nav>
+    const movieGrid = document.getElementById('movieGrid');
+    const searchInput = document.getElementById('searchInput');
+    const heroBanner = document.getElementById('heroBanner');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDesc = document.getElementById('heroDesc');
+    const heroPlayBtn = document.getElementById('heroPlayBtn');
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const closeModal = document.getElementById('closeModal');
+    const sectionHeading = document.getElementById('sectionHeading');
+
+    let featuredMovieId = null;
+
+    // Fetch popular movies
+    async function loadMovies(url, isSearch = false) {
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
         
-        <div class="px-4 py-2 border-t border-slate-800 space-y-2">
-            <button onclick="exportDataJSON()" class="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition">
-                <span>💾 Backup Data (JSON)</span>
-            </button>
-            <label class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                <span>📂 Restore Data</span>
-                <input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden">
-            </label>
-        </div>
-
-        <div class="p-4 border-t border-slate-800 space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span id="sync-status">🟢 Firebase Synced</span>
-                <button onclick="forceCloudPull()" class="text-sky-400 hover:underline font-semibold">↻ Refresh</button>
-            </div>
-            <button onclick="handleLogout()" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-red-500 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                <span>Logout</span>
-            </button>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col overflow-hidden pb-16 lg:pb-0">
-        <!-- TOP HEADER -->
-        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-3 lg:px-6 flex-shrink-0">
-            <div class="flex items-center gap-2.5">
-                <button onclick="toggleSidebar()" class="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-extrabold text-sm shadow-sm">Q</div>
-                    <div>
-                        <h2 id="page-title" class="text-sm lg:text-lg font-extrabold text-slate-800 truncate leading-tight">Q BILL Dashboard</h2>
-                        <span id="header-sync-badge" class="text-[10px] text-sky-600 font-semibold block">☁️ Firebase Synced</span>
-                    </div>
-                </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-                <button onclick="forceCloudPull()" title="Sync Now" class="bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold">↻ Sync</button>
-                <button onclick="switchTab('create-bill')" class="bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 px-2.5 py-1.5 rounded-lg text-xs font-bold">⚡ POS</button>
-                <button onclick="handleLogout()" class="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    <span>Logout</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- DYNAMIC VIEWS -->
-        <main class="flex-1 overflow-y-auto p-3.5 lg:p-6">
-
-            <!-- 1. DASHBOARD VIEW -->
-            <div id="view-dashboard" class="space-y-4">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-center mb-3 gap-2">
-                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quick Actions</h3>
-                        <span id="welcome-badge" class="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full truncate max-w-[180px]"></span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 sm:gap-4 text-center">
-                        <button onclick="switchTab('create-bill')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition">
-                            <div class="w-11 h-11 rounded-full bg-sky-600 text-white flex items-center justify-center mb-1.5 shadow-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></div>
-                            <span class="text-xs font-bold leading-tight">New Bill</span>
-                        </button>
-                        <button onclick="switchTab('inventory')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition">
-                            <div class="w-11 h-11 rounded-full bg-slate-800 text-white flex items-center justify-center mb-1.5 shadow-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
-                            <span class="text-xs font-bold leading-tight">Inventory</span>
-                        </button>
-                        <button onclick="switchTab('parties')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 transition">
-                            <div class="w-11 h-11 rounded-full bg-rose-600 text-white flex items-center justify-center mb-1.5 shadow-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-                            <span class="text-xs font-bold leading-tight">Parties</span>
-                        </button>
-                        <button onclick="switchTab('sales')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition">
-                            <div class="w-11 h-11 rounded-full bg-amber-500 text-white flex items-center justify-center mb-1.5 shadow-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
-                            <span class="text-xs font-bold leading-tight">All Bills</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
-                    <div onclick="switchTab('sales')" class="cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-sky-400 transition">
-                        <div class="flex justify-between items-center text-slate-500 text-xs mb-1"><span>Total Sales</span><span class="text-sky-600 font-bold">↗</span></div>
-                        <div class="text-xl lg:text-2xl font-bold text-slate-800" id="dash-total-sales">₹ 0</div>
-                        <span class="text-[11px] text-sky-600 font-medium">This Month</span>
-                    </div>
-                    <div onclick="switchTab('parties')" class="cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-sky-400 transition">
-                        <div class="flex justify-between items-center text-slate-500 text-xs mb-1"><span>To Collect</span><span class="text-sky-600 font-bold">↓</span></div>
-                        <div class="text-xl lg:text-2xl font-bold text-sky-600" id="dash-to-collect">₹ 0</div>
-                        <span class="text-[11px] text-slate-400">From Parties</span>
-                    </div>
-                    <div onclick="switchTab('parties')" class="cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-rose-400 transition">
-                        <div class="flex justify-between items-center text-slate-500 text-xs mb-1"><span>To Pay</span><span class="text-rose-500 font-bold">↑</span></div>
-                        <div class="text-xl lg:text-2xl font-bold text-rose-600">₹ 0</div>
-                        <span class="text-[11px] text-slate-400">To Vendors</span>
-                    </div>
-                    <div onclick="switchTab('inventory')" class="cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-amber-400 transition">
-                        <div class="flex justify-between items-center text-slate-500 text-xs mb-1"><span>Stock Value</span><span class="text-amber-500 font-bold">📦</span></div>
-                        <div class="text-xl lg:text-2xl font-bold text-slate-800" id="dash-stock-value">₹ 0</div>
-                        <span class="text-[11px] text-amber-600 font-medium" id="dash-item-count">0 Items</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
-                            <h3 class="font-bold text-slate-800 text-sm lg:text-base">Recent Sales Invoices</h3>
-                            <button onclick="switchTab('create-bill')" class="text-xs text-sky-600 font-bold hover:underline">+ New Invoice</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs lg:text-sm">
-                                <thead class="bg-slate-50 text-slate-500 border-b">
-                                    <tr>
-                                        <th class="p-3">Invoice</th>
-                                        <th class="p-3">Customer</th>
-                                        <th class="p-3">Amount</th>
-                                        <th class="p-3">Mode</th>
-                                        <th class="p-3 text-right">PDF Share</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dash-recent-invoices" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
-                            <h3 class="font-bold text-slate-800 text-sm lg:text-base">⚠️ Stock Summary</h3>
-                            <button onclick="switchTab('inventory')" class="text-xs text-sky-600 font-bold hover:underline">Manage Stock</button>
-                        </div>
-                        <div class="p-4 space-y-3" id="dash-stock-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. INVENTORY VIEW -->
-            <div id="view-inventory" class="hidden space-y-4">
-                <button onclick="switchTab('dashboard')" class="text-xs font-bold text-slate-700 bg-white border px-3 py-2 rounded-lg shadow-sm">← Back to Dashboard</button>
-                <div class="bg-white p-4 lg:p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 mb-3 text-sm lg:text-base">Add New Item to Inventory</h3>
-                    <form onsubmit="addItem(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <input type="text" id="item-name" placeholder="Item Name (e.g. Rice 5Kg)" required class="border p-2.5 rounded-lg text-sm md:col-span-2">
-                        <input type="text" id="item-hsn" placeholder="HSN Code" class="border p-2.5 rounded-lg text-sm">
-                        <input type="number" id="item-price" placeholder="Sale Price (₹)" required class="border p-2.5 rounded-lg text-sm">
-                        <input type="number" id="item-stock" placeholder="Opening Stock" required class="border p-2.5 rounded-lg text-sm">
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-lg text-sm md:col-span-5">+ Save Item to Inventory</button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800 text-sm lg:text-base">All Items in Stock</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs lg:text-sm">
-                            <thead class="bg-slate-50 text-slate-500 border-b">
-                                <tr>
-                                    <th class="p-3">Item Name</th>
-                                    <th class="p-3">Price</th>
-                                    <th class="p-3">Stock</th>
-                                    <th class="p-3">Value</th>
-                                    <th class="p-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. PARTIES VIEW -->
-            <div id="view-parties" class="hidden space-y-4">
-                <button onclick="switchTab('dashboard')" class="text-xs font-bold text-slate-700 bg-white border px-3 py-2 rounded-lg shadow-sm">← Back to Dashboard</button>
-                <div class="bg-white p-4 lg:p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-slate-800 mb-3 text-sm lg:text-base">Add New Party / Customer</h3>
-                    <form onsubmit="addParty(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input type="text" id="party-name" placeholder="Customer / Party Name" required class="border p-2.5 rounded-lg text-sm">
-                        <input type="tel" id="party-phone" placeholder="WhatsApp / Mobile Number" required class="border p-2.5 rounded-lg text-sm">
-                        <input type="text" id="party-gst" placeholder="GSTIN (Optional)" class="border p-2.5 rounded-lg text-sm">
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 px-4 rounded-lg text-sm">+ Save Party</button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs lg:text-sm">
-                            <thead class="bg-slate-50 text-slate-500 border-b">
-                                <tr>
-                                    <th class="p-3">Party Name</th>
-                                    <th class="p-3">Mobile</th>
-                                    <th class="p-3">GSTIN</th>
-                                    <th class="p-3">Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody id="parties-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. CREATE BILL VIEW (With Custom Item Entry & Templates & Notes) -->
-            <div id="view-create-bill" class="hidden space-y-4">
-                <div class="no-print">
-                    <button onclick="switchTab('dashboard')" class="text-xs font-bold text-slate-700 bg-white border px-3 py-2 rounded-lg shadow-sm">← Back to Dashboard</button>
-                </div>
-
-                <div class="no-print bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Customer, Template & Bill Control</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Customer Name</label>
-                            <input type="text" id="bill-customer-name" list="party-suggestions" oninput="autoFillPartyPhone()" placeholder="Enter Customer Name..." class="w-full border border-slate-300 p-2.5 rounded-lg text-sm bg-slate-50 font-medium">
-                            <datalist id="party-suggestions"></datalist>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">WhatsApp / Mobile No</label>
-                            <input type="tel" id="bill-customer-phone" placeholder="e.g. 9847012345" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm bg-slate-50 font-medium">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Payment Mode</label>
-                            <select id="bill-payment-mode" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm bg-slate-50 font-medium">
-                                <option value="UPI / GPay">UPI / GPay</option>
-                                <option value="Cash">Cash</option>
-                                <option value="Credit">Credit (Unpaid)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bill Type</label>
-                            <select id="bill-gst-type" onchange="renderBillTable()" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm bg-slate-50 font-medium">
-                                <option value="18" selected>GST Bill (18%)</option>
-                                <option value="5">GST Bill (5%)</option>
-                                <option value="12">GST Bill (12%)</option>
-                                <option value="28">GST Bill (28%)</option>
-                                <option value="0">0% Non-GST Bill</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Design Template</label>
-                            <select id="bill-template-select" onchange="renderBillTable()" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm bg-slate-50 font-medium">
-                                <option value="1" selected>Template 1: Modern Sky</option>
-                                <option value="2">Template 2: Minimalist Clean</option>
-                                <option value="3">Template 3: Corporate Dark</option>
-                                <option value="4">Template 4: Classic Bordered</option>
-                                <option value="5">Template 5: Compact POS</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Extra Charge Name (Optional)</label>
-                            <input type="text" id="bill-extra-name" oninput="renderBillTable()" placeholder="e.g. Delivery / Packing" class="w-full border border-slate-300 p-2 rounded-lg text-sm bg-white font-medium">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Extra Charge Amount (₹)</label>
-                            <input type="number" id="bill-extra-amount" value="0" min="0" oninput="renderBillTable()" class="w-full border border-slate-300 p-2 rounded-lg text-sm bg-white font-medium">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Bill Notes / Terms (Optional)</label>
-                            <input type="text" id="bill-notes" oninput="renderBillTable()" placeholder="e.g. Thanks for shopping!" class="w-full border border-slate-300 p-2 rounded-lg text-sm bg-white font-medium">
-                        </div>
-                    </div>
-
-                    <!-- Inventory Item Selection Box -->
-                    <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 grid grid-cols-1 md:grid-cols-4 gap-2.5">
-                        <select id="bill-item-select" class="border p-2.5 rounded-lg bg-white text-sm md:col-span-2 font-medium"></select>
-                        <input type="number" id="bill-item-qty" value="1" min="1" placeholder="Qty" class="border p-2.5 rounded-lg bg-white text-sm">
-                        <button onclick="addItemToBill()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-sm py-2.5 shadow-sm">+ Add Inventory Item</button>
-                    </div>
-
-                    <!-- Custom / Manual Item Entry Box (Without Tax/GST) -->
-                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 grid grid-cols-1 md:grid-cols-4 gap-2.5">
-                        <input type="text" id="custom-item-name" placeholder="Custom Item Name..." class="border p-2.5 rounded-lg bg-white text-sm md:col-span-2 font-medium">
-                        <input type="number" id="custom-item-price" min="1" placeholder="Price (₹)" class="border p-2.5 rounded-lg bg-white text-sm">
-                        <button onclick="addCustomItemToBill()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-sm py-2.5 shadow-sm">+ Add Custom Item</button>
-                    </div>
-                </div>
-
-                <!-- 5 DESIGN TEMPLATES CONTAINER -->
-                <div id="printable-invoice" class="bg-white p-8 rounded-3xl border border-sky-100 shadow-2xl max-w-2xl mx-auto space-y-6 text-slate-900 relative overflow-hidden transition-all">
-                    
-                    <div id="tpl-top-bar" class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-sky-600 via-cyan-400 to-sky-700"></div>
-
-                    <div class="pt-2 flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <div id="tpl-logo-box" class="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center font-black text-sm">Q</div>
-                                <span id="invoice-title-badge" class="font-premium text-xs font-bold tracking-widest text-sky-700 uppercase">OFFICIAL TAX INVOICE</span>
-                            </div>
-                            <h2 id="invoice-shop-name" class="font-premium text-2xl font-black text-slate-900 tracking-tight">Q BILL STORE</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Professional Business Solutions</p>
-                        </div>
-                        <div id="tpl-inv-box" class="text-right space-y-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                            <div class="text-xs font-bold text-slate-400 uppercase">Invoice No</div>
-                            <div id="inv-number" class="text-sm font-black text-sky-700">#QB-1001</div>
-                            <div class="text-[11px] text-slate-500">Date: <span id="inv-date"></span></div>
-                        </div>
-                    </div>
-
-                    <div id="tpl-cust-box" class="grid grid-cols-2 gap-4 bg-sky-50/40 border border-sky-100 p-4 rounded-2xl text-xs">
-                        <div>
-                            <span id="tpl-billed-label" class="text-sky-700 uppercase font-bold tracking-wider block mb-1 text-[10px]">Billed To:</span>
-                            <span id="preview-cust-name" class="font-extrabold text-slate-900 text-sm">Walk-in Customer</span>
-                            <div id="preview-cust-phone" class="text-slate-600 mt-0.5 font-medium"></div>
-                        </div>
-                        <div class="text-right">
-                            <span id="tpl-pay-label" class="text-sky-700 uppercase font-bold tracking-wider block mb-1 text-[10px]">Payment Mode:</span>
-                            <span id="preview-pay-mode" class="font-extrabold text-slate-900 text-sm bg-sky-100 text-sky-800 px-2.5 py-1 rounded-lg inline-block">UPI / GPay</span>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr id="tpl-table-head-row" class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
-                                    <th class="py-3 px-3 rounded-l-xl">Item Description</th>
-                                    <th class="py-3 px-2">Price</th>
-                                    <th class="py-3 px-2">Qty</th>
-                                    <th id="table-head-tax" class="py-3 px-2">GST</th>
-                                    <th class="py-3 px-3 text-right rounded-r-xl">Total</th>
-                                    <th class="no-print"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="bill-items-body" class="divide-y divide-slate-100">
-                                <tr><td colspan="6" class="py-6 text-center text-slate-400 italic">No items added yet.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="flex justify-between items-end pt-2">
-                        <div id="invoice-notes-container" class="text-xs text-slate-600 italic max-w-xs hidden">
-                            <span class="font-bold not-italic text-slate-700">Notes:</span> <span id="preview-bill-notes"></span>
-                        </div>
-                        <div class="w-72 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs ml-auto">
-                            <div class="flex justify-between text-slate-600">
-                                <span>Subtotal:</span>
-                                <span id="bill-subtotal" class="font-bold">₹ 0.00</span>
-                            </div>
-                            <div id="gst-summary-row" class="flex justify-between text-slate-600">
-                                <span id="gst-label-text">Total Tax (GST):</span>
-                                <span id="bill-gst" class="font-bold">₹ 0.00</span>
-                            </div>
-                            <div id="extra-charge-row" class="flex justify-between text-slate-600 hidden">
-                                <span id="preview-extra-name">Extra Charge:</span>
-                                <span id="preview-extra-amt" class="font-bold">₹ 0.00</span>
-                            </div>
-                            <div class="flex justify-between font-premium text-base font-black text-slate-900 border-t border-slate-200 pt-2">
-                                <span>Grand Total:</span>
-                                <span id="bill-grand-total" class="text-sky-700 text-lg">₹ 0.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-slate-100 pt-4 flex justify-between items-end text-[11px] text-slate-400">
-                        <div>
-                            <p class="font-bold text-slate-700">Thank you for your business!</p>
-                            <p class="mt-0.5">Computer Generated Executive Invoice</p>
-                        </div>
-                        <div class="text-right">
-                            <div class="h-8"></div>
-                            <p class="border-t border-slate-300 pt-1 px-4 font-bold text-slate-600">Authorized Signatory</p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 no-print">
-                    <button onclick="saveAndShareInvoice()" class="bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771z"/></svg>
-                        <span>Save & WhatsApp PDF Share</span>
-                    </button>
-                    <button onclick="saveInvoice()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow">✓ Save Bill</button>
-                </div>
-            </div>
-
-            <!-- 5. ALL SALES INVOICES VIEW -->
-            <div id="view-sales" class="hidden space-y-4">
-                <div class="flex justify-between items-center">
-                    <button onclick="switchTab('dashboard')" class="text-xs font-bold text-slate-700 bg-white border px-3 py-2 rounded-lg shadow-sm">← Back to Dashboard</button>
-                    <button onclick="switchTab('create-bill')" class="bg-sky-600 text-white px-3 py-2 rounded-lg text-xs font-bold">+ Create New Invoice</button>
-                </div>
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800 text-sm lg:text-base">All Q BILL Sales Invoices</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs lg:text-sm">
-                            <thead class="bg-slate-50 text-slate-500 border-b">
-                                <tr>
-                                    <th class="p-3">Date</th>
-                                    <th class="p-3">Invoice</th>
-                                    <th class="p-3">Customer</th>
-                                    <th class="p-3">Amount</th>
-                                    <th class="p-3">Mode</th>
-                                    <th class="p-3 text-right">PDF WhatsApp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="all-sales-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <!-- MOBILE BOTTOM NAVIGATION BAR -->
-        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-20 shadow-lg">
-            <button onclick="switchTab('dashboard')" id="bnav-dashboard" class="bnav-item flex flex-col items-center justify-center text-sky-600 w-full h-full">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                <span class="text-[10px] font-bold mt-1">Home</span>
-            </button>
-            <button onclick="switchTab('parties')" id="bnav-parties" class="bnav-item flex flex-col items-center justify-center text-slate-400 w-full h-full">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span class="text-[10px] font-bold mt-1">Parties</span>
-            </button>
-            <button onclick="switchTab('create-bill')" class="flex flex-col items-center justify-center w-full h-full">
-                <div class="w-12 h-12 rounded-full bg-sky-600 text-white flex items-center justify-center shadow-md -mt-5 border-4 border-slate-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                </div>
-                <span class="text-[10px] font-bold text-sky-700 mt-0.5">New Bill</span>
-            </button>
-            <button onclick="switchTab('inventory')" id="bnav-inventory" class="bnav-item flex flex-col items-center justify-center text-slate-400 w-full h-full">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span class="text-[10px] font-bold mt-1">Items</span>
-            </button>
-            <button onclick="switchTab('sales')" id="bnav-sales" class="bnav-item flex flex-col items-center justify-center text-slate-400 w-full h-full">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span class="text-[10px] font-bold mt-1">Bills</span>
-            </button>
-        </nav>
-    </div>
-</div>
-
-<!-- ==========================================
-     3. FIREBASE & LOGIC
-=========================================== -->
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBsE4hjNmfz1BFIwxaFZPnoe7qiWZrhWsA",
-        authDomain: "qbill-c1a68.firebaseapp.com",
-        projectId: "qbill-c1a68",
-        storageBucket: "qbill-c1a68.firebasestorage.app",
-        messagingSenderId: "565987924157",
-        appId: "1:565987924157:web:dd34a6d7a3d56003b1ffd4"
-    };
-
-    let db = null;
-    let auth = null;
-
-    function initFirebase() {
-        if (!db) {
-            try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-                db = firebase.firestore();
-                auth = firebase.auth();
-            } catch (err) {
-                console.error("Firebase init error:", err);
-                return false;
-            }
+        if (data.results && data.results.length > 0) {
+          if (!isSearch) {
+            setupHero(data.results[0]);
+          }
+          displayMovies(data.results);
+        } else {
+          movieGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No movies found.</p>`;
         }
-        return true;
+      } catch (err) {
+        console.error("API Error: ", err);
+      }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        initFirebase();
+    function setupHero(movie) {
+      featuredMovieId = movie.id;
+      heroTitle.textContent = movie.title;
+      heroDesc.textContent = movie.overview || "No description available.";
+      if (movie.backdrop_path) {
+        heroBanner.style.backgroundImage = `linear-gradient(180deg, rgba(9, 10, 15, 0.2) 0%, var(--bg) 98%), url('${BACKDROP_URL + movie.backdrop_path}')`;
+      }
+    }
+
+    function displayMovies(movies) {
+      movieGrid.innerHTML = '';
+      movies.forEach(movie => {
+        if (!movie.poster_path) return;
+
+        const card = document.createElement('div');
+        card.classList.add('movie-card');
+        card.innerHTML = `
+          <img src="${IMG_URL + movie.poster_path}" alt="${movie.title}" loading="lazy">
+          <div class="rating-badge">★ ${(movie.vote_average || 0).toFixed(1)}</div>
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-year">${(movie.release_date || '').split('-')[0]}</div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => openStream(movie.id));
+        movieGrid.appendChild(card);
+      });
+    }
+
+    // Embed player ലോഡ് ചെയ്യൽ
+    function openStream(tmdbId) {
+      // Third-party embed API വഴി TMDB ID വെച്ച് പ്ലെയർ കണക്റ്റ് ചെയ്യുന്നു
+      videoPlayer.src = `https://vidsrc.to/embed/movie/${tmdbId}`;
+      videoModal.style.display = 'flex';
+    }
+
+    heroPlayBtn.addEventListener('click', () => {
+      if (featuredMovieId) openStream(featuredMovieId);
     });
 
-    let currentUser = null;
-    let authMode = 'login';
-
-    let inventory = [];
-    let parties = [];
-    let invoices = [];
-    let currentBillItems = [];
-    let invoiceCounter = 1001;
-
-    function getCleanKey(email) {
-        return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
-    }
-
-    function isAndroidBillingApp() {
-        return typeof QBILLApp !== 'undefined' && typeof QBILLApp.saveAndSharePDF === 'function';
-    }
-
-    // Company Name Change Function
-    async function updateCompanyName() {
-        if (!currentUser) return;
-        const newName = prompt("Enter new Company / Shop Name:", currentUser.businessName);
-        if (newName && newName.trim() !== "") {
-            currentUser.businessName = newName.trim();
-            document.getElementById('sidebar-shop-name').innerText = currentUser.businessName;
-            document.getElementById('invoice-shop-name').innerText = currentUser.businessName;
-            localStorage.setItem('sb_active_session', JSON.stringify(currentUser));
-            await saveDataToFirestore();
-            alert("Company Name Updated Successfully!");
-        }
-    }
-
-    function toggleAuthMode(mode) {
-        authMode = mode;
-        const loginTab = document.getElementById('tab-login');
-        const signupTab = document.getElementById('tab-signup');
-        const bizField = document.getElementById('business-name-field');
-        const submitBtn = document.getElementById('auth-submit-btn');
-        document.getElementById('auth-error').classList.add('hidden');
-
-        if (mode === 'signup') {
-            signupTab.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white text-sky-700 shadow-sm transition";
-            loginTab.className = "flex-1 py-2 text-sm font-bold rounded-md text-slate-500 hover:text-slate-700 transition";
-            bizField.classList.remove('hidden');
-            submitBtn.innerHTML = `<span>Create Q BILL Account</span>`;
-        } else {
-            loginTab.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white text-sky-700 shadow-sm transition";
-            signupTab.className = "flex-1 py-2 text-sm font-bold rounded-md text-slate-500 hover:text-slate-700 transition";
-            bizField.classList.add('hidden');
-            submitBtn.innerHTML = `<span>Login to Q BILL</span>`;
-        }
-    }
-
-    async function handleAuth(e) {
-        e.preventDefault();
-        if (!initFirebase()) {
-            alert("Firebase initialization failed!");
-            return;
-        }
-
-        const email = document.getElementById('auth-email').value.trim().toLowerCase();
-        const password = document.getElementById('auth-password').value;
-        const businessName = document.getElementById('auth-business').value.trim() || "My Store";
-        const errBox = document.getElementById('auth-error');
-        const submitBtn = document.getElementById('auth-submit-btn');
-
-        errBox.classList.add('hidden');
-        submitBtn.innerText = "Processing Auth...";
-        submitBtn.disabled = true;
-
-        const docKey = getCleanKey(email);
-
-        try {
-            if (authMode === 'signup') {
-                try {
-                    await auth.createUserWithEmailAndPassword(email, password);
-                } catch (err) {
-                    if (err.code !== 'auth/email-already-in-use') throw err;
-                }
-                currentUser = { email, businessName };
-                inventory = [];
-                parties = [];
-                invoices = [];
-                invoiceCounter = 1001;
-                await saveDataToFirestore();
-            } else {
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                } catch (err) {
-                    throw new Error("Invalid Email or Password!");
-                }
-
-                const docSnap = await db.collection('qbill_users').doc(docKey).get();
-                if (docSnap.exists) {
-                    const cData = docSnap.data();
-                    currentUser = { email, businessName: cData.businessName || businessName };
-                    inventory = cData.inventory || [];
-                    parties = cData.parties || [];
-                    invoices = cData.invoices || [];
-                    invoiceCounter = cData.invoiceCounter || 1001;
-                } else {
-                    currentUser = { email, businessName };
-                    inventory = [];
-                    parties = [];
-                    invoices = [];
-                    invoiceCounter = 1001;
-                    await saveDataToFirestore();
-                }
-            }
-
-            localStorage.setItem('sb_active_session', JSON.stringify(currentUser));
-            enterApplication();
-
-        } catch (err) {
-            errBox.innerText = err.message || "Authentication failed!";
-            errBox.classList.remove('hidden');
-        } finally {
-            submitBtn.innerText = authMode === 'signup' ? "Create Q BILL Account" : "Login to Q BILL";
-            submitBtn.disabled = false;
-        }
-    }
-
-    async function saveDataToFirestore() {
-        if (!currentUser || !db) return;
-        const docKey = getCleanKey(currentUser.email);
-        const payload = {
-            email: currentUser.email,
-            businessName: currentUser.businessName,
-            inventory,
-            parties,
-            invoices,
-            invoiceCounter,
-            lastUpdated: Date.now()
-        };
-
-        try {
-            await db.collection('qbill_users').doc(docKey).set(payload, { merge: true });
-        } catch (e) {
-            console.error("Firestore save error:", e);
-        }
-    }
-
-    async function forceCloudPull() {
-        if (!currentUser || !db) return;
-        const docKey = getCleanKey(currentUser.email);
-        try {
-            const docSnap = await db.collection('qbill_users').doc(docKey).get();
-            if (docSnap.exists) {
-                const cData = docSnap.data();
-                inventory = cData.inventory || [];
-                parties = cData.parties || [];
-                invoices = cData.invoices || [];
-                invoiceCounter = cData.invoiceCounter || 1001;
-                if (cData.businessName) {
-                    currentUser.businessName = cData.businessName;
-                    document.getElementById('sidebar-shop-name').innerText = currentUser.businessName;
-                    document.getElementById('invoice-shop-name').innerText = currentUser.businessName;
-                }
-                renderAll();
-                alert("Data Synced from Firebase Successfully!");
-            }
-        } catch (e) {
-            alert("Sync failed. Check internet connection.");
-        }
-    }
-
-    function exportDataJSON() {
-        if (!currentUser) return;
-        const data = { email: currentUser.email, businessName: currentUser.businessName, inventory, parties, invoices, invoiceCounter };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `QBill_Backup_${currentUser.email.split('@')[0]}_${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    async function importDataJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (imported && imported.inventory && imported.invoices) {
-                    inventory = imported.inventory;
-                    parties = imported.parties || [];
-                    invoices = imported.invoices || [];
-                    invoiceCounter = imported.invoiceCounter || 1001;
-                    await saveDataToFirestore();
-                    renderAll();
-                    alert("Data Restored & Synced to Firebase!");
-                } else {
-                    alert("Invalid Backup File format!");
-                }
-            } catch (err) {
-                alert("Failed to parse JSON file!");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function enterApplication() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app-screen').classList.remove('hidden');
-
-        document.getElementById('sidebar-shop-name').innerText = currentUser.businessName || "Q BILL";
-        document.getElementById('invoice-shop-name').innerText = currentUser.businessName || "Q BILL";
-        document.getElementById('sidebar-user-email').innerText = currentUser.email;
-        document.getElementById('welcome-badge').innerText = currentUser.email;
-
-        switchTab('dashboard');
-    }
-
-    async function handleLogout() {
-        if (!confirm("Are you sure you want to Logout from Q BILL?")) return;
-        if (auth) await auth.signOut();
-        localStorage.removeItem('sb_active_session');
-        currentUser = null;
-
-        document.getElementById('app-screen').classList.add('hidden');
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('auth-password').value = '';
-    }
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        document.getElementById('sidebar-backdrop').classList.toggle('hidden');
-    }
-
-    function closeSidebarOnMobile() {
-        if (window.innerWidth < 1024) {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
-        }
-    }
-
-    function switchTab(tabId) {
-        const views = ['dashboard', 'inventory', 'parties', 'create-bill', 'sales'];
-        views.forEach(v => document.getElementById('view-' + v).classList.add('hidden'));
-        document.getElementById('view-' + tabId).classList.remove('hidden');
-
-        document.querySelectorAll('.nav-item').forEach(el => {
-            el.classList.remove('bg-sky-600', 'text-white');
-            el.classList.add('text-slate-300');
-        });
-        const activeNav = document.getElementById('nav-' + tabId);
-        if (activeNav) {
-            activeNav.classList.add('bg-sky-600', 'text-white');
-            activeNav.classList.remove('text-slate-300');
-        }
-
-        document.querySelectorAll('.bnav-item').forEach(el => {
-            el.classList.remove('text-sky-600');
-            el.classList.add('text-slate-400');
-        });
-        const activeBnav = document.getElementById('bnav-' + tabId);
-        if (activeBnav) {
-            activeBnav.classList.add('text-sky-600');
-            activeBnav.classList.remove('text-slate-400');
-        }
-
-        const titles = {
-            'dashboard': 'Q BILL Dashboard',
-            'inventory': 'Inventory Items',
-            'parties': 'Parties & Customers',
-            'create-bill': 'Create GST Invoice',
-            'sales': 'Sales Invoices'
-        };
-        document.getElementById('page-title').innerText = titles[tabId];
-        renderAll();
-    }
-
-    function autoFillPartyPhone() {
-        const typedName = document.getElementById('bill-customer-name').value.trim();
-        document.getElementById('preview-cust-name').innerText = typedName || "Walk-in Customer";
-        
-        const matched = parties.find(p => p.name.toLowerCase() === typedName.toLowerCase());
-        if (matched && matched.phone && matched.phone !== "0000000000") {
-            document.getElementById('bill-customer-phone').value = matched.phone;
-            document.getElementById('preview-cust-phone').innerText = "Ph: " + matched.phone;
-        } else {
-            const phoneVal = document.getElementById('bill-customer-phone').value.trim();
-            document.getElementById('preview-cust-phone').innerText = phoneVal ? "Ph: " + phoneVal : "";
-        }
-    }
-
-    document.addEventListener('input', () => {
-        const name = document.getElementById('bill-customer-name').value.trim();
-        const phone = document.getElementById('bill-customer-phone').value.trim();
-        const mode = document.getElementById('bill-payment-mode').value;
-
-        document.getElementById('preview-cust-name').innerText = name || "Walk-in Customer";
-        document.getElementById('preview-cust-phone').innerText = phone ? "Ph: " + phone : "";
-        document.getElementById('preview-pay-mode').innerText = mode;
+    closeModal.addEventListener('click', () => {
+      videoModal.style.display = 'none';
+      videoPlayer.src = '';
     });
 
-    document.getElementById('bill-payment-mode')?.addEventListener('change', (e) => {
-        document.getElementById('preview-pay-mode').innerText = e.target.value;
+    // Modal പുറത്ത് ക്ലിക്ക് ചെയ്താൽ ക്ലോസ് ആവാൻ
+    window.addEventListener('click', (e) => {
+      if (e.target === videoModal) {
+        videoModal.style.display = 'none';
+        videoPlayer.src = '';
+      }
     });
 
-    // Inventory Add
-    async function addItem(e) {
-        e.preventDefault();
-        const name = document.getElementById('item-name').value;
-        const hsn = document.getElementById('item-hsn').value || "-";
-        const price = parseFloat(document.getElementById('item-price').value);
-        const stock = parseInt(document.getElementById('item-stock').value);
+    // Real-time search handler
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
 
-        inventory.push({ id: Date.now(), name, hsn, price, stock });
-        e.target.reset();
-        renderAll();
-        await saveDataToFirestore();
-        alert("Item Saved & Synced to Firebase!");
-    }
-
-    async function deleteInventoryItem(id) {
-        if (!confirm("Are you sure you want to delete this item?")) return;
-        inventory = inventory.filter(item => item.id !== id);
-        renderAll();
-        await saveDataToFirestore();
-        alert("Item Deleted Successfully!");
-    }
-
-    async function addParty(e) {
-        e.preventDefault();
-        const name = document.getElementById('party-name').value;
-        const phone = document.getElementById('party-phone').value;
-        const gst = document.getElementById('party-gst').value || "-";
-
-        parties.push({ id: Date.now(), name, phone, gst, balance: 0 });
-        e.target.reset();
-        renderAll();
-        await saveDataToFirestore();
-        alert("Party Saved & Synced to Firebase!");
-    }
-
-    // Add inventory item to bill
-    function addItemToBill() {
-        const itemId = parseInt(document.getElementById('bill-item-select').value);
-        const qty = parseInt(document.getElementById('bill-item-qty').value);
-        const item = inventory.find(i => i.id === itemId);
-
-        if (!item || isNaN(itemId)) {
-            alert("Please select a valid item from inventory!");
-            return;
-        }
-        if (qty <= 0) {
-            alert("Please enter a valid quantity!");
-            return;
-        }
-        if (qty > item.stock) {
-            alert("Insufficient Stock! Available: " + item.stock);
-            return;
-        }
-
-        const existing = currentBillItems.find(i => i.id === itemId && !i.isCustom);
-        if (existing) {
-            existing.qty += qty;
+      searchTimeout = setTimeout(() => {
+        if (query) {
+          sectionHeading.textContent = `Search results for "${query}"`;
+          loadMovies(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`, true);
         } else {
-            currentBillItems.push({ ...item, qty, isCustom: false });
+          sectionHeading.textContent = "Popular Movies";
+          loadMovies(`${BASE_URL}/movie/popular?api_key=${API_KEY}`);
         }
-        renderBillTable();
-    }
-
-    // Add Custom manual item to bill (without tax/gst)
-    function addCustomItemToBill() {
-        const cName = document.getElementById('custom-item-name').value.trim();
-        const cPrice = parseFloat(document.getElementById('custom-item-price').value);
-
-        if (!cName) {
-            alert("Please enter a custom item name!");
-            return;
-        }
-        if (isNaN(cPrice) || cPrice <= 0) {
-            alert("Please enter a valid price!");
-            return;
-        }
-
-        currentBillItems.push({
-            id: 'cust_' + Date.now(),
-            name: cName,
-            price: cPrice,
-            qty: 1,
-            stock: 9999,
-            isCustom: true
-        });
-
-        document.getElementById('custom-item-name').value = '';
-        document.getElementById('custom-item-price').value = '';
-        renderBillTable();
-    }
-
-    function removeBillItem(index) {
-        currentBillItems.splice(index, 1);
-        renderBillTable();
-    }
-
-    // Apply 5 Design Templates dynamically
-    function applyTemplateStyles(tplId) {
-        const inv = document.getElementById('printable-invoice');
-        const topBar = document.getElementById('tpl-top-bar');
-        const logoBox = document.getElementById('tpl-logo-box');
-        const invBox = document.getElementById('tpl-inv-box');
-        const custBox = document.getElementById('tpl-cust-box');
-        const tableHead = document.getElementById('tpl-table-head-row');
-
-        inv.className = "bg-white p-8 max-w-2xl mx-auto space-y-6 text-slate-900 relative overflow-hidden transition-all shadow-2xl";
-        
-        if (tplId === '1') {
-            inv.classList.add('rounded-3xl', 'border', 'border-sky-100');
-            topBar.className = "absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-sky-600 via-cyan-400 to-sky-700";
-            logoBox.className = "w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center font-black text-sm";
-            invBox.className = "text-right space-y-1 bg-slate-50 p-3 rounded-2xl border border-slate-100";
-            custBox.className = "grid grid-cols-2 gap-4 bg-sky-50/40 border border-sky-100 p-4 rounded-2xl text-xs";
-            tableHead.className = "bg-slate-900 text-white text-[11px] uppercase tracking-wider";
-        } else if (tplId === '2') {
-            inv.classList.add('rounded-lg', 'border-2', 'border-slate-800');
-            topBar.className = "absolute top-0 left-0 right-0 h-1 bg-slate-800";
-            logoBox.className = "w-7 h-7 rounded-none bg-slate-900 text-white flex items-center justify-center font-black text-sm";
-            invBox.className = "text-right space-y-1 bg-white p-3 rounded-none border border-slate-300";
-            custBox.className = "grid grid-cols-2 gap-4 bg-slate-50 border border-slate-200 p-4 rounded-none text-xs";
-            tableHead.className = "bg-slate-800 text-white text-[11px] uppercase tracking-wider";
-        } else if (tplId === '3') {
-            inv.classList.add('rounded-2xl', 'border', 'border-slate-300');
-            topBar.className = "absolute top-0 left-0 right-0 h-3 bg-slate-900";
-            logoBox.className = "w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm";
-            invBox.className = "text-right space-y-1 bg-slate-900 text-white p-3 rounded-xl border border-slate-800";
-            custBox.className = "grid grid-cols-2 gap-4 bg-slate-100 border border-slate-200 p-4 rounded-xl text-xs";
-            tableHead.className = "bg-sky-700 text-white text-[11px] uppercase tracking-wider";
-        } else if (tplId === '4') {
-            inv.classList.add('rounded-xl', 'border-4', 'border-sky-600');
-            topBar.className = "absolute top-0 left-0 right-0 h-0 bg-transparent";
-            logoBox.className = "w-7 h-7 rounded-none bg-sky-700 text-white flex items-center justify-center font-black text-sm";
-            invBox.className = "text-right space-y-1 bg-sky-50 p-3 rounded-none border border-sky-200";
-            custBox.className = "grid grid-cols-2 gap-4 bg-white border border-sky-300 p-4 rounded-none text-xs";
-            tableHead.className = "bg-sky-600 text-white text-[11px] uppercase tracking-wider";
-        } else if (tplId === '5') {
-            inv.classList.add('rounded-none', 'border', 'border-dashed', 'border-slate-400', 'max-w-md');
-            topBar.className = "absolute top-0 left-0 right-0 h-1 bg-slate-400";
-            logoBox.className = "w-6 h-6 rounded-none bg-slate-800 text-white flex items-center justify-center font-black text-xs";
-            invBox.className = "text-right space-y-0.5 bg-transparent p-1 border-none text-xs";
-            custBox.className = "grid grid-cols-2 gap-2 bg-slate-50 border border-slate-200 p-2 rounded-none text-[11px]";
-            tableHead.className = "bg-slate-700 text-white text-[10px] uppercase tracking-wider";
-        }
-    }
-
-    function renderBillTable() {
-        const gstRate = parseFloat(document.getElementById('bill-gst-type').value) || 0;
-        const templateId = document.getElementById('bill-template-select').value || '1';
-        const notesVal = document.getElementById('bill-notes').value.trim();
-        
-        applyTemplateStyles(templateId);
-
-        const tbody = document.getElementById('bill-items-body');
-        tbody.innerHTML = '';
-        let subtotal = 0;
-        let totalGst = 0;
-
-        const gstSummaryRow = document.getElementById('gst-summary-row');
-        const tableHeadTax = document.getElementById('table-head-tax');
-        const invoiceTitleBadge = document.getElementById('invoice-title-badge');
-        const notesContainer = document.getElementById('invoice-notes-container');
-        const previewNotes = document.getElementById('preview-bill-notes');
-
-        if (notesVal !== "") {
-            notesContainer.classList.remove('hidden');
-            previewNotes.innerText = notesVal;
-        } else {
-            notesContainer.classList.add('hidden');
-        }
-
-        if (gstRate === 0) {
-            if (gstSummaryRow) gstSummaryRow.classList.add('hidden');
-            if (tableHeadTax) tableHeadTax.classList.add('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL INVOICE (NON-GST)";
-        } else {
-            if (gstSummaryRow) gstSummaryRow.classList.remove('hidden');
-            if (tableHeadTax) tableHeadTax.classList.remove('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL TAX INVOICE";
-        }
-
-        if (currentBillItems.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${gstRate === 0 ? 5 : 6}" class="py-6 text-center text-slate-400 italic">No items added yet.</td></tr>`;
-        } else {
-            currentBillItems.forEach((item, index) => {
-                const baseTotal = item.price * item.qty;
-                const appliedGst = item.isCustom ? 0 : gstRate;
-                const gstAmt = (baseTotal * appliedGst) / 100;
-                const finalTotal = baseTotal + gstAmt;
-
-                subtotal += baseTotal;
-                totalGst += gstAmt;
-
-                if (gstRate === 0 || item.isCustom) {
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 px-3 font-semibold text-slate-800">${item.name} ${item.isCustom ? '<span class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-1">Custom</span>' : ''}</td>
-                            <td class="py-3 px-2 text-slate-600">₹${item.price}</td>
-                            <td class="py-3 px-2 text-slate-600">${item.qty}</td>
-                            <td class="py-3 px-3 text-right font-bold text-slate-900">₹${finalTotal.toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right no-print">
-                                <button onclick="removeBillItem(${index})" class="text-rose-600 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50">✕</button>
-                            </td>
-                        </tr>
-                    `;
-                } else {
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 px-3 font-semibold text-slate-800">${item.name}</td>
-                            <td class="py-3 px-2 text-slate-600">₹${item.price}</td>
-                            <td class="py-3 px-2 text-slate-600">${item.qty}</td>
-                            <td class="py-3 px-2 text-slate-600">${appliedGst}%</td>
-                            <td class="py-3 px-3 text-right font-bold text-slate-900">₹${finalTotal.toFixed(2)}</td>
-                            <td class="py-3 px-2 text-right no-print">
-                                <button onclick="removeBillItem(${index})" class="text-rose-600 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50">✕</button>
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        const extraName = document.getElementById('bill-extra-name')?.value.trim() || "Extra Charge";
-        const extraAmt = parseFloat(document.getElementById('bill-extra-amount')?.value) || 0;
-
-        document.getElementById('bill-subtotal').innerText = `₹ ${subtotal.toFixed(2)}`;
-        if (gstRate > 0) {
-            document.getElementById('bill-gst').innerText = `₹ ${totalGst.toFixed(2)}`;
-        }
-
-        const extraRow = document.getElementById('extra-charge-row');
-        if (extraAmt > 0) {
-            extraRow.classList.remove('hidden');
-            document.getElementById('preview-extra-name').innerText = extraName + ":";
-            document.getElementById('preview-extra-amt').innerText = `₹ ${extraAmt.toFixed(2)}`;
-        } else {
-            extraRow.classList.add('hidden');
-        }
-
-        const grandTotal = subtotal + totalGst + extraAmt;
-        document.getElementById('bill-grand-total').innerText = `₹ ${grandTotal.toFixed(2)}`;
-    }
-
-    async function saveInvoice() {
-        if (currentBillItems.length === 0) {
-            alert("Please add at least one item to the bill before saving!");
-            return;
-        }
-
-        const partyName = document.getElementById('bill-customer-name').value.trim() || "Walk-in Customer";
-        const partyPhone = document.getElementById('bill-customer-phone').value.trim();
-        const mode = document.getElementById('bill-payment-mode').value;
-        const gstRate = parseFloat(document.getElementById('bill-gst-type').value) || 0;
-        const templateId = document.getElementById('bill-template-select').value || '1';
-        const notes = document.getElementById('bill-notes').value.trim();
-        const extraName = document.getElementById('bill-extra-name').value.trim() || "Extra Charge";
-        const extraAmt = parseFloat(document.getElementById('bill-extra-amount').value) || 0;
-
-        const invNo = "#QB-" + invoiceCounter++;
-        const today = new Date().toISOString().split('T')[0];
-
-        if (partyName !== "Walk-in Customer" && !parties.some(p => p.name.toLowerCase() === partyName.toLowerCase())) {
-            parties.push({ id: Date.now(), name: partyName, phone: partyPhone || "-", gst: "-", balance: 0 });
-        }
-
-        let subtotal = 0;
-        let totalGst = 0;
-        const savedItems = [];
-
-        currentBillItems.forEach(billItem => {
-            if (!billItem.isCustom) {
-                const invItem = inventory.find(i => i.id === billItem.id);
-                if (invItem) invItem.stock -= billItem.qty;
-            }
-
-            const base = billItem.price * billItem.qty;
-            const appliedGst = billItem.isCustom ? 0 : gstRate;
-            const gst = (base * appliedGst) / 100;
-            subtotal += base;
-            totalGst += gst;
-            savedItems.push({
-                name: billItem.name,
-                qty: billItem.qty,
-                price: billItem.price,
-                gst: appliedGst,
-                total: (base + gst).toFixed(2),
-                isCustom: !!billItem.isCustom
-            });
-        });
-
-        const grandTotal = subtotal + totalGst + extraAmt;
-
-        const newInvoice = {
-            invNo,
-            date: today,
-            party: partyName,
-            phone: partyPhone,
-            mode,
-            gstRate,
-            templateId,
-            notes,
-            subtotal: subtotal.toFixed(2),
-            gst: totalGst.toFixed(2),
-            extraName,
-            extraAmt: extraAmt.toFixed(2),
-            amount: Math.round(grandTotal),
-            grandTotal: grandTotal.toFixed(2),
-            items: savedItems
-        };
-
-        invoices.unshift(newInvoice);
-
-        currentBillItems = [];
-        document.getElementById('bill-customer-name').value = '';
-        document.getElementById('bill-customer-phone').value = '';
-        document.getElementById('bill-extra-name').value = '';
-        document.getElementById('bill-extra-amount').value = '0';
-        document.getElementById('bill-notes').value = '';
-        renderBillTable();
-        await saveDataToFirestore();
-        alert("Bill Saved Successfully!");
-        switchTab('dashboard');
-    }
-
-    async function saveAndShareInvoice() {
-        if (currentBillItems.length === 0) { alert("Please add at least one item!"); return; }
-        
-        const partyName = document.getElementById('bill-customer-name').value.trim() || "Walk-in Customer";
-        const partyPhone = document.getElementById('bill-customer-phone').value.trim();
-        const mode = document.getElementById('bill-payment-mode').value;
-        const gstRate = parseFloat(document.getElementById('bill-gst-type').value) || 0;
-        const templateId = document.getElementById('bill-template-select').value || '1';
-        const notes = document.getElementById('bill-notes').value.trim();
-        const extraName = document.getElementById('bill-extra-name').value.trim() || "Extra Charge";
-        const extraAmt = parseFloat(document.getElementById('bill-extra-amount').value) || 0;
-        const invNo = "#QB-" + invoiceCounter++;
-        const today = new Date().toISOString().split('T')[0];
-
-        if (partyName !== "Walk-in Customer" && !parties.some(p => p.name.toLowerCase() === partyName.toLowerCase())) {
-            parties.push({ id: Date.now(), name: partyName, phone: partyPhone || "-", gst: "-", balance: 0 });
-        }
-
-        let subtotal=0, totalGst=0; const savedItems=[];
-        currentBillItems.forEach(billItem => {
-            if (!billItem.isCustom) {
-                const invItem = inventory.find(i => i.id === billItem.id); if (invItem) invItem.stock -= billItem.qty;
-            }
-            const base = billItem.price * billItem.qty; 
-            const appliedGst = billItem.isCustom ? 0 : gstRate;
-            const gst = (base * appliedGst) / 100;
-            subtotal += base; totalGst += gst; 
-            savedItems.push({ name: billItem.name, qty: billItem.qty, price: billItem.price, gst: appliedGst, total: (base+gst).toFixed(2), isCustom: !!billItem.isCustom });
-        });
-
-        const grandTotal = subtotal + totalGst + extraAmt;
-        const newInvoice = { invNo, date: today, party: partyName, phone: partyPhone, mode, gstRate, templateId, notes, subtotal: subtotal.toFixed(2), gst: totalGst.toFixed(2), extraName, extraAmt: extraAmt.toFixed(2), amount: Math.round(grandTotal), grandTotal: grandTotal.toFixed(2), items: savedItems };
-        invoices.unshift(newInvoice);
-
-        applyTemplateStyles(templateId);
-
-        document.getElementById('inv-number').innerText = newInvoice.invNo; 
-        document.getElementById('inv-date').innerText = newInvoice.date;
-        document.getElementById('preview-cust-name').innerText = newInvoice.party; 
-        document.getElementById('preview-cust-phone').innerText = newInvoice.phone ? "Ph: " + newInvoice.phone : ""; 
-        document.getElementById('preview-pay-mode').innerText = newInvoice.mode;
-        
-        const gstSummaryRow = document.getElementById('gst-summary-row');
-        const tableHeadTax = document.getElementById('table-head-tax');
-        const invoiceTitleBadge = document.getElementById('invoice-title-badge');
-        const notesContainer = document.getElementById('invoice-notes-container');
-        const previewNotes = document.getElementById('preview-bill-notes');
-
-        if (notes !== "") {
-            notesContainer.classList.remove('hidden');
-            previewNotes.innerText = notes;
-        } else {
-            notesContainer.classList.add('hidden');
-        }
-
-        if (gstRate === 0) {
-            if (gstSummaryRow) gstSummaryRow.classList.add('hidden');
-            if (tableHeadTax) tableHeadTax.classList.add('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL INVOICE";
-        } else {
-            if (gstSummaryRow) gstSummaryRow.classList.remove('hidden');
-            if (tableHeadTax) tableHeadTax.classList.remove('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL TAX INVOICE";
-        }
-
-        const tbody = document.getElementById('bill-items-body'); tbody.innerHTML = '';
-        newInvoice.items.forEach(it => { 
-            if (gstRate === 0 || it.isCustom) {
-                tbody.innerHTML += `<tr><td class="py-3 px-3 font-semibold">${it.name}</td><td class="py-3 px-2">₹${it.price}</td><td class="py-3 px-2">${it.qty}</td><td class="py-3 px-3 text-right font-bold">₹${it.total}</td><td></td></tr>`; 
-            } else {
-                tbody.innerHTML += `<tr><td class="py-3 px-3 font-semibold">${it.name}</td><td class="py-3 px-2">₹${it.price}</td><td class="py-3 px-2">${it.qty}</td><td class="py-3 px-2">${it.gst}%</td><td class="py-3 px-3 text-right font-bold">₹${it.total}</td><td></td></tr>`; 
-            }
-        });
-        
-        document.getElementById('bill-subtotal').innerText = `₹ ${newInvoice.subtotal}`; 
-        if (gstRate > 0) {
-            document.getElementById('bill-gst').innerText = `₹ ${newInvoice.gst}`;
-        }
-        
-        const extraRow = document.getElementById('extra-charge-row');
-        if (parseFloat(newInvoice.extraAmt) > 0) { 
-            extraRow.classList.remove('hidden'); 
-            document.getElementById('preview-extra-name').innerText = newInvoice.extraName + ":"; 
-            document.getElementById('preview-extra-amt').innerText = `₹ ${newInvoice.extraAmt}`; 
-        } else { extraRow.classList.add('hidden'); }
-        
-        document.getElementById('bill-grand-total').innerText = `₹ ${newInvoice.grandTotal}`;
-        const element = document.getElementById('printable-invoice');
-        const opt = { margin: 10, filename: `Invoice_${newInvoice.invNo}.pdf`, image: {type:'jpeg', quality:0.98}, html2canvas: {scale:2}, jsPDF: {unit:'mm', format:'a4', orientation:'portrait'} };
-
-        try {
-            const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-            const pdfFile = new File([pdfBlob], `Invoice_${newInvoice.invNo}.pdf`, { type: 'application/pdf' });
-
-            if (isAndroidBillingApp()) {
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    QBILLApp.saveAndSharePDF(reader.result, `Invoice_${newInvoice.invNo}.pdf`, `Invoice ${newInvoice.invNo} - Q BILL`, `Hi ${newInvoice.party}, your invoice ${newInvoice.invNo} amount Rs ${newInvoice.grandTotal} from Q BILL STORE`);
-                };
-                reader.readAsDataURL(pdfBlob);
-            } else if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    files: [pdfFile],
-                    title: `Invoice ${newInvoice.invNo}`,
-                    text: `Here is your tax invoice ${newInvoice.invNo} from Q BILL.`
-                });
-            } else {
-                html2pdf().from(element).set(opt).save();
-            }
-        } catch(e) {
-            html2pdf().from(element).set(opt).save();
-        }
-
-        currentBillItems = []; 
-        document.getElementById('bill-customer-name').value = ''; 
-        document.getElementById('bill-customer-phone').value = ''; 
-        document.getElementById('bill-extra-name').value = ''; 
-        document.getElementById('bill-extra-amount').value = '0'; 
-        document.getElementById('bill-notes').value = ''; 
-        renderBillTable(); 
-        await saveDataToFirestore(); 
-        switchTab('dashboard');
-    }
-
-    async function generateAndSharePDF(inv) {
-        const gstRate = inv.gstRate !== undefined ? inv.gstRate : 18;
-        const templateId = inv.templateId || '1';
-        const notesVal = inv.notes || '';
-        
-        applyTemplateStyles(templateId);
-
-        const gstSummaryRow = document.getElementById('gst-summary-row');
-        const tableHeadTax = document.getElementById('table-head-tax');
-        const invoiceTitleBadge = document.getElementById('invoice-title-badge');
-        const notesContainer = document.getElementById('invoice-notes-container');
-        const previewNotes = document.getElementById('preview-bill-notes');
-
-        if (notesVal !== "") {
-            notesContainer.classList.remove('hidden');
-            previewNotes.innerText = notesVal;
-        } else {
-            notesContainer.classList.add('hidden');
-        }
-
-        if (gstRate === 0) {
-            if (gstSummaryRow) gstSummaryRow.classList.add('hidden');
-            if (tableHeadTax) tableHeadTax.classList.add('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL INVOICE";
-        } else {
-            if (gstSummaryRow) gstSummaryRow.classList.remove('hidden');
-            if (tableHeadTax) tableHeadTax.classList.remove('hidden');
-            if (invoiceTitleBadge) invoiceTitleBadge.innerText = "OFFICIAL TAX INVOICE";
-        }
-
-        if (isAndroidBillingApp()) {
-            document.getElementById('inv-number').innerText = inv.invNo; document.getElementById('inv-date').innerText = inv.date; document.getElementById('preview-cust-name').innerText = inv.party; document.getElementById('preview-cust-phone').innerText = inv.phone ? "Ph: " + inv.phone : ""; document.getElementById('preview-pay-mode').innerText = inv.mode;
-            const tbody = document.getElementById('bill-items-body'); tbody.innerHTML=''; 
-            inv.items.forEach(it=>{
-                if (gstRate === 0 || it.isCustom) {
-                    tbody.innerHTML+=`<tr><td class="py-3 px-3 font-semibold">${it.name}</td><td class="py-3 px-2">₹${it.price}</td><td class="py-3 px-2">${it.qty}</td><td class="py-3 px-3 text-right font-bold">₹${it.total}</td><td></td></tr>`;
-                } else {
-                    tbody.innerHTML+=`<tr><td class="py-3 px-3 font-semibold">${it.name}</td><td class="py-3 px-2">₹${it.price}</td><td class="py-3 px-2">${it.qty}</td><td class="py-3 px-2">${it.gst}%</td><td class="py-3 px-3 text-right font-bold">₹${it.total}</td><td></td></tr>`;
-                }
-            });
-            document.getElementById('bill-subtotal').innerText=`₹ ${inv.subtotal}`; 
-            if (gstRate > 0) document.getElementById('bill-gst').innerText=`₹ ${inv.gst}`;
-            const extraRow=document.getElementById('extra-charge-row'); if(parseFloat(inv.extraAmt)>0){extraRow.classList.remove('hidden'); document.getElementById('preview-extra-name').innerText=inv.extraName+":"; document.getElementById('preview-extra-amt').innerText=`₹ ${inv.extraAmt}`;}else extraRow.classList.add('hidden');
-            document.getElementById('bill-grand-total').innerText=`₹ ${inv.grandTotal}`;
-            const element=document.getElementById('printable-invoice'); const opt={margin:10, filename:`Invoice_${inv.invNo}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
-            try{ 
-                const pdfBlob=await html2pdf().from(element).set(opt).outputPdf('blob'); 
-                const reader=new FileReader(); 
-                reader.onloadend=function(){ 
-                    QBILLApp.saveAndSharePDF(reader.result, `Invoice_${inv.invNo}.pdf`, `Invoice ${inv.invNo} - Q BILL`, `Hi ${inv.party}, your invoice ${inv.invNo} amount Rs ${inv.grandTotal}`); 
-                }; 
-                reader.readAsDataURL(pdfBlob); 
-            }catch(e){ html2pdf().from(element).set(opt).save(); } return;
-        }
-
-        document.getElementById('inv-number').innerText = inv.invNo;
-        document.getElementById('inv-date').innerText = inv.date;
-        document.getElementById('preview-cust-name').innerText = inv.party;
-        document.getElementById('preview-cust-phone').innerText = inv.phone ? "Ph: " + inv.phone : "";
-        document.getElementById('preview-pay-mode').innerText = inv.mode;
-
-        const tbody = document.getElementById('bill-items-body');
-        tbody.innerHTML = '';
-        inv.items.forEach(it => {
-            if (gstRate === 0 || it.isCustom) {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-100">
-                        <td class="py-3 px-3 font-semibold text-slate-800">${it.name}</td>
-                        <td class="py-3 px-2 text-slate-600">₹${it.price}</td>
-                        <td class="py-3 px-2 text-slate-600">${it.qty}</td>
-                        <td class="py-3 px-3 text-right font-bold text-slate-900">₹${it.total}</td>
-                        <td class="py-3 px-2 text-right no-print"></td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-100">
-                        <td class="py-3 px-3 font-semibold text-slate-800">${it.name}</td>
-                        <td class="py-3 px-2 text-slate-600">₹${it.price}</td>
-                        <td class="py-3 px-2 text-slate-600">${it.qty}</td>
-                        <td class="py-3 px-2 text-slate-600">${it.gst}%</td>
-                        <td class="py-3 px-3 text-right font-bold text-slate-900">₹${it.total}</td>
-                        <td class="py-3 px-2 text-right no-print"></td>
-                    </tr>
-                `;
-            }
-        });
-        document.getElementById('bill-subtotal').innerText = `₹ ${inv.subtotal}`;
-        if (gstRate > 0) {
-            document.getElementById('bill-gst').innerText = `₹ ${inv.gst}`;
-        }
-
-        const extraRow = document.getElementById('extra-charge-row');
-        const extraAmtNum = parseFloat(inv.extraAmt) || 0;
-        if (extraAmtNum > 0) {
-            extraRow.classList.remove('hidden');
-            document.getElementById('preview-extra-name').innerText = (inv.extraName || "Extra Charge") + ":";
-            document.getElementById('preview-extra-amt').innerText = `₹ ${inv.extraAmt}`;
-        } else {
-            extraRow.classList.add('hidden');
-        }
-
-        document.getElementById('bill-grand-total').innerText = `₹ ${inv.grandTotal}`;
-
-        const element = document.getElementById('printable-invoice');
-        const opt = {
-            margin:       10,
-            filename:     `Invoice_${inv.invNo}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        try {
-            const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-            const pdfFile = new File([pdfBlob], `Invoice_${inv.invNo}.pdf`, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    files: [pdfFile],
-                    title: `Invoice ${inv.invNo}`,
-                    text: `Here is your tax invoice ${inv.invNo} from Q BILL.`
-                });
-            } else {
-                html2pdf().from(element).set(opt).save();
-                alert("PDF downloaded successfully!");
-            }
-        } catch (err) {
-            html2pdf().from(element).set(opt).save();
-        }
-    }
-
-    function sharePDFByIndex(index) {
-        const inv = invoices[index];
-        if (inv) generateAndSharePDF(inv);
-    }
-
-    function renderAll() {
-        if (!currentUser) return;
-        const totalSales = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-        const totalStockVal = inventory.reduce((sum, item) => sum + (item.price * item.stock), 0);
-
-        document.getElementById('dash-total-sales').innerText = `₹ ${totalSales.toLocaleString()}`;
-        document.getElementById('dash-stock-value').innerText = `₹ ${totalStockVal.toLocaleString()}`;
-        document.getElementById('dash-item-count').innerText = `${inventory.length} Active Items`;
-
-        const recentBody = document.getElementById('dash-recent-invoices');
-        const allSalesBody = document.getElementById('all-sales-body');
-        recentBody.innerHTML = '';
-        allSalesBody.innerHTML = '';
-
-        if (invoices.length === 0) {
-            recentBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">No invoices created yet.</td></tr>`;
-            allSalesBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 text-xs">No invoices created yet.</td></tr>`;
-        } else {
-            invoices.forEach((inv, idx) => {
-                const pdfBtn = `
-                    <button onclick="sharePDFByIndex(${idx})" class="bg-[#25D366]/15 hover:bg-[#25D366] text-[#128C7E] hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition">
-                        <span>📄 PDF WhatsApp</span>
-                    </button>
-                `;
-                const rowHtml = `
-                    <tr>
-                        <td class="p-3 font-semibold text-sky-700">${inv.invNo}</td>
-                        <td class="p-3 font-medium">${inv.party}</td>
-                        <td class="p-3 font-bold">₹ ${inv.amount}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 text-[11px] rounded-full bg-sky-100 text-sky-700 font-medium">${inv.mode}</span></td>
-                        <td class="p-3 text-right">${pdfBtn}</td>
-                    </tr>
-                `;
-                recentBody.innerHTML += rowHtml;
-                allSalesBody.innerHTML += `<tr><td class="p-3 text-slate-500">${inv.date}</td>` + rowHtml.substring(4);
-            });
-        }
-
-        const stockList = document.getElementById('dash-stock-list');
-        stockList.innerHTML = '';
-        if (inventory.length === 0) {
-            stockList.innerHTML = `<div class="text-center text-xs text-slate-400 py-3">No items in inventory.<br><a href="#" onclick="switchTab('inventory')" class="text-sky-600 font-bold underline">+ Add items</a></div>`;
-        } else {
-            inventory.forEach(item => {
-                const badgeColor = item.stock < 10 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700';
-                stockList.innerHTML += `
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <div>
-                            <div class="font-medium text-sm">${item.name}</div>
-                            <div class="text-xs text-slate-400">Price: ₹${item.price}</div>
-                        </div>
-                        <span class="px-2.5 py-1 text-xs font-bold rounded ${badgeColor}">${item.stock} Qty</span>
-                    </div>
-                `;
-            });
-        }
-
-        const invBody = document.getElementById('inventory-table-body');
-        invBody.innerHTML = '';
-        if (inventory.length === 0) {
-            invBody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 text-sm">No items found. Add items using the form above.</td></tr>`;
-        } else {
-            inventory.forEach(item => {
-                invBody.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-medium">${item.name}</td>
-                        <td class="p-3">₹${item.price}</td>
-                        <td class="p-3 font-bold">${item.stock}</td>
-                        <td class="p-3 font-semibold text-sky-700">₹${item.price * item.stock}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="deleteInventoryItem(${item.id})" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded-lg text-xs font-bold transition">Delete</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        const partyBody = document.getElementById('parties-table-body');
-        partyBody.innerHTML = '';
-        if (parties.length === 0) {
-            partyBody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-sm">No parties added yet.</td></tr>`;
-        } else {
-            parties.forEach(p => {
-                partyBody.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-medium">${p.name}</td>
-                        <td class="p-3 text-slate-500">${p.phone}</td>
-                        <td class="p-3 text-slate-500">${p.gst}</td>
-                        <td class="p-3 font-bold text-sky-600">₹ ${p.balance}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        const partySuggestions = document.getElementById('party-suggestions');
-        partySuggestions.innerHTML = parties.map(p => `<option value="${p.name}">${p.phone}</option>`).join('');
-
-        const itemSelect = document.getElementById('bill-item-select');
-        if (inventory.length === 0) {
-            itemSelect.innerHTML = `<option value="">-- No items available, add in Inventory --</option>`;
-        } else {
-            itemSelect.innerHTML = inventory.map(i => `<option value="${i.id}">${i.name} - ₹${i.price} (Stock: ${i.stock})</option>`).join('');
-        }
-
-        document.getElementById('inv-number').innerText = "#QB-" + invoiceCounter;
-        document.getElementById('inv-date').innerText = new Date().toISOString().split('T')[0];
-    }
-
-    window.onload = function() {
-        const splash = document.getElementById('splash-screen');
-        setTimeout(async () => {
-            splash.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => splash.classList.add('hidden'), 500);
-
-            const savedSession = JSON.parse(localStorage.getItem('sb_active_session'));
-            if (savedSession && savedSession.email) {
-                currentUser = savedSession;
-                const docKey = getCleanKey(currentUser.email);
-                
-                if (initFirebase()) {
-                    try {
-                        const docSnap = await db.collection('qbill_users').doc(docKey).get();
-                        if (docSnap.exists) {
-                            const cData = docSnap.data();
-                            inventory = cData.inventory || [];
-                            parties = cData.parties || [];
-                            invoices = cData.invoices || [];
-                            invoiceCounter = cData.invoiceCounter || 1001;
-                            if (cData.businessName) {
-                                currentUser.businessName = cData.businessName;
-                            }
-                        }
-                    } catch (e) {}
-                }
-
-                enterApplication();
-            }
-        }, 2200);
-    };
-</script>
-
+      }, 500);
+    });
+
+    // Initial load
+    loadMovies(`${BASE_URL}/movie/popular?api_key=${API_KEY}`);
+  </script>
 </body>
 </html>
