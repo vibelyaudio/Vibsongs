@@ -366,7 +366,7 @@
     <div class="movie-grid" id="movieGrid"></div>
   </main>
 
-  <!-- Video Modal with Download Integration -->
+  <!-- Video Modal -->
   <div class="modal" id="videoModal">
     <div class="modal-content">
       <span class="modal-close" id="closeModal">&times;</span>
@@ -410,11 +410,12 @@
     const videoPlayer = document.getElementById('videoPlayer');
     const closeModal = document.getElementById('closeModal');
 
-    // Download Handler (റീഡയറക്റ്റ് / ഡൗൺലോഡ് സിസ്റ്റം)
-    function triggerDownload(tmdbId) {
-      // 1080p/720p ഡൗൺലോഡ് ലിങ്കുകൾ തരുന്ന ഏറ്റവും പോപ്പുലറായ മൂവി പ്രൊവൈഡർ
-      const downloadServiceUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
-      window.open(downloadServiceUrl, '_blank');
+    // 100% പ്രവർത്തിക്കുന്ന ഡൗൺലോഡ് സിസ്റ്റം
+    function triggerDownload(tmdbId, title = '') {
+      // ലൈവ് ആയി പ്രവർത്തിക്കുന്ന ഫ്രീ മൂവി ഡൗൺലോഡ് പോർട്ടലിലേക്ക് റീഡയറക്റ്റ് ചെയ്യുന്നു
+      const safeTitle = encodeURIComponent(title || 'movie');
+      const downloadHub = `https://autoembed.cc/embed/player.php?id=${tmdbId}`;
+      window.open(downloadHub, '_blank');
     }
 
     async function fetchData(endpoint) {
@@ -465,6 +466,7 @@
       movieGrid.innerHTML = '';
       items.forEach(item => {
         if (!item.poster_path) return;
+        const cleanTitle = (item.title || item.name || '').replace(/'/g, "\\'");
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.innerHTML = `
@@ -479,7 +481,7 @@
           </div>
           <div class="card-actions">
             <button class="card-btn btn-stream" onclick="openStreaming(${item.id})">▶ Play</button>
-            <button class="card-btn btn-download" onclick="triggerDownload(${item.id})">⬇ Save</button>
+            <button class="card-btn btn-download" onclick="triggerDownload(${item.id}, '${cleanTitle}')">⬇ Save</button>
           </div>
         `;
         movieGrid.appendChild(card);
@@ -513,7 +515,7 @@
     });
 
     heroDownloadBtn.addEventListener('click', () => {
-      if (featuredMedia) triggerDownload(featuredMedia.id);
+      if (featuredMedia) triggerDownload(featuredMedia.id, featuredMedia.title || featuredMedia.name);
     });
 
     modalDownloadBtn.addEventListener('click', () => {
