@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieBox Pro - Multilingual</title>
+  <title>MovieBox Pro - Stream & Download</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
   <style>
     :root {
@@ -11,6 +11,7 @@
       --card-bg: #151821;
       --accent: #00d2ff;
       --accent-glow: rgba(0, 210, 255, 0.4);
+      --download-green: #00e676;
       --text-main: #f5f6fa;
       --text-muted: #8c9ba5;
       --star: #ffb703;
@@ -35,7 +36,6 @@
       background: rgba(11, 12, 16, 0.95);
       backdrop-filter: blur(15px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      flex-wrap: wrap;
       gap: 12px;
     }
     .logo {
@@ -51,7 +51,6 @@
       border-radius: 25px;
       padding: 8px 16px;
       width: 240px;
-      transition: 0.3s;
     }
     .search-box:focus-within {
       border-color: var(--accent);
@@ -66,7 +65,7 @@
       font-size: 0.85rem;
     }
 
-    /* Language Category Bar */
+    /* Filter Bar */
     .filter-bar {
       display: flex;
       gap: 10px;
@@ -85,7 +84,7 @@
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      padding: 8px 18px;
+      padding: 7px 18px;
       border-radius: 20px;
       transition: all 0.25s;
     }
@@ -133,18 +132,35 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: 0.2s;
+      text-decoration: none;
+    }
     .play-btn {
       background: var(--accent);
       color: #0b0c10;
-      font-weight: 700;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 25px;
-      cursor: pointer;
       box-shadow: 0 4px 15px var(--accent-glow);
-      transition: 0.2s;
     }
-    .play-btn:hover { transform: scale(1.05); }
+    .download-btn {
+      background: var(--download-green);
+      color: #05140b;
+      box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+    }
+    .action-btn:hover { transform: scale(1.05); }
 
     /* Grid */
     main { padding: 25px 5%; }
@@ -158,32 +174,36 @@
 
     .movie-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
       gap: 18px;
     }
     .movie-card {
       background: var(--card-bg);
       border-radius: 12px;
       overflow: hidden;
-      cursor: pointer;
       position: relative;
       transition: transform 0.3s, box-shadow 0.3s;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
     }
     .movie-card:hover {
-      transform: translateY(-7px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 12px var(--accent-glow);
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 10px var(--accent-glow);
+    }
+    .poster-wrap {
+      position: relative;
+      cursor: pointer;
     }
     .movie-card img {
       width: 100%;
-      height: 240px;
+      height: 245px;
       object-fit: cover;
       display: block;
     }
     .rating-badge {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 8px; right: 8px;
       background: rgba(11, 12, 16, 0.85);
       backdrop-filter: blur(5px);
       color: var(--star);
@@ -194,8 +214,7 @@
     }
     .lang-badge {
       position: absolute;
-      top: 8px;
-      left: 8px;
+      top: 8px; left: 8px;
       background: rgba(0, 210, 255, 0.85);
       color: #000;
       font-size: 0.65rem;
@@ -204,7 +223,7 @@
       border-radius: 4px;
       text-transform: uppercase;
     }
-    .movie-info { padding: 10px; }
+    .movie-info { padding: 10px; flex-grow: 1; }
     .movie-title {
       font-size: 0.85rem;
       font-weight: 600;
@@ -215,7 +234,33 @@
     .movie-year {
       color: var(--text-muted);
       font-size: 0.75rem;
-      margin-top: 3px;
+      margin-top: 2px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      padding: 0 10px 10px 10px;
+    }
+    .card-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-stream {
+      background: rgba(0, 210, 255, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .btn-download {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--download-green);
+      border: 1px solid var(--download-green);
     }
 
     /* Modal Player */
@@ -259,20 +304,23 @@
       width: 100%; height: 100%;
       border: none;
     }
-    .server-switcher {
+    .modal-toolbar {
       display: flex;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
       padding: 12px 16px;
       background: #11131a;
-      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
+    .server-switcher { display: flex; gap: 8px; align-items: center; }
     .server-switcher span { font-size: 0.8rem; color: var(--text-muted); }
     .server-btn {
       background: #1e2230;
       border: none;
       color: #fff;
       font-size: 0.75rem;
-      padding: 5px 12px;
+      padding: 5px 10px;
       border-radius: 4px;
       cursor: pointer;
     }
@@ -292,7 +340,6 @@
     </div>
   </header>
 
-  <!-- Multi-Language Bar -->
   <div class="filter-bar">
     <button class="filter-btn active" onclick="loadByLanguage('all', 'Trending All')">🔥 All Trending</button>
     <button class="filter-btn" onclick="loadByLanguage('ml', 'Malayalam Movies')">🌴 Malayalam</button>
@@ -307,7 +354,10 @@
       <div class="hero-tag" id="heroTag">FEATURED</div>
       <h1 id="heroTitle">Loading...</h1>
       <p id="heroDesc"></p>
-      <button class="play-btn" id="heroPlayBtn">▶ Stream Now</button>
+      <div class="hero-actions">
+        <button class="action-btn play-btn" id="heroPlayBtn">▶ Stream Now</button>
+        <button class="action-btn download-btn" id="heroDownloadBtn">⬇ Download Movie</button>
+      </div>
     </div>
   </section>
 
@@ -316,18 +366,23 @@
     <div class="movie-grid" id="movieGrid"></div>
   </main>
 
-  <!-- Video Modal -->
+  <!-- Video Modal with Download Integration -->
   <div class="modal" id="videoModal">
     <div class="modal-content">
       <span class="modal-close" id="closeModal">&times;</span>
       <div class="player-wrapper">
         <iframe id="videoPlayer" src="" allowfullscreen></iframe>
       </div>
-      <div class="server-switcher">
-        <span>Server:</span>
-        <button class="server-btn active" onclick="switchServer(1)">Server 1</button>
-        <button class="server-btn" onclick="switchServer(2)">Server 2</button>
-        <button class="server-btn" onclick="switchServer(3)">Server 3</button>
+      <div class="modal-toolbar">
+        <div class="server-switcher">
+          <span>Server:</span>
+          <button class="server-btn active" onclick="switchServer(1)">Server 1</button>
+          <button class="server-btn" onclick="switchServer(2)">Server 2</button>
+          <button class="server-btn" onclick="switchServer(3)">Server 3</button>
+        </div>
+        <button class="action-btn download-btn" id="modalDownloadBtn" style="padding: 6px 16px; font-size: 0.8rem;">
+          ⬇ Download Video
+        </button>
       </div>
     </div>
   </div>
@@ -346,12 +401,21 @@
     const heroTitle = document.getElementById('heroTitle');
     const heroDesc = document.getElementById('heroDesc');
     const heroPlayBtn = document.getElementById('heroPlayBtn');
+    const heroDownloadBtn = document.getElementById('heroDownloadBtn');
+    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
     const heroTag = document.getElementById('heroTag');
     const sectionHeading = document.getElementById('sectionHeading');
     const searchInput = document.getElementById('searchInput');
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
     const closeModal = document.getElementById('closeModal');
+
+    // Download Handler (റീഡയറക്റ്റ് / ഡൗൺലോഡ് സിസ്റ്റം)
+    function triggerDownload(tmdbId) {
+      // 1080p/720p ഡൗൺലോഡ് ലിങ്കുകൾ തരുന്ന ഏറ്റവും പോപ്പുലറായ മൂവി പ്രൊവൈഡർ
+      const downloadServiceUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
+      window.open(downloadServiceUrl, '_blank');
+    }
 
     async function fetchData(endpoint) {
       try {
@@ -366,7 +430,6 @@
     }
 
     async function loadByLanguage(langCode, label) {
-      // Update UI active buttons
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent.toLowerCase().includes(label.split(' ')[0].toLowerCase()));
       });
@@ -377,7 +440,6 @@
       if (langCode === 'all') {
         items = await fetchData(`/trending/movie/day?language=en-US`);
       } else {
-        // Fetch by original language sorted by popularity/rating
         items = await fetchData(`/discover/movie?with_original_language=${langCode}&sort_by=popularity.desc`);
       }
 
@@ -406,15 +468,20 @@
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.innerHTML = `
-          <img src="${IMG_URL + item.poster_path}" alt="${item.title}" loading="lazy">
-          <div class="lang-badge">${item.original_language || 'EN'}</div>
-          <div class="rating-badge">★ ${(item.vote_average || 0).toFixed(1)}</div>
+          <div class="poster-wrap" onclick="openStreaming(${item.id})">
+            <img src="${IMG_URL + item.poster_path}" alt="${item.title}" loading="lazy">
+            <div class="lang-badge">${item.original_language || 'EN'}</div>
+            <div class="rating-badge">★ ${(item.vote_average || 0).toFixed(1)}</div>
+          </div>
           <div class="movie-info">
             <div class="movie-title">${item.title}</div>
             <div class="movie-year">${(item.release_date || '').split('-')[0]}</div>
           </div>
+          <div class="card-actions">
+            <button class="card-btn btn-stream" onclick="openStreaming(${item.id})">▶ Play</button>
+            <button class="card-btn btn-download" onclick="triggerDownload(${item.id})">⬇ Save</button>
+          </div>
         `;
-        card.addEventListener('click', () => openStreaming(item.id));
         movieGrid.appendChild(card);
       });
     }
@@ -445,6 +512,14 @@
       if (featuredMedia) openStreaming(featuredMedia.id);
     });
 
+    heroDownloadBtn.addEventListener('click', () => {
+      if (featuredMedia) triggerDownload(featuredMedia.id);
+    });
+
+    modalDownloadBtn.addEventListener('click', () => {
+      if (activeMediaId) triggerDownload(activeMediaId);
+    });
+
     closeModal.addEventListener('click', () => {
       videoModal.style.display = 'none';
       videoPlayer.src = '';
@@ -472,7 +547,7 @@
       }, 400);
     });
 
-    // Default: All trending movies
+    // Default load
     loadByLanguage('all', 'Trending All');
   </script>
 </body>
