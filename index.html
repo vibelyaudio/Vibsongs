@@ -373,7 +373,7 @@
         });
     </script>
 
-    <!-- VIBELY FIXED SCRIPT WITH MEDIA SESSION CONTROLS -->
+    <!-- VIBELY CLEAN SPOTIFY SCRIPT -->
     <script>
         let currentPlaylist = [];
         let currentIndex = 0;
@@ -681,25 +681,7 @@
             `).join('');
         }
 
-        // === MEDIA SESSION & SPOTIFY PLAYER PLAYBACK ===
-        function setupMediaSession(song) {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: song.title,
-                    artist: song.artist,
-                    album: 'Vibely Music',
-                    artwork: [
-                        { src: `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
-                    ]
-                });
-
-                navigator.mediaSession.setActionHandler('play', () => { togglePlayPause(); });
-                navigator.mediaSession.setActionHandler('pause', () => { togglePlayPause(); });
-                navigator.mediaSession.setActionHandler('previoustrack', () => { playPrevious(); });
-                navigator.mediaSession.setActionHandler('nexttrack', () => { playNext(); });
-            }
-        }
-
+        // === SPOTIFY PLAYER PLAYBACK ===
         async function playSongByIndex(containerId, index) {
             activeContainerId = containerId;
             let list = currentPlaylist;
@@ -728,8 +710,6 @@
             document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-xs";
             showStatus("Playing via Spotify Player ✓", true);
             setTimeout(()=>showStatus("", false), 1500);
-
-            setupMediaSession(song);
 
             songCurrentTime = 0;
             songDuration = song.duration || 180;
