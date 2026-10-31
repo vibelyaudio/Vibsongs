@@ -45,7 +45,7 @@
     <div id="login-screen" class="fixed inset-0 bg-spotifyDark z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500 hidden">
         <div class="bg-[#121212] p-8 rounded-2xl shadow-2xl border border-neutral-800 max-w-md w-full text-center">
             <div class="w-16 h-16 bg-spotifyGreen rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-spotifyGreen/20">
-                <i class="fa-solid fa-spotify text-black text-3xl"></i>
+                <i class="fa-solid fa-headphones-simple text-black text-2xl"></i>
             </div>
             <h1 class="text-2xl font-black tracking-wider text-white mb-1" id="authTitle">Log in to VIBELY</h1>
             <p class="text-neutral-400 text-xs mb-6" id="authSubtitle">Continue with Email & Password</p>
@@ -97,10 +97,10 @@
     <div id="splash-screen" class="fixed inset-0 bg-spotifyDark z-40 flex flex-col items-center justify-center transition-opacity duration-700">
         <div class="flex flex-col items-center">
             <div class="w-24 h-24 bg-spotifyGreen rounded-full flex items-center justify-center logo-pulse mb-5 shadow-xl">
-                <i class="fa-solid fa-spotify text-black text-6xl"></i>
+                <i class="fa-solid fa-headphones-simple text-black text-5xl"></i>
             </div>
             <h1 class="text-4xl font-black tracking-widest text-white">VIBELY</h1>
-            <p class="text-spotifyGreen font-semibold text-xs mt-2 tracking-widest uppercase">Spotify Experience</p>
+            <p class="text-spotifyGreen font-semibold text-xs mt-2 tracking-widest uppercase">Music Streaming</p>
         </div>
     </div>
 
@@ -109,7 +109,9 @@
         <!-- SIDEBAR (LEFT PANEL) -->
         <aside class="w-64 bg-spotifyDark flex flex-col p-4 rounded-lg hidden md:flex space-y-2">
             <div class="flex items-center space-x-3 px-2 py-3 mb-2">
-                <i class="fa-solid fa-spotify text-spotifyGreen text-2xl"></i>
+                <div class="w-8 h-8 bg-spotifyGreen rounded-full flex items-center justify-center text-black">
+                    <i class="fa-solid fa-headphones-simple text-sm"></i>
+                </div>
                 <span class="text-xl font-bold tracking-tight text-white">VIBELY</span>
             </div>
             <nav class="space-y-1">
@@ -217,7 +219,7 @@
                     <div class="flex items-center justify-between">
                         <h2 id="sectionHeading" class="text-xl sm:text-2xl font-black tracking-tight text-white">Vibely Tracks</h2>
                     </div>
-                    <!-- Song Grid (Spotify Style Card) -->
+                    <!-- Song Grid -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="songsGrid">
                         <!-- Populated by JS -->
                     </div>
@@ -346,7 +348,7 @@
         });
     </script>
 
-    <!-- VIBELY SPOTIFY FIXED SCRIPT -->
+    <!-- VIBELY SPOTIFY SCRIPT -->
     <script>
         let currentPlaylist = [];
         let currentIndex = 0;
@@ -550,11 +552,11 @@
                 const isFav = favorites.some(f => f.videoId === song.videoId);
                 const safeImg = `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`;
                 return `
-                    <div class="bg-spotifyCard hover:bg-spotifyCardHover p-4 rounded-lg cursor-pointer transition-all duration-300 group shadow-lg relative flex flex-col">
-                        <div class="relative mb-3 overflow-hidden rounded-md aspect-square shadow-md" onclick="playSongByIndex('${containerId}', ${idx})">
+                    <div class="bg-spotifyCard hover:bg-spotifyCardHover p-4 rounded-md cursor-pointer transition-all duration-300 group shadow-lg relative flex flex-col">
+                        <div class="relative mb-3 overflow-hidden rounded aspect-square shadow" onclick="playSongByIndex('${containerId}', ${idx})">
                             <img src="${safeImg}" onerror="this.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300'" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <button class="absolute bottom-2 right-2 w-12 h-12 bg-spotifyGreen text-black rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                                <i class="fa-solid fa-play text-sm ml-0.5"></i>
+                            <button class="absolute bottom-2 right-2 w-10 h-10 bg-spotifyGreen text-black rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                                <i class="fa-solid fa-play text-xs ml-0.5"></i>
                             </button>
                         </div>
                         <div class="flex items-start justify-between mt-1">
@@ -624,7 +626,7 @@
             }
 
             grid.innerHTML = playlists.map((pl, pIdx) => `
-                <div class="bg-spotifyCard p-4 rounded-lg shadow-md">
+                <div class="bg-spotifyCard p-4 rounded-md shadow-md">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-bold text-base text-white"><i class="fa-solid fa-list-music text-spotifyGreen mr-2"></i>${pl.name}</h3>
                         <span class="text-xs bg-neutral-800 text-spotifyGreen font-semibold px-2 py-0.5 rounded-full">${pl.songs.length} songs</span>
