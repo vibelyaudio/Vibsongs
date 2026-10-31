@@ -107,7 +107,7 @@
               <button onclick="handleSignup()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Register</button>
             </div>
             <p class="text-[11px] text-gray-400 text-center mt-3">
-              Don't have an account? 
+              Already have an account? 
               <button onclick="switchToLogin()" class="text-rose-400 font-semibold underline hover:text-rose-300">Login</button>
             </p>
           </div>
@@ -271,9 +271,36 @@
           
           <button onclick="handleInstaDownload()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
 
-          <!-- RESULT CONTAINER -->
           <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1">
             <div id="result"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YOUTUBE POPUP DOWNLOADER MODAL -->
+    <div id="yt-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-sm">
+              <i class="fa-brands fa-youtube"></i>
+            </div>
+            <h3 class="text-xs font-bold text-red-400">YouTube Downloader</h3>
+          </div>
+          <button onclick="closeYtDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste YouTube Video Link</label>
+            <input type="text" id="yt-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500" placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+          
+          <button onclick="handleYtDownload()" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-700 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
+
+          <div id="yt-result-container" class="hidden flex flex-col gap-2 mt-1">
+            <div id="yt-result"></div>
           </div>
         </div>
       </div>
@@ -289,7 +316,8 @@
         <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
         <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
         <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
-        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <!-- YOUTUBE DOWNLOAD BUTTON -->
+        <button onclick="openYtDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></button>
         <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
       </div>
     </div>
@@ -629,6 +657,17 @@
       document.getElementById('insta-downloader-modal').classList.add('hidden');
     }
 
+    function openYtDownloader() {
+      document.getElementById('yt-downloader-modal').classList.remove('hidden');
+      document.getElementById('yt-link-input').value = '';
+      document.getElementById('yt-result-container').classList.add('hidden');
+      document.getElementById('yt-result').innerHTML = '';
+    }
+
+    function closeYtDownloader() {
+      document.getElementById('yt-downloader-modal').classList.add('hidden');
+    }
+
     async function handleInstaDownload(){
       let u = document.getElementById('insta-link-input').value.trim();
       let r = document.getElementById('result');
@@ -664,6 +703,42 @@
         r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch video. Try another link.</p>';
       } catch(e) {
         r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server connection error. Please try again later.</p>';
+      }
+    }
+
+    async function handleYtDownload(){
+      let u = document.getElementById('yt-link-input').value.trim();
+      let r = document.getElementById('yt-result');
+      let container = document.getElementById('yt-result-container');
+      
+      if(!u || (!u.includes('youtube.com') && !u.includes('youtu.be'))){
+        alert('Correct YouTube link paste cheyyu');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      r.innerHTML = '<p class="text-xs text-red-400 mt-2">⏳ Fetching YouTube Video...</p>';
+
+      try {
+        // Using Cobalt API for YouTube download support
+        let res = await fetch('https://api.cobalt.tools/api/json', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({url: u})
+        });
+        let data = await res.json();
+        let videoUrl = data.url;
+
+        if(videoUrl){
+          r.innerHTML = `
+            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
+          `;
+          return;
+        }
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch YouTube video.</p>';
+      } catch(e) {
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server error. Try again later.</p>';
       }
     }
 
