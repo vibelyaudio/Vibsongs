@@ -1,559 +1,698 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieBox Pro - Stream & Download</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOOP - Social App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- PeerJS for Real-time Video Chat -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    :root {
-      --bg: #0b0c10;
-      --card-bg: #151821;
-      --accent: #00d2ff;
-      --accent-glow: rgba(0, 210, 255, 0.4);
-      --download-green: #00e676;
-      --text-main: #f5f6fa;
-      --text-muted: #8c9ba5;
-      --star: #ffb703;
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes loopPulse {
+      0% { transform: scale(0.8); opacity: 0; filter: blur(10px); }
+      50% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
+      100% { transform: scale(1); opacity: 1; }
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      font-family: 'Poppins', sans-serif;
-      overflow-x: hidden;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 5%;
-      background: rgba(11, 12, 16, 0.95);
-      backdrop-filter: blur(15px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      gap: 12px;
-    }
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .logo span { color: var(--accent); }
-
-    .search-box {
-      background: #1c1f2b;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 25px;
-      padding: 8px 16px;
-      width: 240px;
-    }
-    .search-box:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
-    .search-box input {
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #fff;
-      width: 100%;
-      font-size: 0.85rem;
-    }
-
-    .filter-bar {
-      display: flex;
-      gap: 10px;
-      padding: 12px 5%;
-      background: #10121a;
-      overflow-x: auto;
-      white-space: nowrap;
-      scrollbar-width: none;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .filter-bar::-webkit-scrollbar { display: none; }
-    .filter-btn {
-      background: #181c28;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 7px 18px;
-      border-radius: 20px;
-      transition: all 0.25s;
-    }
-    .filter-btn.active, .filter-btn:hover {
-      color: #0b0c10;
-      background: var(--accent);
-      border-color: var(--accent);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .hero {
-      position: relative;
-      height: 55vh;
-      min-height: 380px;
-      display: flex;
-      align-items: flex-end;
-      padding: 5%;
-      background-size: cover;
-      background-position: center top;
-      transition: background 0.5s ease;
-    }
-    .hero-content {
-      max-width: 650px;
-      z-index: 2;
-    }
-    .hero-tag {
-      background: var(--accent);
-      color: #0b0c10;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-    .hero h1 { font-size: 2.2rem; margin-bottom: 8px; line-height: 1.2; }
-    .hero p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin-bottom: 16px;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 700;
-      border: none;
-      padding: 10px 22px;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: 0.2s;
-    }
-    .play-btn {
-      background: var(--accent);
-      color: #0b0c10;
-      box-shadow: 0 4px 15px var(--accent-glow);
-    }
-    .download-btn {
-      background: var(--download-green);
-      color: #05140b;
-      box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
-    }
-    .action-btn:hover { transform: scale(1.05); }
-
-    main { padding: 25px 5%; }
-    .section-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      border-left: 4px solid var(--accent);
-      padding-left: 10px;
-    }
-
-    .movie-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-      gap: 18px;
-    }
-    .movie-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-      transition: transform 0.3s, box-shadow 0.3s;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      flex-direction: column;
-    }
-    .movie-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 10px var(--accent-glow);
-    }
-    .poster-wrap {
-      position: relative;
-      cursor: pointer;
-    }
-    .movie-card img {
-      width: 100%;
-      height: 245px;
-      object-fit: cover;
-      display: block;
-    }
-    .rating-badge {
-      position: absolute;
-      top: 8px; right: 8px;
-      background: rgba(11, 12, 16, 0.85);
-      backdrop-filter: blur(5px);
-      color: var(--star);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 3px 6px;
-      border-radius: 4px;
-    }
-    .lang-badge {
-      position: absolute;
-      top: 8px; left: 8px;
-      background: rgba(0, 210, 255, 0.85);
-      color: #000;
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-    .movie-info { padding: 10px; flex-grow: 1; }
-    .movie-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .movie-year {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      margin-top: 2px;
-    }
-    .card-actions {
-      display: flex;
-      gap: 6px;
-      padding: 0 10px 10px 10px;
-    }
-    .card-btn {
-      flex: 1;
-      padding: 6px 0;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      text-align: center;
-    }
-    .btn-stream {
-      background: rgba(0, 210, 255, 0.15);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-    }
-    .btn-download {
-      background: rgba(0, 230, 118, 0.15);
-      color: var(--download-green);
-      border: 1px solid var(--download-green);
-    }
-
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(10px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      padding: 15px;
-    }
-    .modal-content {
-      background: var(--card-bg);
-      width: 100%;
-      max-width: 900px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 10px; right: 15px;
-      font-size: 2rem;
-      color: #fff;
-      cursor: pointer;
-      z-index: 10;
-    }
-    .player-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-    }
-    .player-wrapper iframe {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      border: none;
-    }
-    .modal-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      background: #11131a;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .server-switcher { display: flex; gap: 8px; align-items: center; }
-    .server-switcher span { font-size: 0.8rem; color: var(--text-muted); }
-    .server-btn {
-      background: #1e2230;
-      border: none;
-      color: #fff;
-      font-size: 0.75rem;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .server-btn.active {
-      background: var(--accent);
-      color: #0b0c10;
-      font-weight: 700;
+    .animate-loop-intro {
+      animation: loopPulse 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
-<body>
+<body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
 
-  <header>
-    <div class="logo" onclick="location.reload()">Movie<span>Box</span></div>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search any movie...">
+  <!-- INTRO ANIMATION SCREEN -->
+  <div id="intro-screen" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-700">
+    <div class="flex flex-col items-center animate-loop-intro">
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-500/50 mb-4">
+        <i class="fa-solid fa-infinity text-4xl text-black font-extrabold animate-spin" style="animation-duration: 6s;"></i>
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">LOOP</h1>
+      <p class="text-xs text-gray-500 mt-2 tracking-wider">Stay Connected, Stay in the Loop</p>
     </div>
-  </header>
-
-  <div class="filter-bar">
-    <button class="filter-btn active" onclick="loadByLanguage('all', 'Trending All')">🔥 All Trending</button>
-    <button class="filter-btn" onclick="loadByLanguage('ml', 'Malayalam Movies')">🌴 Malayalam</button>
-    <button class="filter-btn" onclick="loadByLanguage('ta', 'Tamil Movies')">🎬 Tamil</button>
-    <button class="filter-btn" onclick="loadByLanguage('te', 'Telugu Movies')">⚡ Telugu</button>
-    <button class="filter-btn" onclick="loadByLanguage('hi', 'Hindi Movies')">🌟 Hindi</button>
-    <button class="filter-btn" onclick="loadByLanguage('en', 'Hollywood Movies')">🍿 Hollywood</button>
   </div>
 
-  <section class="hero" id="heroBanner">
-    <div class="hero-content">
-      <div class="hero-tag" id="heroTag">FEATURED</div>
-      <h1 id="heroTitle">Loading...</h1>
-      <p id="heroDesc"></p>
-      <div class="hero-actions">
-        <button class="action-btn play-btn" id="heroPlayBtn">▶ Stream Now</button>
-        <button class="action-btn download-btn" id="heroDownloadBtn">⬇ Download Movie</button>
-      </div>
-    </div>
-  </section>
-
-  <main>
-    <div class="section-title" id="sectionHeading">Trending Movies</div>
-    <div class="movie-grid" id="movieGrid"></div>
-  </main>
-
-  <div class="modal" id="videoModal">
-    <div class="modal-content">
-      <span class="modal-close" id="closeModal">&times;</span>
-      <div class="player-wrapper">
-        <iframe id="videoPlayer" src="" allowfullscreen></iframe>
-      </div>
-      <div class="modal-toolbar">
-        <div class="server-switcher">
-          <span>Server:</span>
-          <button class="server-btn active" onclick="switchServer(1)">Server 1</button>
-          <button class="server-btn" onclick="switchServer(2)">Server 2</button>
-          <button class="server-btn" onclick="switchServer(3)">Server 3</button>
+  <!-- Mobile Outer Frame Container -->
+  <div id="app-container" class="w-full max-w-md h-full bg-black flex flex-col justify-between relative shadow-2xl border-x border-gray-800 transition-colors duration-300">
+    
+    <!-- Top Header -->
+    <header id="app-header" class="h-14 bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-4 border-b border-gray-800/80 shrink-0 z-10 transition-colors duration-300">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+          <i class="fa-solid fa-infinity text-sm"></i>
         </div>
-        <button class="action-btn download-btn" id="modalDownloadBtn" style="padding: 6px 16px; font-size: 0.8rem;">
-          ⬇ Download Video
+        <h1 id="app-title" class="text-xl font-extrabold tracking-wider text-emerald-400">LOOP</h1>
+      </div>
+      <div class="flex items-center gap-4 text-gray-300">
+        <button onclick="toggleTheme()" class="hover:text-emerald-400 transition">
+          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
         </button>
+        <button><i class="fa-solid fa-search text-lg"></i></button>
+        <button><i class="fa-solid fa-bell text-lg"></i></button>
+      </div>
+    </header>
+
+    <!-- Dynamic Content Area -->
+    <main class="flex-1 relative overflow-hidden flex flex-col" id="main-content">
+      
+      <!-- AUTH SECTION -->
+      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-6 bg-gray-950 absolute inset-0 z-20">
+        <div id="login-box" class="flex flex-col gap-4">
+          <div class="text-center mb-2">
+            <h2 class="text-2xl font-bold text-white">Welcome Back</h2>
+            <p class="text-xs text-gray-400 mt-1">Please log in to continue to LOOP</p>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Username or Email</label>
+            <input type="text" id="login-identifier" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Enter username or email">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Password</label>
+            <input type="password" id="login-password" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Enter password">
+          </div>
+          <p id="login-error" class="text-red-500 text-xs hidden text-center"></p>
+          <button onclick="handleLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-sm py-3 rounded-xl transition mt-2">Log In</button>
+          
+          <p class="text-xs text-gray-400 text-center mt-4">
+            Don't have an account? 
+            <button onclick="toggleAuthMode('signup')" class="text-emerald-400 font-semibold underline">Create Account</button>
+          </p>
+        </div>
+
+        <div id="signup-box" class="hidden flex flex-col gap-4">
+          <div class="text-center mb-2">
+            <h2 class="text-2xl font-bold text-white">Create Account</h2>
+            <p class="text-xs text-gray-400 mt-1">Join LOOP today and stay connected</p>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Email</label>
+            <input type="email" id="signup-email" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="name@example.com">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Username</label>
+            <input type="text" id="signup-username" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Choose username">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Password</label>
+            <input type="password" id="signup-password" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Create password">
+          </div>
+          <p id="signup-error" class="text-red-500 text-xs hidden text-center"></p>
+          <button onclick="handleSignup()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-sm py-3 rounded-xl transition mt-2">Sign Up</button>
+          
+          <p class="text-xs text-gray-400 text-center mt-4">
+            Already have an account? 
+            <button onclick="toggleAuthMode('login')" class="text-emerald-400 font-semibold underline">Log In</button>
+          </p>
+        </div>
+      </div>
+
+      <!-- HOME VIEW (EMPTY) -->
+      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-4 items-center justify-center text-center">
+        <div class="text-gray-500 text-xs">
+          <i class="fa-solid fa-house text-3xl mb-2 text-gray-600"></i>
+          <p>No posts available in Home.</p>
+        </div>
+      </div>
+
+      <!-- LOOP SECTION (ROOM BASED INSTANT LIVE VIDEO) -->
+      <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
+        <!-- Status Indicator -->
+        <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
+          <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Ready to connect
+          </span>
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
+        </div>
+
+        <!-- Room Input Box for instant testing -->
+        <div class="flex gap-2 items-center bg-gray-900 p-2 rounded-xl border border-gray-800 shrink-0">
+          <input type="text" id="room-code-input" placeholder="Enter Room Name (e.g. room123)" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+          <button onclick="joinRoom()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-4 py-1.5 rounded-lg transition">Connect</button>
+        </div>
+
+        <!-- Video Container Area -->
+        <div class="flex-1 relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 flex flex-col">
+          <!-- Stranger / Remote Video View (Main Screen) -->
+          <div class="w-full h-full relative flex items-center justify-center bg-gray-950">
+            <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+            <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
+              <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
+              <p class="text-xs" id="status-text">Enter room code and tap Connect</p>
+            </div>
+          </div>
+
+          <!-- Local User Camera Preview (Small Floating Box Top-Right) -->
+          <div class="absolute top-3 right-3 w-28 h-40 bg-black rounded-xl overflow-hidden border-2 border-emerald-500/60 shadow-lg flex items-center justify-center z-10">
+            <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+            <span class="absolute bottom-1 left-1 bg-black/60 text-[8px] px-1.5 py-0.5 rounded text-white">You</span>
+          </div>
+        </div>
+
+        <!-- Skip / Next Button -->
+        <div class="shrink-0 pb-2">
+          <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-forward-step text-base"></i> DISCONNECT / LEAVE
+          </button>
+        </div>
+      </div>
+
+      <!-- QUOTES SECTION -->
+      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto">
+        <div class="bg-gradient-to-br from-indigo-900/80 to-purple-950 border border-indigo-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+          <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
+          <div>
+            <span class="bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30">ShareChat Motivation</span>
+            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"വിജയം എന്നത് ഒറ്റരാത്രികൊണ്ട് ഉണ്ടാവുന്നതല്ല, ദിവസേനയുള്ള കഠിനാധ്വാനത്തിന്റെ ഫലമാണ്."</p>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-indigo-800/40 text-xs text-gray-400">
+            <span>- ShareChat Quotes</span>
+            <button class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE SECTION -->
+      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col items-center text-center relative shadow-lg">
+          <div class="relative mb-3">
+            <img id="display-profile-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md">
+            <button onclick="openEditProfileModal()" class="absolute bottom-0 right-0 bg-emerald-500 text-black p-2 rounded-full shadow border-2 border-gray-900 hover:bg-emerald-400 transition">
+              <i class="fa-solid fa-camera text-xs font-bold"></i>
+            </button>
+          </div>
+          <h2 id="display-name" class="text-lg font-bold text-white">Rahul K</h2>
+          <p id="display-username" class="text-xs text-emerald-400 font-medium">@rahulkerala</p>
+          <div class="flex items-center gap-1.5 mt-2 text-xs text-gray-400">
+            <i class="fa-regular fa-envelope text-gray-500"></i>
+            <span id="display-email">rahul.kerala@example.com</span>
+          </div>
+          <button onclick="openEditProfileModal()" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2.5 rounded-xl transition">
+            Edit Profile
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 my-4">
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">24</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Saved</span>
+          </div>
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">12.5k</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Followers</span>
+          </div>
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">450</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Following</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl flex flex-col divide-y divide-gray-800">
+          <button onclick="handleLogout()" class="flex items-center justify-between p-3.5 text-xs text-red-400 hover:bg-gray-850 transition">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-right-from-bracket text-sm"></i>
+              <span>Logout</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <h3 class="text-sm font-bold text-emerald-400">Edit Profile Details</h3>
+          <button onclick="closeEditProfileModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Full Name</label>
+            <input type="text" id="input-name" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Username</label>
+            <input type="text" id="input-username" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Email Address</label>
+            <input type="email" id="input-email" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Profile Photo URL</label>
+            <input type="text" id="input-img" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button onclick="closeEditProfileModal()" class="flex-1 bg-gray-800 text-gray-300 font-semibold text-xs py-2 rounded-xl">Cancel</button>
+          <button onclick="saveProfileDetails()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2 rounded-xl transition">Save</button>
+        </div>
       </div>
     </div>
+
+    <!-- INSTAGRAM POPUP DOWNLOADER MODAL -->
+    <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-sm">
+              <i class="fa-brands fa-instagram"></i>
+            </div>
+            <h3 class="text-xs font-bold text-pink-400">Instagram Downloader</h3>
+          </div>
+          <button onclick="closeInstaDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste Instagram Reel Link</label>
+            <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/reel/...">
+          </div>
+          
+          <button onclick="handleInstaDownload()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
+
+          <!-- RESULT CONTAINER -->
+          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1">
+            <div id="result"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOATING DOWNLOAD MENU -->
+    <div id="download-menu" class="hidden absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/95 border border-gray-700 backdrop-blur-md rounded-2xl p-4 shadow-2xl z-40 w-11/12 max-w-xs flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+        <h3 class="text-xs font-bold text-emerald-400">Share or Download via</h3>
+        <button onclick="toggleDownloadMenu()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="grid grid-cols-5 gap-2 py-2">
+        <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
+        <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
+        <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
+        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
+      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-14 text-emerald-400 transition"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[11px] font-medium">Home</span></button>
+      <button onclick="switchTab('loop')" id="nav-loop" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-video text-xl mb-1"></i><span class="text-[11px] font-medium">LOOP</span></button>
+      <button onclick="toggleDownloadMenu()" class="flex flex-col items-center justify-center"><div class="w-14 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20 active:scale-95 transition"><i class="fa-solid fa-download text-lg font-bold"></i></div><span class="text-[11px] font-medium text-gray-300 mt-1">Download</span></button>
+      <button onclick="switchTab('quotes')" id="nav-quotes" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-quote-left text-xl mb-1"></i><span class="text-[11px] font-medium">Quotes</span></button>
+      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-regular fa-user text-xl mb-1"></i><span class="text-[11px] font-medium">Profile</span></button>
+    </nav>
+
   </div>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    const TMDB_API_KEY = "4202ab5f0ea390e81172b29cceca6795";
-    const BASE_URL = "https://api.themoviedb.org/3";
-    const IMG_URL = "https://image.tmdb.org/t/p/w500";
-    const BACKDROP_URL = "https://image.tmdb.org/t/p/original";
+    let users = JSON.parse(localStorage.getItem('loop_users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+    let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
+    
+    let peer = null;
+    let localStream = null;
+    let currentCall = null;
 
-    let activeMediaId = null;
-    let featuredMedia = null;
+    function applyTheme() {
+      const container = document.getElementById('app-container');
+      const header = document.getElementById('app-header');
+      const themeIcon = document.getElementById('theme-icon');
 
-    const movieGrid = document.getElementById('movieGrid');
-    const heroBanner = document.getElementById('heroBanner');
-    const heroTitle = document.getElementById('heroTitle');
-    const heroDesc = document.getElementById('heroDesc');
-    const heroPlayBtn = document.getElementById('heroPlayBtn');
-    const heroDownloadBtn = document.getElementById('heroDownloadBtn');
-    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
-    const heroTag = document.getElementById('heroTag');
-    const sectionHeading = document.getElementById('sectionHeading');
-    const searchInput = document.getElementById('searchInput');
-    const videoModal = document.getElementById('videoModal');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const closeModal = document.getElementById('closeModal');
-
-    // പുതിയ ഡൗൺലോഡ് സിസ്റ്റം
-    function triggerDownload(tmdbId, title = '') {
-      const movieName = encodeURIComponent(title || 'Movie');
-      const directServer = `https://www.2embed.cc/embed/${tmdbId}`;
-      const telegramSearch = `https://t.me/s/search?q=${movieName}`;
-
-      const userChoice = confirm(
-        `"${title}" ഡൗൺലോഡ് ചെയ്യാൻ തിരഞ്ഞെടുക്കുക:\n\n` +
-        `[OK] - വെബ് പ്ലെയർ & ഡയറക്റ്റ് ഡൗൺലോഡ്\n` +
-        `[Cancel] - ടെലിഗ്രാം വഴി ഡൗൺലോഡ്`
-      );
-
-      if (userChoice) {
-        window.open(directServer, '_blank');
+      if (isDarkMode) {
+        container.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        container.classList.add('bg-black', 'text-white', 'border-gray-800');
+        header.classList.remove('bg-white/90', 'border-gray-200');
+        header.classList.add('bg-gray-900/90', 'border-gray-800/80');
+        themeIcon.className = "fa-solid fa-moon text-lg text-emerald-400";
       } else {
-        window.open(telegramSearch, '_blank');
+        container.classList.remove('bg-black', 'text-white', 'border-gray-800');
+        container.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        header.classList.remove('bg-gray-900/90', 'border-gray-800/80');
+        header.classList.add('bg-white/90', 'border-gray-200');
+        themeIcon.className = "fa-solid fa-sun text-lg text-amber-500";
       }
     }
 
-    async function fetchData(endpoint) {
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('loop_dark_mode', JSON.stringify(isDarkMode));
+      applyTheme();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => { applyTheme(); });
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const intro = document.getElementById('intro-screen');
+        intro.style.opacity = '0';
+        setTimeout(() => {
+          intro.style.display = 'none';
+          checkAuthState();
+        }, 700);
+      }, 1800);
+    });
+
+    function checkAuthState() {
+      if (currentUser) {
+        document.getElementById('auth-view').classList.add('hidden');
+        document.getElementById('bottom-nav').classList.remove('hidden');
+        updateProfileDisplay();
+        switchTab('home');
+      } else {
+        document.getElementById('auth-view').classList.remove('hidden');
+        document.getElementById('home-view').classList.add('hidden');
+        document.getElementById('bottom-nav').classList.add('hidden');
+        document.getElementById('app-title').innerText = "LOOP";
+      }
+    }
+
+    function toggleAuthMode(mode) {
+      document.getElementById('login-error').classList.add('hidden');
+      document.getElementById('signup-error').classList.add('hidden');
+      if (mode === 'signup') {
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('signup-box').classList.remove('hidden');
+      } else {
+        document.getElementById('signup-box').classList.add('hidden');
+        document.getElementById('login-box').classList.remove('hidden');
+      }
+    }
+
+    function handleSignup() {
+      const email = document.getElementById('signup-email').value.trim();
+      const username = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value.trim();
+      const errorEl = document.getElementById('signup-error');
+
+      if (!email || !username || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const existingUser = users.find(u => u.email === email || u.username === username);
+      if (existingUser) {
+        errorEl.innerText = "Email or Username already exists.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const newUser = {
+        name: username,
+        username: username,
+        email: email,
+        password: password,
+        img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+      };
+
+      users.push(newUser);
+      localStorage.setItem('loop_users', JSON.stringify(users));
+      currentUser = newUser;
+      localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+      
+      errorEl.classList.add('hidden');
+      checkAuthState();
+    }
+
+    function handleLogin() {
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorEl = document.getElementById('login-error');
+
+      if (!identifier || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.add('hidden');
+        return;
+      }
+
+      const user = users.find(u => (u.email === identifier || u.username === identifier) && u.password === password);
+      
+      if (user) {
+        currentUser = user;
+        localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+        errorEl.classList.add('hidden');
+        checkAuthState();
+      } else {
+        errorEl.innerText = "Invalid Username/Email or Password.";
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('loop_current_user');
+      stopPeerConnection();
+      checkAuthState();
+    }
+
+    function updateProfileDisplay() {
+      if (currentUser) {
+        document.getElementById('display-name').innerText = currentUser.name || currentUser.username;
+        let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
+        document.getElementById('display-username').innerText = formattedUsername;
+        document.getElementById('display-email').innerText = currentUser.email;
+        document.getElementById('display-profile-img').src = currentUser.img;
+      }
+    }
+
+    function switchTab(tab) {
+      document.getElementById('home-view').classList.add('hidden');
+      document.getElementById('loop-view').classList.add('hidden');
+      document.getElementById('quotes-view').classList.add('hidden');
+      document.getElementById('profile-view').classList.add('hidden');
+      document.getElementById('download-menu').classList.add('hidden');
+
+      document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+
+      if(tab === 'home') {
+        document.getElementById('home-view').classList.remove('hidden');
+        document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP";
+        stopPeerConnection();
+      } else if(tab === 'loop') {
+        document.getElementById('loop-view').classList.remove('hidden');
+        document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP Live";
+        initCameraOnly();
+      } else if(tab === 'quotes') {
+        document.getElementById('quotes-view').classList.remove('hidden');
+        document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP Quotes";
+        stopPeerConnection();
+      } else if(tab === 'profile') {
+        document.getElementById('profile-view').classList.remove('hidden');
+        document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "My Profile";
+        stopPeerConnection();
+      }
+    }
+
+    async function initCameraOnly() {
       try {
-        const sep = endpoint.includes('?') ? '&' : '?';
-        const res = await fetch(`${BASE_URL}${endpoint}${sep}api_key=${TMDB_API_KEY}`);
-        const data = await res.json();
-        return data.results || [];
-      } catch (e) {
-        console.error("API Error:", e);
-        return [];
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('local-video').srcObject = localStream;
+      } catch (err) {
+        alert("Camera permission required!");
       }
     }
 
-    async function loadByLanguage(langCode, label) {
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(label.split(' ')[0].toLowerCase()));
-      });
-
-      sectionHeading.textContent = label;
-
-      let items = [];
-      if (langCode === 'all') {
-        items = await fetchData(`/trending/movie/day?language=en-US`);
-      } else {
-        items = await fetchData(`/discover/movie?with_original_language=${langCode}&sort_by=popularity.desc`);
+    // Room connection for testing between 2 phones instantly
+    function joinRoom() {
+      let roomName = document.getElementById('room-code-input').value.trim();
+      if(!roomName) {
+        alert("Please enter a room code!");
+        return;
       }
 
-      if (items.length > 0) {
-        setHero(items[0], label);
-        renderList(items);
-      } else {
-        movieGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No movies found.</p>`;
-      }
-    }
+      const statusEl = document.getElementById('match-status');
+      const statusText = document.getElementById('status-text');
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
 
-    function setHero(item, label) {
-      featuredMedia = item;
-      heroTitle.textContent = item.title || item.name;
-      heroDesc.textContent = item.overview || "No plot summary available.";
-      heroTag.textContent = label.toUpperCase();
-      if (item.backdrop_path) {
-        heroBanner.style.backgroundImage = `linear-gradient(180deg, rgba(11,12,16,0.3) 0%, var(--bg) 98%), url('${BACKDROP_URL + item.backdrop_path}')`;
-      }
-    }
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Joining room: ${roomName}...`;
 
-    function renderList(items) {
-      movieGrid.innerHTML = '';
-      items.forEach(item => {
-        if (!item.poster_path) return;
-        const cleanTitle = (item.title || item.name || '').replace(/'/g, "\\'");
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-        card.innerHTML = `
-          <div class="poster-wrap" onclick="openStreaming(${item.id})">
-            <img src="${IMG_URL + item.poster_path}" alt="${item.title}" loading="lazy">
-            <div class="lang-badge">${item.original_language || 'EN'}</div>
-            <div class="rating-badge">★ ${(item.vote_average || 0).toFixed(1)}</div>
-          </div>
-          <div class="movie-info">
-            <div class="movie-title">${item.title}</div>
-            <div class="movie-year">${(item.release_date || '').split('-')[0]}</div>
-          </div>
-          <div class="card-actions">
-            <button class="card-btn btn-stream" onclick="openStreaming(${item.id})">▶ Play</button>
-            <button class="card-btn btn-download" onclick="triggerDownload(${item.id}, '${cleanTitle}')">⬇ Save</button>
-          </div>
-        `;
-        movieGrid.appendChild(card);
-      });
-    }
+      if(peer) { peer.destroy(); }
 
-    function openStreaming(id) {
-      activeMediaId = id;
-      switchServer(1);
-      videoModal.style.display = 'flex';
-    }
+      // We use roomName as peer ID for user 1, and caller for user 2
+      let myPeerId = roomName + "_user1";
+      let targetPeerId = roomName + "_user2";
 
-    function switchServer(serverNum) {
-      document.querySelectorAll('.server-btn').forEach((btn, idx) => {
-        btn.classList.toggle('active', idx === serverNum - 1);
-      });
+      // Try creating as user 1, if taken, become user 2
+      peer = new Peer(myPeerId);
 
-      if (!activeMediaId) return;
+      peer.on('open', (id) => {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Waiting in room...`;
+        statusText.innerText = `Joined ${roomName}. Connecting...`;
 
-      if (serverNum === 1) {
-        videoPlayer.src = `https://www.2embed.cc/embed/${activeMediaId}`;
-      } else if (serverNum === 2) {
-        videoPlayer.src = `https://vidsrc.me/embed/movie?tmdb=${activeMediaId}`;
-      } else if (serverNum === 3) {
-        videoPlayer.src = `https://embed.smashystream.com/playere.php?tmdb=${activeMediaId}`;
-      }
-    }
-
-    heroPlayBtn.addEventListener('click', () => {
-      if (featuredMedia) openStreaming(featuredMedia.id);
-    });
-
-    heroDownloadBtn.addEventListener('click', () => {
-      if (featuredMedia) triggerDownload(featuredMedia.id, featuredMedia.title || featuredMedia.name);
-    });
-
-    modalDownloadBtn.addEventListener('click', () => {
-      if (activeMediaId) triggerDownload(activeMediaId);
-    });
-
-    closeModal.addEventListener('click', () => {
-      videoModal.style.display = 'none';
-      videoPlayer.src = '';
-    });
-
-    window.addEventListener('click', (e) => {
-      if (e.target === videoModal) {
-        videoModal.style.display = 'none';
-        videoPlayer.src = '';
-      }
-    });
-
-    let searchTimer;
-    searchInput.addEventListener('input', (e) => {
-      clearTimeout(searchTimer);
-      const query = e.target.value.trim();
-      searchTimer = setTimeout(async () => {
-        if (query) {
-          sectionHeading.textContent = `Search results for "${query}"`;
-          const results = await fetchData(`/search/movie?query=${encodeURIComponent(query)}`);
-          renderList(results);
-        } else {
-          loadByLanguage('all', 'Trending All');
+        // Attempt calling user 2 if they are already there
+        let call = peer.call(targetPeerId, localStream);
+        if(call) {
+          setupCallHandlers(call);
         }
-      }, 400);
-    });
+      });
 
-    loadByLanguage('all', 'Trending All');
+      peer.on('error', (err) => {
+        // If user 1 ID is already taken, connect as user 2
+        if(err.type === 'unavailable-id') {
+          peer = new Peer(targetPeerId);
+          peer.on('open', (id) => {
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Calling room partner...`;
+            let call = peer.call(myPeerId, localStream);
+            if(call) {
+              setupCallHandlers(call);
+            }
+          });
+        }
+      });
+
+      peer.on('call', (call) => {
+        currentCall = call;
+        call.answer(localStream);
+        setupCallHandlers(call);
+      });
+    }
+
+    function setupCallHandlers(call) {
+      currentCall = call;
+      const statusEl = document.getElementById('match-status');
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
+
+      call.on('stream', (remoteStream) => {
+        strangerVideo.srcObject = remoteStream;
+        strangerVideo.play();
+        placeholder.classList.add('hidden');
+        strangerVideo.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected successfully!`;
+      });
+
+      call.on('close', () => {
+        strangerVideo.srcObject = null;
+        strangerVideo.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Partner disconnected`;
+      });
+    }
+
+    function skipStranger() {
+      if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+      }
+      const strangerVideo = document.getElementById('stranger-video');
+      const placeholder = document.getElementById('stranger-placeholder');
+      strangerVideo.srcObject = null;
+      strangerVideo.classList.add('hidden');
+      placeholder.classList.remove('hidden');
+      document.getElementById('match-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Disconnected`;
+    }
+
+    function stopPeerConnection() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
+    }
+
+    function toggleDownloadMenu() {
+      document.getElementById('download-menu').classList.toggle('hidden');
+    }
+
+    function openInstaDownloader() {
+      document.getElementById('insta-downloader-modal').classList.remove('hidden');
+      document.getElementById('insta-link-input').value = '';
+      document.getElementById('insta-result-container').classList.add('hidden');
+      document.getElementById('result').innerHTML = '';
+    }
+
+    function closeInstaDownloader() {
+      document.getElementById('insta-downloader-modal').classList.add('hidden');
+    }
+
+    async function handleInstaDownload(){
+      let u = document.getElementById('insta-link-input').value.trim();
+      let r = document.getElementById('result');
+      let container = document.getElementById('insta-result-container');
+      
+      if(!u || !u.includes('instagram.com')){
+        alert('Correct Insta link paste cheyyu');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching via Backend...</p>';
+
+      try {
+        let res = await fetch(`https://insta-api-45a7.onrender.com/api?url=${encodeURIComponent(u)}`);
+        let contentType = res.headers.get("content-type");
+        let videoUrl = "";
+        
+        if (contentType && contentType.includes("application/json")) {
+          let data = await res.json();
+          videoUrl = data.url || data.videoUrl || data.medias?.[0]?.url;
+        } else {
+          videoUrl = res.url;
+        }
+
+        if(videoUrl){
+          r.innerHTML = `
+            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
+          `;
+          return;
+        }
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch video. Try another link.</p>';
+      } catch(e) {
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server connection error. Please try again later.</p>';
+      }
+    }
+
+    function openEditProfileModal() {
+      document.getElementById('input-name').value = currentUser.name || '';
+      updateProfileDisplay();
+      document.getElementById('edit-profile-modal').classList.remove('hidden');
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('edit-profile-modal').classList.add('hidden');
+    }
+
+    function saveProfileDetails() {
+      const name = document.getElementById('input-name').value;
+      const username = document.getElementById('input-username').value;
+      const email = document.getElementById('input-email').value;
+      const imgUrl = document.getElementById('input-img').value;
+
+      if(name) currentUser.name = name;
+      if(username) currentUser.username = username;
+      if(email) currentUser.email = email;
+      if(imgUrl) currentUser.img = imgUrl;
+
+      const userIndex = users.findIndex(u => u.email === currentUser.email || u.username === currentUser.username);
+      if(userIndex !== -1) {
+        users[userIndex] = currentUser;
+        localStorage.setItem('loop_users', JSON.stringify(users));
+      }
+      localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+
+      updateProfileDisplay();
+      closeEditProfileModal();
+    }
   </script>
 </body>
 </html>
