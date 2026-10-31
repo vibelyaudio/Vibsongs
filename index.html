@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIBELY - Spotify Edition</title>
+    <title>VIBELY - Music Streaming</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,10 +11,11 @@
             theme: {
                 extend: {
                     colors: {
-                        spotifyGreen: '#1DB954',
-                        spotifyDark: '#121212',
-                        spotifyCard: '#181818',
-                        spotifyCardHover: '#282828'
+                        vibelyGreen: '#1DB954',
+                        vibelyDarkGreen: '#15883e',
+                        vibelyLight: '#F8FAFC',
+                        vibelyCard: '#FFFFFF',
+                        vibelyHover: '#F0FDF4'
                     }
                 }
             }
@@ -23,10 +24,9 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #121212; }
-        ::-webkit-scrollbar-thumb { background: #282828; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3E3E3E; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #1DB954; border-radius: 4px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         @keyframes pulse-ring {
@@ -37,218 +37,172 @@
         .logo-pulse { animation: pulse-ring 2s infinite; }
     </style>
 </head>
-<body class="bg-spotifyDark text-white font-sans select-none overflow-hidden h-screen flex flex-col">
+<body class="bg-vibelyLight text-gray-900 font-sans select-none overflow-hidden h-screen flex flex-col">
 
     <!-- LOGIN / CREATE ACCOUNT SCREEN MODAL -->
-    <div id="login-screen" class="fixed inset-0 bg-spotifyDark z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500 hidden">
-        <div class="bg-[#121212] p-8 rounded-2xl shadow-2xl border border-neutral-800 max-w-md w-full text-center">
-            <div class="w-16 h-16 bg-spotifyGreen rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-spotifyGreen/20">
-                <i class="fa-solid fa-headphones-simple text-black text-2xl"></i>
+    <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500 hidden">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full text-center">
+            <div class="w-16 h-16 bg-vibelyGreen rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-vibelyGreen/30">
+                <i class="fa-solid fa-headphones-simple text-white text-2xl"></i>
             </div>
-            <h1 class="text-2xl font-black tracking-wider text-white mb-1" id="authTitle">Log in to VIBELY</h1>
-            <p class="text-neutral-400 text-xs mb-6" id="authSubtitle">Continue with Email & Password</p>
+            <h1 class="text-2xl font-black tracking-wider text-gray-900 mb-1" id="authTitle">Welcome to VIBELY</h1>
+            <p class="text-gray-500 text-xs mb-6" id="authSubtitle">Login with Email & Password</p>
             
             <!-- LOGIN FORM -->
-            <div id="loginForm" class="space-y-4 text-left">
-                <div>
-                    <label class="block text-xs font-bold text-neutral-300 mb-1">Email address</label>
-                    <input type="email" id="loginEmail" placeholder="Email address" 
-                        class="w-full bg-[#3e3e3e] text-white text-sm rounded-md px-4 py-3 border border-transparent focus:outline-none focus:border-white transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-neutral-300 mb-1">Password</label>
-                    <input type="password" id="loginPassword" placeholder="Password" 
-                        class="w-full bg-[#3e3e3e] text-white text-sm rounded-md px-4 py-3 border border-transparent focus:outline-none focus:border-white transition">
-                </div>
-                <button onclick="handleLoginSubmit()" class="w-full bg-spotifyGreen hover:bg-[#1ed760] text-black font-bold py-3 rounded-full transition shadow-md text-sm mt-2">
-                    Log In
+            <div id="loginForm" class="space-y-4">
+                <input type="email" id="loginEmail" placeholder="Email Address" 
+                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
+                <input type="password" id="loginPassword" placeholder="Password" 
+                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
+                <button onclick="handleLoginSubmit()" class="w-full bg-vibelyGreen hover:bg-vibelyDarkGreen text-white font-bold py-3 rounded-xl transition shadow-md shadow-vibelyGreen/30 text-sm">
+                    Login
                 </button>
-                <p class="text-xs text-neutral-400 text-center mt-4">Don't have an account? <button onclick="switchAuthMode('signup')" class="text-white font-bold hover:underline">Sign up for Vibely</button></p>
+                <p class="text-xs text-gray-500 mt-4">Don't have an account? <button onclick="switchAuthMode('signup')" class="text-vibelyGreen font-bold hover:underline">Create Account</button></p>
             </div>
 
             <!-- CREATE ACCOUNT FORM -->
-            <div id="signupForm" class="space-y-4 text-left hidden">
-                <div>
-                    <label class="block text-xs font-bold text-neutral-300 mb-1">What should we call you?</label>
-                    <input type="text" id="signupName" placeholder="Enter a profile name" 
-                        class="w-full bg-[#3e3e3e] text-white text-sm rounded-md px-4 py-3 border border-transparent focus:outline-none focus:border-white transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-neutral-300 mb-1">Email address</label>
-                    <input type="email" id="signupEmail" placeholder="name@domain.com" 
-                        class="w-full bg-[#3e3e3e] text-white text-sm rounded-md px-4 py-3 border border-transparent focus:outline-none focus:border-white transition">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-neutral-300 mb-1">Create a password</label>
-                    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" 
-                        class="w-full bg-[#3e3e3e] text-white text-sm rounded-md px-4 py-3 border border-transparent focus:outline-none focus:border-white transition">
-                </div>
-                <button onclick="handleSignupSubmit()" class="w-full bg-spotifyGreen hover:bg-[#1ed760] text-black font-bold py-3 rounded-full transition shadow-md text-sm mt-2">
-                    Sign Up
+            <div id="signupForm" class="space-y-4 hidden">
+                <input type="text" id="signupName" placeholder="Full Name" 
+                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
+                <input type="email" id="signupEmail" placeholder="Email Address" 
+                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
+                <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" 
+                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
+                <button onclick="handleSignupSubmit()" class="w-full bg-vibelyGreen hover:bg-vibelyDarkGreen text-white font-bold py-3 rounded-xl transition shadow-md shadow-vibelyGreen/30 text-sm">
+                    Create Account
                 </button>
-                <p class="text-xs text-neutral-400 text-center mt-4">Have an account? <button onclick="switchAuthMode('login')" class="text-white font-bold hover:underline">Log in</button></p>
+                <p class="text-xs text-gray-500 mt-4">Already have an account? <button onclick="switchAuthMode('login')" class="text-vibelyGreen font-bold hover:underline">Login</button></p>
             </div>
         </div>
     </div>
 
     <!-- SPLASH SCREEN -->
-    <div id="splash-screen" class="fixed inset-0 bg-spotifyDark z-40 flex flex-col items-center justify-center transition-opacity duration-700">
+    <div id="splash-screen" class="fixed inset-0 bg-white z-40 flex flex-col items-center justify-center transition-opacity duration-700">
         <div class="flex flex-col items-center">
-            <div class="w-24 h-24 bg-spotifyGreen rounded-full flex items-center justify-center logo-pulse mb-5 shadow-xl">
-                <i class="fa-solid fa-headphones-simple text-black text-5xl"></i>
+            <div class="w-24 h-24 bg-vibelyGreen rounded-full flex items-center justify-center logo-pulse mb-5 shadow-xl">
+                <i class="fa-solid fa-headphones-simple text-white text-5xl"></i>
             </div>
-            <h1 class="text-4xl font-black tracking-widest text-white">VIBELY</h1>
-            <p class="text-spotifyGreen font-semibold text-xs mt-2 tracking-widest uppercase">Music Streaming</p>
+            <h1 class="text-4xl font-black tracking-widest text-gray-900">VIBELY</h1>
+            <p class="text-vibelyGreen font-semibold text-sm mt-2 tracking-wide">MUSIC STREAMING</p>
         </div>
     </div>
 
-    <!-- MAIN APP LAYOUT (SPOTIFY 3-PANEL STYLE) -->
-    <div class="flex flex-1 overflow-hidden p-2 gap-2 bg-black">
-        <!-- SIDEBAR (LEFT PANEL) -->
-        <aside class="w-64 bg-spotifyDark flex flex-col p-4 rounded-lg hidden md:flex space-y-2">
-            <div class="flex items-center space-x-3 px-2 py-3 mb-2">
-                <div class="w-8 h-8 bg-spotifyGreen rounded-full flex items-center justify-center text-black">
-                    <i class="fa-solid fa-headphones-simple text-sm"></i>
+    <!-- MAIN APP LAYOUT -->
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white flex flex-col p-6 hidden md:flex border-r border-gray-200 shadow-sm">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-vibelyGreen rounded-full flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-headphones-simple text-white text-lg"></i>
                 </div>
-                <span class="text-xl font-bold tracking-tight text-white">VIBELY</span>
+                <span class="text-2xl font-black tracking-tight text-gray-900">VIBELY</span>
             </div>
-            <nav class="space-y-1">
-                <a href="#" onclick="switchTab('home')" id="nav-home" class="flex items-center space-x-4 bg-[#282828] text-white px-4 py-3 rounded-md font-bold transition text-sm">
-                    <i class="fa-solid fa-house text-lg w-5"></i><span>Home</span>
+            <nav class="space-y-2 flex-1">
+                <a href="#" onclick="switchTab('home')" id="nav-home" class="flex items-center space-x-4 bg-vibelyGreen text-white px-4 py-3 rounded-xl font-semibold transition shadow-sm">
+                    <i class="fa-solid fa-house text-lg w-6"></i><span>Home</span>
                 </a>
-                <a href="#" onclick="switchTab('search')" id="nav-search" class="flex items-center space-x-4 text-neutral-400 hover:text-white px-4 py-3 rounded-md font-bold transition text-sm">
-                    <i class="fa-solid fa-magnifying-glass text-lg w-5"></i><span>Search</span>
+                <a href="#" onclick="switchTab('search')" id="nav-search" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fa-solid fa-magnifying-glass text-lg w-6"></i><span>Search Songs</span>
+                </a>
+                <a href="#" onclick="switchTab('favorites')" id="nav-favorites" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fa-solid fa-heart text-lg w-6 text-red-500"></i><span>Favorites</span>
+                </a>
+                <a href="#" onclick="switchTab('playlists')" id="nav-playlists" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fa-solid fa-list-music text-lg w-6"></i><span>Playlists</span>
                 </a>
             </nav>
-
-            <!-- Library / Playlists Box -->
-            <div class="bg-spotifyCard flex-1 rounded-lg p-4 flex flex-col mt-2">
-                <div class="flex items-center justify-between text-neutral-400 mb-4">
-                    <div class="flex items-center space-x-3 font-bold text-sm">
-                        <i class="fa-solid fa-book-bookmark text-base"></i>
-                        <span>Your Library</span>
-                    </div>
-                    <button onclick="createNewPlaylist()" class="hover:bg-[#282828] w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition">
-                        <i class="fa-solid fa-plus text-sm"></i>
-                    </button>
-                </div>
-                <div class="space-y-1 flex-1 overflow-y-auto no-scrollbar">
-                    <button onclick="switchTab('favorites')" class="w-full text-left px-3 py-2 rounded-md hover:bg-[#282828] transition flex items-center space-x-3 group">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-700 to-blue-300 rounded flex items-center justify-center text-white shadow">
-                            <i class="fa-solid fa-heart text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-sm text-white group-hover:underline">Liked Songs</p>
-                            <p class="text-xs text-neutral-400">Playlist • Vibely</p>
-                        </div>
-                    </button>
-                    <button onclick="switchTab('playlists')" class="w-full text-left px-3 py-2 rounded-md hover:bg-[#282828] transition flex items-center space-x-3 group">
-                        <div class="w-10 h-10 bg-neutral-800 rounded flex items-center justify-center text-spotifyGreen shadow">
-                            <i class="fa-solid fa-list-music text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-sm text-white group-hover:underline">My Playlists</p>
-                            <p class="text-xs text-neutral-400">Collection</p>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <div class="pt-2 border-t border-neutral-800 flex items-center justify-between text-xs px-2 text-neutral-400">
-                <span id="userNameDisplay" class="font-bold text-white truncate max-w-[120px]">User</span>
-                <button onclick="handleLogout()" class="text-neutral-400 hover:text-white transition">Log out</button>
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <span id="userNameDisplay" class="font-bold text-gray-800">User</span>
+                <button onclick="handleLogout()" class="text-red-500 hover:underline">Logout</button>
             </div>
         </aside>
 
-        <!-- CONTENT AREA (CENTER MAIN PANEL) -->
-        <main class="flex-1 bg-gradient-to-b from-[#222222] to-spotifyDark rounded-lg overflow-y-auto pb-32 relative">
-            <!-- Top Sticky Header -->
-            <header class="sticky top-0 bg-[#121212]/90 backdrop-blur-md px-4 sm:px-6 py-4 flex items-center justify-between z-20">
+        <!-- CONTENT AREA -->
+        <main class="flex-1 bg-gradient-to-b from-green-50/70 to-white overflow-y-auto pb-32">
+            <!-- Top Fixed Header -->
+            <header class="sticky top-0 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 flex items-center justify-between z-20 border-b border-gray-200 shadow-sm">
                 <!-- Clickable Logo with Dropdown Menu -->
                 <div class="relative">
-                    <div onclick="toggleMenu()" class="flex items-center space-x-2 mr-3 cursor-pointer select-none group bg-[#242424] hover:bg-[#2a2a2a] px-3 py-1.5 rounded-full transition">
-                        <div class="w-6 h-6 bg-spotifyGreen rounded-full flex items-center justify-center text-black">
-                            <i class="fa-solid fa-headphones-simple text-xs"></i>
+                    <div onclick="toggleMenu()" class="flex items-center space-x-2 mr-3 cursor-pointer select-none group">
+                        <div class="w-8 h-8 bg-vibelyGreen rounded-full flex items-center justify-center shadow group-hover:scale-105 transition">
+                            <i class="fa-solid fa-headphones-simple text-white text-sm"></i>
                         </div>
-                        <span class="font-bold text-white text-xs tracking-tight">VIBELY</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-neutral-400 ml-0.5"></i>
+                        <span class="font-black text-gray-900 tracking-tight text-sm sm:text-base">VIBELY</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 ml-0.5"></i>
                     </div>
 
                     <!-- Dropdown Menu -->
-                    <div id="logoMenu" class="hidden absolute top-12 left-0 bg-[#282828] border border-neutral-700 rounded-xl shadow-2xl py-2 w-48 z-50">
-                        <button onclick="switchTab('home'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-house w-4 text-spotifyGreen"></i><span>Home</span>
+                    <div id="logoMenu" class="hidden absolute top-12 left-0 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 w-48 z-50">
+                        <button onclick="switchTab('home'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-house w-4 text-vibelyGreen"></i><span>Home</span>
                         </button>
-                        <button onclick="switchTab('search'); closeMenu(); document.getElementById('searchInput').focus();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-magnifying-glass w-4 text-spotifyGreen"></i><span>Search Songs</span>
+                        <button onclick="switchTab('search'); closeMenu(); document.getElementById('searchInput').focus();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-magnifying-glass w-4 text-vibelyGreen"></i><span>Search Songs</span>
                         </button>
-                        <button onclick="switchTab('favorites'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
+                        <button onclick="switchTab('favorites'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
                             <i class="fa-solid fa-heart w-4 text-red-500"></i><span>Liked Songs</span>
                         </button>
-                        <button onclick="switchTab('playlists'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-list-music w-4 text-spotifyGreen"></i><span>Playlists</span>
-                        </button>
-                        <div class="border-t border-neutral-700 my-1"></div>
-                        <button onclick="handleLogout(); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-950/50 flex items-center space-x-2.5 transition">
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <button onclick="handleLogout(); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 transition">
                             <i class="fa-solid fa-right-from-bracket w-4"></i><span>Logout Account</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Search Input Header -->
+                <!-- Search Box -->
                 <div class="flex items-center flex-1 max-w-md mx-2">
                     <div class="relative w-full flex items-center">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 text-neutral-400 text-sm"></i>
-                        <input type="text" id="searchInput" placeholder="What do you want to play?" 
-                            class="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#121212] text-white text-sm rounded-full pl-11 pr-16 py-2.5 border border-transparent focus:border-white transition outline-none"
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 text-gray-400 text-xs"></i>
+                        <input type="text" id="searchInput" placeholder="Search Vibely tracks..." 
+                            class="w-full bg-gray-100 text-gray-900 text-xs sm:text-sm rounded-full pl-9 pr-16 py-2 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:bg-white focus:ring-2 focus:ring-vibelyGreen/20 transition"
                             onkeypress="if(event.key === 'Enter') handleSearch()">
-                        <button onclick="handleSearch()" class="absolute right-2 bg-white text-black text-xs font-bold px-3 py-1.5 rounded-full hover:scale-105 transition">
+                        <button onclick="handleSearch()" class="absolute right-1 bg-vibelyGreen hover:bg-vibelyDarkGreen text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm">
                             Search
                         </button>
                     </div>
                 </div>
 
                 <!-- Profile Avatar -->
-                <div class="flex items-center space-x-3 ml-2">
-                    <div id="userAvatar" class="w-8 h-8 bg-neutral-700 text-white rounded-full flex items-center justify-center font-bold text-xs shadow border border-neutral-600">
+                <div class="flex items-center space-x-2 ml-1">
+                    <div id="userAvatar" class="w-8 h-8 bg-vibelyGreen text-white rounded-full flex items-center justify-center font-bold text-xs shadow">
                         IA
                     </div>
                 </div>
             </header>
 
             <!-- Quick Filter Pills -->
-            <div class="px-6 pt-4 flex items-center space-x-2 overflow-x-auto no-scrollbar">
-                <button onclick="quickSearch('Avesham Malayalam Songs')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Avesham</button>
-                <button onclick="quickSearch('Illuminati Dabzee')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Illuminati</button>
-                <button onclick="quickSearch('Manjummel Boys')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Manjummel Boys</button>
-                <button onclick="quickSearch('Premalu Songs')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Premalu</button>
-                <button onclick="quickSearch('Anirudh Tamil Hits')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Tamil Hits</button>
-                <button onclick="quickSearch('Hindi New Songs')" class="bg-[#282828] hover:bg-[#3e3e3e] text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition">Hindi Hits</button>
+            <div class="px-4 sm:px-6 pt-4 flex items-center space-x-2 overflow-x-auto no-scrollbar">
+                <button onclick="quickSearch('Avesham Malayalam Songs')" class="bg-vibelyGreen text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm hover:bg-vibelyDarkGreen transition">Avesham</button>
+                <button onclick="quickSearch('Illuminati Dabzee')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Illuminati</button>
+                <button onclick="quickSearch('Manjummel Boys')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Manjummel Boys</button>
+                <button onclick="quickSearch('Premalu Songs')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Premalu</button>
+                <button onclick="quickSearch('Anirudh Tamil Hits')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Tamil Hits</button>
+                <button onclick="quickSearch('Hindi New Songs')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Hindi Hits</button>
             </div>
 
             <!-- Dynamic Views -->
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <!-- Status Message -->
-                <div id="statusMessage" class="hidden mb-4 p-3 rounded-md bg-[#282828] border border-neutral-700 text-spotifyGreen text-xs font-bold flex items-center space-x-2">
+                <div id="statusMessage" class="hidden mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-vibelyDarkGreen text-xs font-semibold flex items-center space-x-2">
                     <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <span id="statusText">Searching tracks...</span>
+                    <span id="statusText">Searching Vibely tracks...</span>
                 </div>
 
                 <!-- HOME / RESULTS VIEW -->
                 <div id="view-home" class="space-y-4">
                     <div class="flex items-center justify-between">
-                        <h2 id="sectionHeading" class="text-xl sm:text-2xl font-black tracking-tight text-white">Vibely Tracks</h2>
+                        <h2 id="sectionHeading" class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Vibely Tracks</h2>
                     </div>
                     <!-- Song Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="songsGrid">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="songsGrid">
                         <!-- Populated by JS -->
                     </div>
                 </div>
 
                 <!-- FAVORITES VIEW -->
                 <div id="view-favorites" class="space-y-4 hidden">
-                    <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white">Liked Songs</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="favoritesGrid">
+                    <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Your Favorite Songs</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="favoritesGrid">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -256,12 +210,12 @@
                 <!-- PLAYLISTS VIEW -->
                 <div id="view-playlists" class="space-y-4 hidden">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white">Your Playlists</h2>
-                        <button onclick="createNewPlaylist()" class="bg-spotifyGreen text-black text-xs font-bold px-4 py-2 rounded-full hover:scale-105 transition">
+                        <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Your Playlists</h2>
+                        <button onclick="createNewPlaylist()" class="bg-vibelyGreen text-white text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-vibelyDarkGreen transition">
                             <i class="fa-solid fa-plus mr-1"></i> New Playlist
                         </button>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="playlistsGrid">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="playlistsGrid">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -270,48 +224,46 @@
     </div>
 
     <!-- FLOATING LIKED SONGS BUTTON -->
-    <button onclick="switchTab('favorites')" class="fixed bottom-28 right-6 w-14 h-14 bg-spotifyGreen text-black rounded-full flex items-center justify-center shadow-2xl z-40 transition hover:scale-110 group" title="Liked Songs">
+    <button onclick="switchTab('favorites')" class="fixed bottom-28 right-6 w-14 h-14 bg-vibelyGreen hover:bg-vibelyDarkGreen text-white rounded-full flex items-center justify-center shadow-2xl z-40 transition hover:scale-110 group" title="Liked Songs">
         <i class="fa-solid fa-heart text-xl group-hover:scale-110 transition"></i>
     </button>
 
-    <!-- SPOTIFY BOTTOM MUSIC PLAYER BAR -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-900 px-4 py-2.5 flex flex-col justify-center z-30 h-24">
+    <!-- BOTTOM MUSIC PLAYER -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 flex flex-col justify-center z-30 shadow-2xl h-24">
         <div class="w-full flex items-center space-x-2 mb-1.5 max-w-3xl mx-auto">
-            <span class="text-[10px] font-semibold text-neutral-400 w-8 text-right" id="current-time">0:00</span>
-            <input type="range" id="progress-bar" value="0" min="0" max="100" class="w-full h-1 bg-neutral-600 rounded-lg appearance-none cursor-pointer accent-white hover:accent-spotifyGreen">
-            <span class="text-[10px] font-semibold text-neutral-400 w-8" id="duration">0:00</span>
+            <span class="text-[10px] font-semibold text-gray-500 w-8 text-right" id="current-time">0:00</span>
+            <input type="range" id="progress-bar" value="0" min="0" max="100" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-vibelyGreen">
+            <span class="text-[10px] font-semibold text-gray-500 w-8" id="duration">0:00</span>
         </div>
 
-        <div class="flex items-center justify-between w-full max-w-7xl mx-auto">
-            <!-- Left Song Info -->
-            <div class="flex items-center space-x-3 w-1/3 overflow-hidden">
-                <img id="player-thumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" class="w-12 h-12 rounded-md object-cover shadow">
+        <div class="flex items-center justify-between w-full max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3 w-1/3 sm:w-1/3 overflow-hidden">
+                <img id="player-thumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" class="w-12 h-12 rounded-xl object-cover shadow-md border border-gray-100">
                 <div class="overflow-hidden pr-2">
-                    <h4 id="player-title" class="text-sm font-bold truncate text-white">Select a song</h4>
-                    <p id="player-artist" class="text-xs text-neutral-400 truncate">Vibely Ready</p>
+                    <h4 id="player-title" class="text-sm font-bold truncate text-gray-900">Select a song</h4>
+                    <p id="player-artist" class="text-xs text-vibelyGreen font-medium truncate">Vibely Ready</p>
                 </div>
             </div>
 
-            <!-- Center Controls & Player Container -->
-            <div class="flex items-center justify-center space-x-4 w-1/3">
-                <button onclick="playPrevious()" class="text-neutral-400 hover:text-white transition text-base" title="Previous">
+            <!-- PLAYER CONTAINER (VIDEO IFRAME PLAYBACK) -->
+            <div class="flex items-center justify-center w-1/3 sm:w-1/3">
+                <div id="player-container" class="w-full max-w-xs h-12 flex items-center justify-center bg-gray-100 rounded-xl overflow-hidden shadow-inner">
+                    <span class="text-xs text-gray-400">Select a song to play</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 w-1/3 sm:w-1/3">
+                <button onclick="playPrevious()" class="text-gray-600 hover:text-vibelyGreen transition text-base">
                     <i class="fa-solid fa-backward-step"></i>
                 </button>
-                <button onclick="togglePlayPause()" id="play-btn" class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow" title="Play/Pause">
+                <button onclick="togglePlayPause()" id="play-btn" class="w-10 h-10 bg-vibelyGreen text-white rounded-full flex items-center justify-center hover:bg-vibelyDarkGreen hover:scale-105 transition shadow-sm">
                     <i id="play-pause-icon" class="fa-solid fa-play text-sm ml-0.5"></i>
                 </button>
-                <button onclick="playNext()" class="text-neutral-400 hover:text-white transition text-base" title="Next">
+                <button onclick="playNext()" class="text-gray-600 hover:text-vibelyGreen transition text-base">
                     <i class="fa-solid fa-forward-step"></i>
                 </button>
-            </div>
-
-            <!-- Right Player Container & Download -->
-            <div class="flex items-center justify-end space-x-3 w-1/3">
-                <div id="player-container" class="w-40 h-12 flex items-center justify-center bg-[#181818] rounded-lg overflow-hidden border border-neutral-800">
-                    <span class="text-xs text-neutral-400">Player Ready</span>
-                </div>
-                <a id="download-btn" href="#" target="_blank" class="hidden text-neutral-400 hover:text-white transition text-sm" title="Open on YouTube">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <a id="download-btn" href="#" target="_blank" class="hidden bg-vibelyGreen text-white font-bold text-xs px-3 py-2 rounded-full items-center space-x-1 hover:bg-vibelyDarkGreen transition shadow-sm">
+                    <i class="fa-solid fa-download"></i>
                 </a>
             </div>
         </div>
@@ -371,7 +323,7 @@
         });
     </script>
 
-    <!-- VIBELY CLEAN SPOTIFY SCRIPT -->
+    <!-- VIBELY VIDEO IFRAME & FULL CONTROLS SCRIPT -->
     <script>
         let currentPlaylist = [];
         let currentIndex = 0;
@@ -388,13 +340,13 @@
             if(mode === 'signup') {
                 document.getElementById('loginForm').classList.add('hidden');
                 document.getElementById('signupForm').classList.remove('hidden');
-                document.getElementById('authTitle').innerText = 'Sign up to Vibely';
+                document.getElementById('authTitle').innerText = 'Create Account';
                 document.getElementById('authSubtitle').innerText = 'Sign up with Email & Password';
             } else {
                 document.getElementById('signupForm').classList.add('hidden');
                 document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('authTitle').innerText = 'Log in to VIBELY';
-                document.getElementById('authSubtitle').innerText = 'Continue with Email & Password';
+                document.getElementById('authTitle').innerText = 'Welcome to VIBELY';
+                document.getElementById('authSubtitle').innerText = 'Login with Email & Password';
             }
         }
 
@@ -509,6 +461,7 @@
             searchYouTubeMusicQuery(query);
         }
 
+        // MUSIC APIS WITH GUARANTEED DIRECT YOUTUBE THUMBNAILS
         const YT_MUSIC_APIS = [
             { url: q => `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music Kavin', parser: 'piped' },
             { url: q => `https://pipedapi.moomoo.me/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music MooMoo', parser: 'piped' },
@@ -581,7 +534,7 @@
         function renderSongs(songs, containerId) {
             const grid = document.getElementById(containerId);
             if(!songs || songs.length === 0) {
-                grid.innerHTML = `<p class="text-neutral-400 text-sm col-span-full">No songs found.</p>`;
+                grid.innerHTML = `<p class="text-gray-400 text-sm col-span-full">No songs found.</p>`;
                 return;
             }
 
@@ -589,20 +542,23 @@
                 const isFav = favorites.some(f => f.videoId === song.videoId);
                 const safeImg = `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`;
                 return `
-                    <div class="bg-spotifyCard hover:bg-spotifyCardHover p-4 rounded-md cursor-pointer transition-all duration-300 group shadow-lg relative flex flex-col">
-                        <div class="relative mb-3 overflow-hidden rounded aspect-square shadow" onclick="playSongByIndex('${containerId}', ${idx})">
-                            <img src="${safeImg}" onerror="this.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300'" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <button class="absolute bottom-2 right-2 w-10 h-10 bg-spotifyGreen text-black rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                                <i class="fa-solid fa-play text-xs ml-0.5"></i>
+                    <div class="bg-vibelyCard hover:bg-vibelyHover border border-gray-100 hover:border-vibelyGreen p-3 rounded-2xl cursor-pointer transition-all duration-200 group shadow-sm hover:shadow-md relative">
+                        <div class="relative mb-3 overflow-hidden rounded-xl" onclick="playSongByIndex('${containerId}', ${idx})">
+                            <img src="${safeImg}" onerror="this.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300'" loading="lazy" class="w-full aspect-square object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-2 left-2 bg-vibelyGreen text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">
+                                MUSIC
+                            </span>
+                            <button class="absolute bottom-2.5 right-2.5 w-11 h-11 bg-vibelyGreen text-white rounded-full flex items-center justify-center shadow-lg opacity-95 group-hover:scale-110 transition">
+                                <i class="fa-solid fa-play text-sm ml-0.5"></i>
                             </button>
                         </div>
-                        <div class="flex items-start justify-between mt-1">
+                        <div class="flex items-start justify-between">
                             <div onclick="playSongByIndex('${containerId}', ${idx})" class="overflow-hidden flex-1 pr-2">
-                                <h3 class="font-bold text-sm text-white truncate">${song.title}</h3>
-                                <p class="text-xs text-neutral-400 truncate mt-1">${song.artist}</p>
+                                <h3 class="font-bold text-sm text-gray-900 truncate">${song.title}</h3>
+                                <p class="text-xs text-gray-500 truncate mt-0.5">${song.artist}</p>
                             </div>
-                            <button onclick="toggleFavorite('${song.videoId}', '${encodeURIComponent(song.title)}', '${encodeURIComponent(song.artist)}', '${encodeURIComponent(safeImg)}')" class="text-neutral-400 hover:text-white transition p-1">
-                                <i class="${isFav ? 'fa-solid text-spotifyGreen' : 'fa-regular'} fa-heart text-base"></i>
+                            <button onclick="toggleFavorite('${song.videoId}', '${encodeURIComponent(song.title)}', '${encodeURIComponent(song.artist)}', '${encodeURIComponent(safeImg)}')" class="text-gray-400 hover:text-red-500 transition p-1">
+                                <i class="${isFav ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart text-base"></i>
                             </button>
                         </div>
                     </div>
@@ -658,20 +614,20 @@
         function renderPlaylists() {
             const grid = document.getElementById('playlistsGrid');
             if(playlists.length === 0) {
-                grid.innerHTML = `<p class="text-xs text-neutral-400">No playlists created yet. Click '+' above.</p>`;
+                grid.innerHTML = `<p class="text-xs text-gray-400">No playlists created yet. Click 'New Playlist' above.</p>`;
                 return;
             }
 
             grid.innerHTML = playlists.map((pl, pIdx) => `
-                <div class="bg-spotifyCard p-4 rounded-md shadow-md">
+                <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-bold text-base text-white"><i class="fa-solid fa-list-music text-spotifyGreen mr-2"></i>${pl.name}</h3>
-                        <span class="text-xs bg-neutral-800 text-spotifyGreen font-semibold px-2 py-0.5 rounded-full">${pl.songs.length} songs</span>
+                        <h3 class="font-bold text-base text-gray-900"><i class="fa-solid fa-list-music text-vibelyGreen mr-2"></i>${pl.name}</h3>
+                        <span class="text-xs bg-green-100 text-vibelyDarkGreen font-semibold px-2 py-0.5 rounded-full">${pl.songs.length} songs</span>
                     </div>
                     <div class="space-y-2 max-h-40 overflow-y-auto no-scrollbar mb-3">
-                        ${pl.songs.length === 0 ? '<p class="text-xs text-neutral-500">Playlist is empty</p>' : pl.songs.map((s, sIdx) => `
-                            <div class="flex items-center justify-between text-xs py-1 border-b border-neutral-800">
-                                <span class="truncate text-neutral-300 pr-2">${s.title}</span>
+                        ${pl.songs.length === 0 ? '<p class="text-xs text-gray-400">Playlist is empty</p>' : pl.songs.map((s, sIdx) => `
+                            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-50">
+                                <span class="truncate text-gray-700 pr-2">${s.title}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -679,7 +635,7 @@
             `).join('');
         }
 
-        // === SPOTIFY PLAYER PLAYBACK ===
+        // === VIDEO IFRAME PLAYBACK & CONTROLS FIX ===
         async function playSongByIndex(containerId, index) {
             activeContainerId = containerId;
             let list = currentPlaylist;
@@ -692,11 +648,11 @@
 
             const container = document.getElementById('player-container');
             document.getElementById('player-title').innerText = song.title;
-            document.getElementById('player-artist').innerText = song.artist;
+            document.getElementById('player-artist').innerText = song.artist + " • Playing...";
             document.getElementById('player-thumb').src = `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`;
             
             container.innerHTML = `
-                <iframe class="w-full h-full rounded" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             `;
             
             const downloadBtn = document.getElementById('download-btn');
@@ -705,8 +661,8 @@
             downloadBtn.href = `https://www.youtube.com/watch?v=${song.videoId}`;
 
             isPlaying = true;
-            document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-xs";
-            showStatus("Playing via Spotify Player ✓", true);
+            document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-sm";
+            showStatus("Playing via YouTube ✓", true);
             setTimeout(()=>showStatus("", false), 1500);
 
             songCurrentTime = 0;
@@ -740,13 +696,13 @@
 
             if(isPlaying) {
                 isPlaying = false;
-                document.getElementById('play-pause-icon').className = "fa-solid fa-play text-xs ml-0.5";
-                container.innerHTML = `<span class="text-[10px] text-neutral-400">Paused</span>`;
+                document.getElementById('play-pause-icon').className = "fa-solid fa-play text-sm ml-0.5";
+                container.innerHTML = `<span class="text-xs text-gray-500 font-semibold">Paused</span>`;
             } else {
                 isPlaying = true;
-                document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-xs";
+                document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-sm";
                 container.innerHTML = `
-                    <iframe class="w-full h-full rounded" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${Math.floor(songCurrentTime)}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${Math.floor(songCurrentTime)}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 `;
             }
         }
@@ -770,7 +726,7 @@
                 const container = document.getElementById('player-container');
                 if(isPlaying) {
                     container.innerHTML = `
-                        <iframe class="w-full h-full rounded" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${songCurrentTime}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                        <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${songCurrentTime}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     `;
                 }
             }
@@ -789,8 +745,8 @@
                 const nav = document.getElementById(`nav-${t}`);
                 if(view) view.classList.add('hidden');
                 if(nav) {
-                    nav.classList.remove('bg-[#282828]', 'text-white');
-                    nav.classList.add('text-neutral-400', 'hover:text-white');
+                    nav.classList.remove('bg-vibelyGreen', 'text-white');
+                    nav.classList.add('text-gray-600', 'hover:bg-green-50', 'hover:text-vibelyGreen');
                 }
             });
 
@@ -798,8 +754,8 @@
             const activeNav = document.getElementById(`nav-${tab}`);
             if(activeView) activeView.classList.remove('hidden');
             if(activeNav) {
-                activeNav.classList.add('bg-[#282828]', 'text-white');
-                activeNav.classList.remove('text-neutral-400', 'hover:text-white');
+                activeNav.classList.add('bg-vibelyGreen', 'text-white');
+                activeNav.classList.remove('text-gray-600', 'hover:bg-green-50', 'hover:text-vibelyGreen');
             }
 
             if(tab === 'favorites') {
