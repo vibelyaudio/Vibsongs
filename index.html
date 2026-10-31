@@ -1,771 +1,705 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIBELY - Music Streaming</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        vibelyGreen: '#1DB954',
-                        vibelyDarkGreen: '#15883e',
-                        vibelyLight: '#F8FAFC',
-                        vibelyCard: '#FFFFFF',
-                        vibelyHover: '#F0FDF4'
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #1DB954; border-radius: 4px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(29, 185, 84, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(29, 185, 84, 0); }
-        }
-        .logo-pulse { animation: pulse-ring 2s infinite; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOOP - Social App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- PeerJS for Real-time Video Chat -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Sliding Auth Animation Styles */
+    .form-container {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+    }
+  </style>
 </head>
-<body class="bg-vibelyLight text-gray-900 font-sans select-none overflow-hidden h-screen flex flex-col">
+<body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
 
-    <!-- LOGIN / CREATE ACCOUNT SCREEN MODAL -->
-    <div id="login-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500 hidden">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full text-center">
-            <div class="w-16 h-16 bg-vibelyGreen rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-vibelyGreen/30">
-                <i class="fa-solid fa-headphones-simple text-white text-2xl"></i>
-            </div>
-            <h1 class="text-2xl font-black tracking-wider text-gray-900 mb-1" id="authTitle">Welcome to VIBELY</h1>
-            <p class="text-gray-500 text-xs mb-6" id="authSubtitle">Login with Email & Password</p>
-            
-            <!-- LOGIN FORM -->
-            <div id="loginForm" class="space-y-4">
-                <input type="email" id="loginEmail" placeholder="Email Address" 
-                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
-                <input type="password" id="loginPassword" placeholder="Password" 
-                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
-                <button onclick="handleLoginSubmit()" class="w-full bg-vibelyGreen hover:bg-vibelyDarkGreen text-white font-bold py-3 rounded-xl transition shadow-md shadow-vibelyGreen/30 text-sm">
-                    Login
-                </button>
-                <p class="text-xs text-gray-500 mt-4">Don't have an account? <button onclick="switchAuthMode('signup')" class="text-vibelyGreen font-bold hover:underline">Create Account</button></p>
-            </div>
+  <!-- INTRO ANIMATION SCREEN -->
+  <div id="intro-screen" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-700">
+    <div class="flex flex-col items-center">
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-500/50 mb-4">
+        <i class="fa-solid fa-infinity text-4xl text-black font-extrabold animate-spin" style="animation-duration: 6s;"></i>
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">LOOP</h1>
+      <p class="text-xs text-gray-500 mt-2 tracking-wider">Stay Connected, Stay in the Loop</p>
+    </div>
+  </div>
 
-            <!-- CREATE ACCOUNT FORM -->
-            <div id="signupForm" class="space-y-4 hidden">
-                <input type="text" id="signupName" placeholder="Full Name" 
-                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
-                <input type="email" id="signupEmail" placeholder="Email Address" 
-                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
-                <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" 
-                    class="w-full bg-gray-50 text-gray-900 text-sm rounded-xl px-4 py-3 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:ring-2 focus:ring-vibelyGreen/20 transition">
-                <button onclick="handleSignupSubmit()" class="w-full bg-vibelyGreen hover:bg-vibelyDarkGreen text-white font-bold py-3 rounded-xl transition shadow-md shadow-vibelyGreen/30 text-sm">
-                    Create Account
-                </button>
-                <p class="text-xs text-gray-500 mt-4">Already have an account? <button onclick="switchAuthMode('login')" class="text-vibelyGreen font-bold hover:underline">Login</button></p>
-            </div>
+  <!-- Mobile Outer Frame Container -->
+  <div id="app-container" class="w-full max-w-md h-full bg-black flex flex-col justify-between relative shadow-2xl border-x border-gray-800 transition-colors duration-300">
+    
+    <!-- Top Header -->
+    <header id="app-header" class="h-14 bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-4 border-b border-gray-800/80 shrink-0 z-10 transition-colors duration-300">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+          <i class="fa-solid fa-infinity text-sm"></i>
         </div>
+        <h1 id="app-title" class="text-xl font-extrabold tracking-wider text-emerald-400">LOOP</h1>
+      </div>
+      <div class="flex items-center gap-4 text-gray-300">
+        <button onclick="toggleTheme()" class="hover:text-emerald-400 transition">
+          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+        </button>
+        <button><i class="fa-solid fa-search text-lg"></i></button>
+        <button><i class="fa-solid fa-bell text-lg"></i></button>
+      </div>
+    </header>
+
+    <!-- Dynamic Content Area -->
+    <main class="flex-1 relative overflow-hidden flex flex-col" id="main-content">
+      
+      <!-- ANIMATED LOGIN & SIGNUP SECTION -->
+      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-5 bg-gradient-to-br from-gray-950 via-zinc-900 to-neutral-950 absolute inset-0 z-20 overflow-hidden">
+        <div class="relative w-full max-w-sm mx-auto bg-gray-900/80 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-6 shadow-2xl shadow-rose-950/40 overflow-hidden min-h-[420px] flex flex-col justify-center">
+          
+          <!-- LOGIN FORM -->
+          <div id="login-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-0 opacity-100">
+            <div class="text-center mb-4">
+              <h2 class="text-2xl font-black text-white tracking-wide">Login</h2>
+              <p class="text-[11px] text-gray-400 mt-0.5">Welcome back! Please enter your details.</p>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-1">Username</label>
+                <input type="text" id="login-identifier" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Enter username">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-1">Password</label>
+                <input type="password" id="login-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="••••••••">
+              </div>
+              <p id="login-error" class="text-rose-500 text-[10px] hidden text-center"></p>
+              <button onclick="handleLogin()" class="w-full py-3 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Login</button>
+            </div>
+            <p class="text-[11px] text-gray-400 text-center mt-4">
+              Don't have an account? 
+              <button onclick="switchToSignup()" class="text-rose-400 font-semibold underline hover:text-rose-300">Sign Up</button>
+            </p>
+          </div>
+
+          <!-- SIGNUP FORM -->
+          <div id="signup-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-full opacity-0 pointer-events-none">
+            <div class="text-center mb-3">
+              <h2 class="text-2xl font-black text-white tracking-wide">Register</h2>
+              <p class="text-[11px] text-gray-400 mt-0.5">Create a new account to join LOOP.</p>
+            </div>
+            <div class="flex flex-col gap-2.5">
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Email</label>
+                <input type="email" id="signup-email" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="name@example.com">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Username</label>
+                <input type="text" id="signup-username" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Choose username">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Password</label>
+                <input type="password" id="signup-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Create password">
+              </div>
+              <p id="signup-error" class="text-rose-500 text-[10px] hidden text-center"></p>
+              <button onclick="handleSignup()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Register</button>
+            </div>
+            <p class="text-[11px] text-gray-400 text-center mt-3">
+              Don't have an account? 
+              <button onclick="switchToLogin()" class="text-rose-400 font-semibold underline hover:text-rose-300">Login</button>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- HOME VIEW (EMPTY) -->
+      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-4 items-center justify-center text-center">
+        <div class="text-gray-500 text-xs">
+          <i class="fa-solid fa-house text-3xl mb-2 text-gray-600"></i>
+          <p>No posts available in Home.</p>
+        </div>
+      </div>
+
+      <!-- LOOP SECTION (AUTOMATIC ROOM 123 CONNECTION) -->
+      <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
+        <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
+          <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting automatically...
+          </span>
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
+        </div>
+
+        <div class="flex-1 relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 flex flex-col">
+          <div class="w-full h-full relative flex items-center justify-center bg-gray-950">
+            <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+            <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
+              <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
+              <p class="text-xs" id="status-text">Searching for someone in room123...</p>
+            </div>
+          </div>
+
+          <div class="absolute top-3 right-3 w-28 h-40 bg-black rounded-xl overflow-hidden border-2 border-emerald-500/60 shadow-lg flex items-center justify-center z-10">
+            <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+            <span class="absolute bottom-1 left-1 bg-black/60 text-[8px] px-1.5 py-0.5 rounded text-white">You</span>
+          </div>
+        </div>
+
+        <div class="shrink-0 pb-2">
+          <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-forward-step text-base"></i> SKIP / NEXT
+          </button>
+        </div>
+      </div>
+
+      <!-- QUOTES SECTION -->
+      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto">
+        <div class="bg-gradient-to-br from-indigo-900/80 to-purple-950 border border-indigo-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+          <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
+          <div>
+            <span class="bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30">ShareChat Motivation</span>
+            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"വിജയം എന്നത് ഒറ്റരാത്രികൊണ്ട് ഉണ്ടാവുന്നതല്ല, ദിവസേനയുള്ള കഠിനാധ്വാനത്തിന്റെ ഫലമാണ്."</p>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-indigo-800/40 text-xs text-gray-400">
+            <span>- ShareChat Quotes</span>
+            <button class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE SECTION -->
+      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col items-center text-center relative shadow-lg">
+          <div class="relative mb-3">
+            <img id="display-profile-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md">
+            <button onclick="openEditProfileModal()" class="absolute bottom-0 right-0 bg-emerald-500 text-black p-2 rounded-full shadow border-2 border-gray-900 hover:bg-emerald-400 transition">
+              <i class="fa-solid fa-camera text-xs font-bold"></i>
+            </button>
+          </div>
+          <h2 id="display-name" class="text-lg font-bold text-white">Rahul K</h2>
+          <p id="display-username" class="text-xs text-emerald-400 font-medium">@rahulkerala</p>
+          <div class="flex items-center gap-1.5 mt-2 text-xs text-gray-400">
+            <i class="fa-regular fa-envelope text-gray-500"></i>
+            <span id="display-email">rahul.kerala@example.com</span>
+          </div>
+          <button onclick="openEditProfileModal()" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2.5 rounded-xl transition">
+            Edit Profile
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 my-4">
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">24</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Saved</span>
+          </div>
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">12.5k</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Followers</span>
+          </div>
+          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
+            <span class="block text-base font-bold text-white">450</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Following</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl flex flex-col divide-y divide-gray-800">
+          <button onclick="handleLogout()" class="flex items-center justify-between p-3.5 text-xs text-red-400 hover:bg-gray-850 transition">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-right-from-bracket text-sm"></i>
+              <span>Logout</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <h3 class="text-sm font-bold text-emerald-400">Edit Profile Details</h3>
+          <button onclick="closeEditProfileModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Full Name</label>
+            <input type="text" id="input-name" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Username</label>
+            <input type="text" id="input-username" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Email Address</label>
+            <input type="email" id="input-email" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1">Profile Photo URL</label>
+            <input type="text" id="input-img" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button onclick="closeEditProfileModal()" class="flex-1 bg-gray-800 text-gray-300 font-semibold text-xs py-2 rounded-xl">Cancel</button>
+          <button onclick="saveProfileDetails()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2 rounded-xl transition">Save</button>
+        </div>
+      </div>
     </div>
 
-    <!-- SPLASH SCREEN -->
-    <div id="splash-screen" class="fixed inset-0 bg-white z-40 flex flex-col items-center justify-center transition-opacity duration-700">
-        <div class="flex flex-col items-center">
-            <div class="w-24 h-24 bg-vibelyGreen rounded-full flex items-center justify-center logo-pulse mb-5 shadow-xl">
-                <i class="fa-solid fa-headphones-simple text-white text-5xl"></i>
+    <!-- INSTAGRAM POPUP DOWNLOADER MODAL -->
+    <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-sm">
+              <i class="fa-brands fa-instagram"></i>
             </div>
-            <h1 class="text-4xl font-black tracking-widest text-gray-900">VIBELY</h1>
-            <p class="text-vibelyGreen font-semibold text-sm mt-2 tracking-wide">MUSIC STREAMING</p>
+            <h3 class="text-xs font-bold text-pink-400">Instagram Downloader</h3>
+          </div>
+          <button onclick="closeInstaDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
         </div>
+        
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste Instagram Reel Link</label>
+            <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/reel/...">
+          </div>
+          
+          <button onclick="handleInstaDownload()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
+
+          <!-- RESULT CONTAINER -->
+          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1">
+            <div id="result"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- MAIN APP LAYOUT -->
-    <div class="flex flex-1 overflow-hidden relative">
-        <!-- SIDEBAR -->
-        <aside class="w-64 bg-white flex flex-col p-6 hidden md:flex border-r border-gray-200 shadow-sm">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-10 h-10 bg-vibelyGreen rounded-full flex items-center justify-center shadow-md">
-                    <i class="fa-solid fa-headphones-simple text-white text-lg"></i>
-                </div>
-                <span class="text-2xl font-black tracking-tight text-gray-900">VIBELY</span>
-            </div>
-            <nav class="space-y-2 flex-1">
-                <a href="#" onclick="switchTab('home')" id="nav-home" class="flex items-center space-x-4 bg-vibelyGreen text-white px-4 py-3 rounded-xl font-semibold transition shadow-sm">
-                    <i class="fa-solid fa-house text-lg w-6"></i><span>Home</span>
-                </a>
-                <a href="#" onclick="switchTab('search')" id="nav-search" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
-                    <i class="fa-solid fa-magnifying-glass text-lg w-6"></i><span>Search Songs</span>
-                </a>
-                <a href="#" onclick="switchTab('favorites')" id="nav-favorites" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
-                    <i class="fa-solid fa-heart text-lg w-6 text-red-500"></i><span>Favorites</span>
-                </a>
-                <a href="#" onclick="switchTab('playlists')" id="nav-playlists" class="flex items-center space-x-4 text-gray-600 hover:bg-green-50 hover:text-vibelyGreen px-4 py-3 rounded-xl font-semibold transition">
-                    <i class="fa-solid fa-list-music text-lg w-6"></i><span>Playlists</span>
-                </a>
-            </nav>
-            <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                <span id="userNameDisplay" class="font-bold text-gray-800">User</span>
-                <button onclick="handleLogout()" class="text-red-500 hover:underline">Logout</button>
-            </div>
-        </aside>
-
-        <!-- CONTENT AREA -->
-        <main class="flex-1 bg-gradient-to-b from-green-50/70 to-white overflow-y-auto pb-32">
-            <!-- Top Fixed Header -->
-            <header class="sticky top-0 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 flex items-center justify-between z-20 border-b border-gray-200 shadow-sm">
-                <!-- Clickable Logo with Dropdown Menu -->
-                <div class="relative">
-                    <div onclick="toggleMenu()" class="flex items-center space-x-2 mr-3 cursor-pointer select-none group">
-                        <div class="w-8 h-8 bg-vibelyGreen rounded-full flex items-center justify-center shadow group-hover:scale-105 transition">
-                            <i class="fa-solid fa-headphones-simple text-white text-sm"></i>
-                        </div>
-                        <span class="font-black text-gray-900 tracking-tight text-sm sm:text-base">VIBELY</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 ml-0.5"></i>
-                    </div>
-
-                    <!-- Dropdown Menu -->
-                    <div id="logoMenu" class="hidden absolute top-12 left-0 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 w-48 z-50">
-                        <button onclick="switchTab('home'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-house w-4 text-vibelyGreen"></i><span>Home</span>
-                        </button>
-                        <button onclick="switchTab('search'); closeMenu(); document.getElementById('searchInput').focus();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-magnifying-glass w-4 text-vibelyGreen"></i><span>Search Songs</span>
-                        </button>
-                        <button onclick="switchTab('favorites'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-green-50 hover:text-vibelyGreen flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-heart w-4 text-red-500"></i><span>Liked Songs</span>
-                        </button>
-                        <div class="border-t border-gray-100 my-1"></div>
-                        <button onclick="handleLogout(); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 transition">
-                            <i class="fa-solid fa-right-from-bracket w-4"></i><span>Logout Account</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Search Box -->
-                <div class="flex items-center flex-1 max-w-md mx-2">
-                    <div class="relative w-full flex items-center">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 text-gray-400 text-xs"></i>
-                        <input type="text" id="searchInput" placeholder="Search Vibely tracks..." 
-                            class="w-full bg-gray-100 text-gray-900 text-xs sm:text-sm rounded-full pl-9 pr-16 py-2 border border-gray-200 focus:outline-none focus:border-vibelyGreen focus:bg-white focus:ring-2 focus:ring-vibelyGreen/20 transition"
-                            onkeypress="if(event.key === 'Enter') handleSearch()">
-                        <button onclick="handleSearch()" class="absolute right-1 bg-vibelyGreen hover:bg-vibelyDarkGreen text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm">
-                            Search
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Profile Avatar -->
-                <div class="flex items-center space-x-2 ml-1">
-                    <div id="userAvatar" class="w-8 h-8 bg-vibelyGreen text-white rounded-full flex items-center justify-center font-bold text-xs shadow">
-                        IA
-                    </div>
-                </div>
-            </header>
-
-            <!-- Quick Filter Pills -->
-            <div class="px-4 sm:px-6 pt-4 flex items-center space-x-2 overflow-x-auto no-scrollbar">
-                <button onclick="quickSearch('Avesham Malayalam Songs')" class="bg-vibelyGreen text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap shadow-sm hover:bg-vibelyDarkGreen transition">Avesham</button>
-                <button onclick="quickSearch('Illuminati Dabzee')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Illuminati</button>
-                <button onclick="quickSearch('Manjummel Boys')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Manjummel Boys</button>
-                <button onclick="quickSearch('Premalu Songs')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Premalu</button>
-                <button onclick="quickSearch('Anirudh Tamil Hits')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Tamil Hits</button>
-                <button onclick="quickSearch('Hindi New Songs')" class="bg-white border border-gray-200 text-gray-700 hover:border-vibelyGreen hover:text-vibelyGreen text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap transition">Hindi Hits</button>
-            </div>
-
-            <!-- Dynamic Views -->
-            <div class="p-4 sm:p-6">
-                <!-- Status Message -->
-                <div id="statusMessage" class="hidden mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-vibelyDarkGreen text-xs font-semibold flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    <span id="statusText">Searching Vibely tracks...</span>
-                </div>
-
-                <!-- HOME / RESULTS VIEW -->
-                <div id="view-home" class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h2 id="sectionHeading" class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Vibely Tracks</h2>
-                    </div>
-                    <!-- Song Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="songsGrid">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- FAVORITES VIEW -->
-                <div id="view-favorites" class="space-y-4 hidden">
-                    <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Your Favorite Songs</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="favoritesGrid">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- PLAYLISTS VIEW -->
-                <div id="view-playlists" class="space-y-4 hidden">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">Your Playlists</h2>
-                        <button onclick="createNewPlaylist()" class="bg-vibelyGreen text-white text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-vibelyDarkGreen transition">
-                            <i class="fa-solid fa-plus mr-1"></i> New Playlist
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="playlistsGrid">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-        </main>
+    <!-- FLOATING DOWNLOAD MENU -->
+    <div id="download-menu" class="hidden absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/95 border border-gray-700 backdrop-blur-md rounded-2xl p-4 shadow-2xl z-40 w-11/12 max-w-xs flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+        <h3 class="text-xs font-bold text-emerald-400">Share or Download via</h3>
+        <button onclick="toggleDownloadMenu()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="grid grid-cols-5 gap-2 py-2">
+        <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
+        <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
+        <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
+        <a href="https://youtube.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-600/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></a>
+        <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
+      </div>
     </div>
 
-    <!-- FLOATING LIKED SONGS BUTTON -->
-    <button onclick="switchTab('favorites')" class="fixed bottom-28 right-6 w-14 h-14 bg-vibelyGreen hover:bg-vibelyDarkGreen text-white rounded-full flex items-center justify-center shadow-2xl z-40 transition hover:scale-110 group" title="Liked Songs">
-        <i class="fa-solid fa-heart text-xl group-hover:scale-110 transition"></i>
-    </button>
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
+      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-14 text-emerald-400 transition"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[11px] font-medium">Home</span></button>
+      <button onclick="switchTab('loop')" id="nav-loop" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-video text-xl mb-1"></i><span class="text-[11px] font-medium">LOOP</span></button>
+      <button onclick="toggleDownloadMenu()" class="flex flex-col items-center justify-center"><div class="w-14 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20 active:scale-95 transition"><i class="fa-solid fa-download text-lg font-bold"></i></div><span class="text-[11px] font-medium text-gray-300 mt-1">Download</span></button>
+      <button onclick="switchTab('quotes')" id="nav-quotes" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-quote-left text-xl mb-1"></i><span class="text-[11px] font-medium">Quotes</span></button>
+      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-regular fa-user text-xl mb-1"></i><span class="text-[11px] font-medium">Profile</span></button>
+    </nav>
 
-    <!-- BOTTOM MUSIC PLAYER -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 flex flex-col justify-center z-30 shadow-2xl h-24">
-        <div class="w-full flex items-center space-x-2 mb-1.5 max-w-3xl mx-auto">
-            <span class="text-[10px] font-semibold text-gray-500 w-8 text-right" id="current-time">0:00</span>
-            <input type="range" id="progress-bar" value="0" min="0" max="100" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-vibelyGreen">
-            <span class="text-[10px] font-semibold text-gray-500 w-8" id="duration">0:00</span>
-        </div>
+  </div>
 
-        <div class="flex items-center justify-between w-full max-w-6xl mx-auto">
-            <div class="flex items-center space-x-3 w-1/3 sm:w-1/3 overflow-hidden">
-                <img id="player-thumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" class="w-12 h-12 rounded-xl object-cover shadow-md border border-gray-100">
-                <div class="overflow-hidden pr-2">
-                    <h4 id="player-title" class="text-sm font-bold truncate text-gray-900">Select a song</h4>
-                    <p id="player-artist" class="text-xs text-vibelyGreen font-medium truncate">Vibely Ready</p>
-                </div>
-            </div>
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let users = JSON.parse(localStorage.getItem('loop_users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+    let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
+    
+    let peer = null;
+    let localStream = null;
+    let currentCall = null;
 
-            <!-- PLAYER CONTAINER (VIDEO IFRAME PLAYBACK) -->
-            <div class="flex items-center justify-center w-1/3 sm:w-1/3">
-                <div id="player-container" class="w-full max-w-xs h-12 flex items-center justify-center bg-gray-100 rounded-xl overflow-hidden shadow-inner">
-                    <span class="text-xs text-gray-400">Select a song to play</span>
-                </div>
-            </div>
+    function applyTheme() {
+      const container = document.getElementById('app-container');
+      const header = document.getElementById('app-header');
+      const themeIcon = document.getElementById('theme-icon');
 
-            <div class="flex items-center justify-end space-x-3 w-1/3 sm:w-1/3">
-                <button onclick="playPrevious()" class="text-gray-600 hover:text-vibelyGreen transition text-base">
-                    <i class="fa-solid fa-backward-step"></i>
-                </button>
-                <button onclick="togglePlayPause()" id="play-btn" class="w-10 h-10 bg-vibelyGreen text-white rounded-full flex items-center justify-center hover:bg-vibelyDarkGreen hover:scale-105 transition shadow-sm">
-                    <i id="play-pause-icon" class="fa-solid fa-play text-sm ml-0.5"></i>
-                </button>
-                <button onclick="playNext()" class="text-gray-600 hover:text-vibelyGreen transition text-base">
-                    <i class="fa-solid fa-forward-step"></i>
-                </button>
-                <a id="download-btn" href="#" target="_blank" class="hidden bg-vibelyGreen text-white font-bold text-xs px-3 py-2 rounded-full items-center space-x-1 hover:bg-vibelyDarkGreen transition shadow-sm">
-                    <i class="fa-solid fa-download"></i>
-                </a>
-            </div>
-        </div>
-    </footer>
+      if (isDarkMode) {
+        container.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        container.classList.add('bg-black', 'text-white', 'border-gray-800');
+        header.classList.remove('bg-white/90', 'border-gray-200');
+        header.classList.add('bg-gray-900/90', 'border-gray-800/80');
+        themeIcon.className = "fa-solid fa-moon text-lg text-emerald-400";
+      } else {
+        container.classList.remove('bg-black', 'text-white', 'border-gray-800');
+        container.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
+        header.classList.remove('bg-gray-900/90', 'border-gray-800/80');
+        header.classList.add('bg-white/90', 'border-gray-200');
+        themeIcon.className = "fa-solid fa-sun text-lg text-amber-500";
+      }
+    }
 
-    <!-- FIREBASE & APP LOGIC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('loop_dark_mode', JSON.stringify(isDarkMode));
+      applyTheme();
+    }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCM_1-W2fc1fu8vAT-bJmJuVkl0KGRsvWg",
-            authDomain: "vibely-488d8.firebaseapp.com",
-            projectId: "vibely-488d8",
-            storageBucket: "vibely-488d8.firebasestorage.app",
-            messagingSenderId: "1038725355357",
-            appId: "1:1038725355357:web:e4e190957f3c4ee2e87ab4"
-        };
+    window.addEventListener('DOMContentLoaded', () => { applyTheme(); });
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const intro = document.getElementById('intro-screen');
+        intro.style.opacity = '0';
+        setTimeout(() => {
+          intro.style.display = 'none';
+          checkAuthState();
+        }, 700);
+      }, 1800);
+    });
 
-        window.auth = auth;
-        window.db = db;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.signOut = signOut;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-        window.updateDoc = updateDoc;
+    function checkAuthState() {
+      if (currentUser) {
+        document.getElementById('auth-view').classList.add('hidden');
+        document.getElementById('bottom-nav').classList.remove('hidden');
+        updateProfileDisplay();
+        switchTab('home');
+      } else {
+        document.getElementById('auth-view').classList.remove('hidden');
+        document.getElementById('home-view').classList.add('hidden');
+        document.getElementById('bottom-nav').classList.add('hidden');
+        document.getElementById('app-title').innerText = "LOOP";
+      }
+    }
 
-        onAuthStateChanged(auth, async (user) => {
-            const splash = document.getElementById('splash-screen');
-            if (user) {
-                window.currentUid = user.uid;
-                const userDocRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userDocRef);
-                if (userSnap.exists()) {
-                    window.currentUserName = userSnap.data().name || "User";
-                } else {
-                    window.currentUserName = "User";
-                }
-                
-                document.getElementById('login-screen').style.display = 'none';
-                initApp();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
+    function switchToSignup() {
+      const loginBox = document.getElementById('login-form-box');
+      const signupBox = document.getElementById('signup-form-box');
+      
+      loginBox.style.transform = 'translateX(-120%)';
+      loginBox.style.opacity = '0';
+      loginBox.classList.add('pointer-events-none');
+
+      signupBox.style.transform = 'translateX(0)';
+      signupBox.style.opacity = '1';
+      signupBox.classList.remove('pointer-events-none');
+    }
+
+    function switchToLogin() {
+      const loginBox = document.getElementById('login-form-box');
+      const signupBox = document.getElementById('signup-form-box');
+      
+      signupBox.style.transform = 'translateX(120%)';
+      signupBox.style.opacity = '0';
+      signupBox.classList.add('pointer-events-none');
+
+      loginBox.style.transform = 'translateX(0)';
+      loginBox.style.opacity = '1';
+      loginBox.classList.remove('pointer-events-none');
+    }
+
+    function handleSignup() {
+      const email = document.getElementById('signup-email').value.trim();
+      const username = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value.trim();
+      const errorEl = document.getElementById('signup-error');
+
+      if (!email || !username || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const existingUser = users.find(u => u.email === email || u.username === username);
+      if (existingUser) {
+        errorEl.innerText = "Email or Username already exists.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const newUser = {
+        name: username,
+        username: username,
+        email: email,
+        password: password,
+        img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+      };
+
+      users.push(newUser);
+      localStorage.setItem('loop_users', JSON.stringify(users));
+      currentUser = newUser;
+      localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+      
+      errorEl.classList.add('hidden');
+      checkAuthState();
+    }
+
+    function handleLogin() {
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorEl = document.getElementById('login-error');
+
+      if (!identifier || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const user = users.find(u => (u.email === identifier || u.username === identifier) && u.password === password);
+      
+      if (user) {
+        currentUser = user;
+        localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+        errorEl.classList.add('hidden');
+        checkAuthState();
+      } else {
+        errorEl.innerText = "Invalid Username/Email or Password.";
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('loop_current_user');
+      stopPeerConnection();
+      checkAuthState();
+    }
+
+    function updateProfileDisplay() {
+      if (currentUser) {
+        document.getElementById('display-name').innerText = currentUser.name || currentUser.username;
+        let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
+        document.getElementById('display-username').innerText = formattedUsername;
+        document.getElementById('display-email').innerText = currentUser.email;
+        document.getElementById('display-profile-img').src = currentUser.img;
+      }
+    }
+
+    function switchTab(tab) {
+      document.getElementById('home-view').classList.add('hidden');
+      document.getElementById('loop-view').classList.add('hidden');
+      document.getElementById('quotes-view').classList.add('hidden');
+      document.getElementById('profile-view').classList.add('hidden');
+      document.getElementById('download-menu').classList.add('hidden');
+
+      document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+
+      if(tab === 'home') {
+        document.getElementById('home-view').classList.remove('hidden');
+        document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP";
+        stopPeerConnection();
+      } else if(tab === 'loop') {
+        document.getElementById('loop-view').classList.remove('hidden');
+        document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP Live";
+        autoJoinRoom123();
+      } else if(tab === 'quotes') {
+        document.getElementById('quotes-view').classList.remove('hidden');
+        document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP Quotes";
+        stopPeerConnection();
+      } else if(tab === 'profile') {
+        document.getElementById('profile-view').classList.remove('hidden');
+        document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "My Profile";
+        stopPeerConnection();
+      }
+    }
+
+    async function autoJoinRoom123() {
+      const statusEl = document.getElementById('match-status');
+      const statusText = document.getElementById('status-text');
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
+
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Accessing camera...`;
+
+      try {
+        if (!localStream) {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          document.getElementById('local-video').srcObject = localStream;
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Camera permission denied`;
+        return;
+      }
+
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to room123...`;
+
+      if(peer) { peer.destroy(); }
+
+      let roomName = "room123";
+      let myPeerId = roomName + "_user1";
+      let targetPeerId = roomName + "_user2";
+
+      peer = new Peer(myPeerId);
+
+      peer.on('open', (id) => {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Waiting in room123...`;
+        statusText.innerText = `Connected to pool. Waiting for partner...`;
+
+        let call = peer.call(targetPeerId, localStream);
+        if(call) {
+          setupCallHandlers(call);
+        }
+      });
+
+      peer.on('error', (err) => {
+        if(err.type === 'unavailable-id') {
+          peer = new Peer(targetPeerId);
+          peer.on('open', (id) => {
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting with partner...`;
+            let call = peer.call(myPeerId, localStream);
+            if(call) {
+              setupCallHandlers(call);
             }
+          });
+        }
+      });
 
-            if(splash) {
-                splash.style.opacity = '0';
-                setTimeout(() => splash.remove(), 600);
-            }
-        });
-    </script>
+      peer.on('call', (call) => {
+        currentCall = call;
+        call.answer(localStream);
+        setupCallHandlers(call);
+      });
+    }
 
-    <!-- VIBELY VIDEO IFRAME & FULL CONTROLS SCRIPT -->
-    <script>
-        let currentPlaylist = [];
-        let currentIndex = 0;
-        let isPlaying = false;
-        let activeContainerId = 'songsGrid';
-        let timerInterval = null;
-        let songCurrentTime = 0;
-        let songDuration = 180;
+    function setupCallHandlers(call) {
+      currentCall = call;
+      const statusEl = document.getElementById('match-status');
+      const placeholder = document.getElementById('stranger-placeholder');
+      const strangerVideo = document.getElementById('stranger-video');
 
-        let favorites = [];
-        let playlists = [];
+      call.on('stream', (remoteStream) => {
+        strangerVideo.srcObject = remoteStream;
+        strangerVideo.play();
+        placeholder.classList.add('hidden');
+        strangerVideo.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected successfully!`;
+      });
 
-        function switchAuthMode(mode) {
-            if(mode === 'signup') {
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('signupForm').classList.remove('hidden');
-                document.getElementById('authTitle').innerText = 'Create Account';
-                document.getElementById('authSubtitle').innerText = 'Sign up with Email & Password';
-            } else {
-                document.getElementById('signupForm').classList.add('hidden');
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('authTitle').innerText = 'Welcome to VIBELY';
-                document.getElementById('authSubtitle').innerText = 'Login with Email & Password';
-            }
+      call.on('close', () => {
+        strangerVideo.srcObject = null;
+        strangerVideo.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Partner disconnected`;
+      });
+    }
+
+    function skipStranger() {
+      if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+      }
+      const strangerVideo = document.getElementById('stranger-video');
+      const placeholder = document.getElementById('stranger-placeholder');
+      strangerVideo.srcObject = null;
+      strangerVideo.classList.add('hidden');
+      placeholder.classList.remove('hidden');
+      document.getElementById('match-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Reconnecting...`;
+      
+      setTimeout(() => {
+        autoJoinRoom123();
+      }, 1000);
+    }
+
+    function stopPeerConnection() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
+    }
+
+    function toggleDownloadMenu() {
+      document.getElementById('download-menu').classList.toggle('hidden');
+    }
+
+    function openInstaDownloader() {
+      document.getElementById('insta-downloader-modal').classList.remove('hidden');
+      document.getElementById('insta-link-input').value = '';
+      document.getElementById('insta-result-container').classList.add('hidden');
+      document.getElementById('result').innerHTML = '';
+    }
+
+    function closeInstaDownloader() {
+      document.getElementById('insta-downloader-modal').classList.add('hidden');
+    }
+
+    async function handleInstaDownload(){
+      let u = document.getElementById('insta-link-input').value.trim();
+      let r = document.getElementById('result');
+      let container = document.getElementById('insta-result-container');
+      
+      if(!u || !u.includes('instagram.com')){
+        alert('Correct Insta link paste cheyyu');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching via Backend...</p>';
+
+      try {
+        let res = await fetch(`https://insta-api-45a7.onrender.com/api?url=${encodeURIComponent(u)}`);
+        let contentType = res.headers.get("content-type");
+        let videoUrl = "";
+        
+        if (contentType && contentType.includes("application/json")) {
+          let data = await res.json();
+          videoUrl = data.url || data.videoUrl || data.medias?.[0]?.url;
+        } else {
+          videoUrl = res.url;
         }
 
-        async function handleSignupSubmit() {
-            const name = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value.trim();
-
-            if(!name || !email || !password) {
-                alert("Please fill in all fields!");
-                return;
-            }
-
-            try {
-                const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
-                const uid = userCredential.user.uid;
-
-                await window.setDoc(window.doc(window.db, "users", uid), {
-                    name,
-                    email,
-                    favorites: [],
-                    playlists: []
-                });
-
-                document.getElementById('login-screen').style.display = 'none';
-            } catch (error) {
-                alert("Signup failed: " + error.message);
-            }
+        if(videoUrl){
+          r.innerHTML = `
+            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
+            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
+          `;
+          return;
         }
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch video. Try another link.</p>';
+      } catch(e) {
+        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server connection error. Please try again later.</p>';
+      }
+    }
 
-        async function handleLoginSubmit() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
+    function openEditProfileModal() {
+      document.getElementById('input-name').value = currentUser.name || '';
+      document.getElementById('input-username').value = currentUser.username || '';
+      document.getElementById('input-email').value = currentUser.email || '';
+      document.getElementById('input-img').value = currentUser.img || '';
+      document.getElementById('edit-profile-modal').classList.remove('hidden');
+    }
 
-            if(!email || !password) {
-                alert("Please enter email and password!");
-                return;
-            }
+    function closeEditProfileModal() {
+      document.getElementById('edit-profile-modal').classList.add('hidden');
+    }
 
-            try {
-                await window.signInWithEmailAndPassword(window.auth, email, password);
-                document.getElementById('login-screen').style.display = 'none';
-            } catch (error) {
-                alert("Login failed: Invalid email or password!");
-            }
-        }
+    function saveProfileDetails() {
+      const name = document.getElementById('input-name').value;
+      const username = document.getElementById('input-username').value;
+      const email = document.getElementById('input-email').value;
+      const imgUrl = document.getElementById('input-img').value;
 
-        async function handleLogout() {
-            try {
-                await window.signOut(window.auth);
-                location.reload();
-            } catch (e) {
-                console.error(e);
-            }
-        }
+      if(name) currentUser.name = name;
+      if(username) currentUser.username = username;
+      if(email) currentUser.email = email;
+      if(imgUrl) currentUser.img = imgUrl;
 
-        async function initApp() {
-            document.getElementById('userNameDisplay').innerText = window.currentUserName;
-            document.getElementById('userAvatar').innerText = window.currentUserName.substring(0, 2).toUpperCase();
-            
-            try {
-                const userDoc = await window.getDoc(window.doc(window.db, "users", window.currentUid));
-                if(userDoc.exists()) {
-                    favorites = userDoc.data().favorites || [];
-                    playlists = userDoc.data().playlists || [];
-                }
-            } catch(e) {
-                console.error("Error loading user data:", e);
-            }
+      const userIndex = users.findIndex(u => u.email === currentUser.email || u.username === currentUser.username);
+      if(userIndex !== -1) {
+        users[userIndex] = currentUser;
+        localStorage.setItem('loop_users', JSON.stringify(users));
+      }
+      localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
 
-            searchYouTubeMusicQuery("Malayalam Hits 2026");
-        }
-
-        function toggleMenu() {
-            const menu = document.getElementById('logoMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        function closeMenu() {
-            document.getElementById('logoMenu').classList.add('hidden');
-        }
-
-        window.addEventListener('click', (e) => {
-            const menu = document.getElementById('logoMenu');
-            const logo = e.target.closest('header .relative');
-            if (!logo && menu && !menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
-            }
-        });
-
-        function showStatus(text, show = true) {
-            const box = document.getElementById('statusMessage');
-            const span = document.getElementById('statusText');
-            if(show) {
-                span.innerText = text;
-                box.classList.remove('hidden');
-            } else {
-                box.classList.add('hidden');
-            }
-        }
-
-        function quickSearch(queryName) {
-            document.getElementById('searchInput').value = queryName;
-            handleSearch();
-        }
-
-        function handleSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            if(!query) return;
-            switchTab('home');
-            document.getElementById('sectionHeading').innerText = `Vibely Tracks for "${query}"`;
-            searchYouTubeMusicQuery(query);
-        }
-
-        // MUSIC APIS WITH GUARANTEED DIRECT YOUTUBE THUMBNAILS
-        const YT_MUSIC_APIS = [
-            { url: q => `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music Kavin', parser: 'piped' },
-            { url: q => `https://pipedapi.moomoo.me/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music MooMoo', parser: 'piped' },
-            { url: q => `https://pipedapi.adminforge.de/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music Admin', parser: 'piped' },
-            { url: q => `https://api.piped.private.coffee/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music Private', parser: 'piped' },
-            { url: q => `https://pipedapi.ducks.party/search?q=${encodeURIComponent(q)}&filter=music_songs`, name: 'YT Music Ducks', parser: 'piped' },
-            { url: q => `https://inv.nadeko.net/api/v1/search?q=${encodeURIComponent(q)}&type=video&music=1`, name: 'YT Music Nadeko', parser: 'invidious' },
-            { url: q => `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(q)}&type=video`, name: 'YT Music NerdVPN', parser: 'invidious' },
-        ];
-
-        async function searchYouTubeMusicFast(query) {
-            for (let api of YT_MUSIC_APIS) {
-                try {
-                    const c = new AbortController();
-                    setTimeout(() => c.abort(), 3500);
-                    const res = await fetch(api.url(query), { signal: c.signal });
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    let songs = [];
-                    
-                    if (api.parser === 'piped') {
-                        const items = data.items || data || [];
-                        songs = items.filter(i => i.type === 'stream' || i.url?.includes('/watch')).map(item => {
-                            const vId = item.url?.split('v=')[1] || item.id;
-                            return {
-                                videoId: vId,
-                                title: item.title,
-                                artist: item.uploaderName || item.uploader || "Vibely Artist",
-                                image: `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
-                                duration: item.duration || 180
-                            };
-                        });
-                    } else if (api.parser === 'invidious' && Array.isArray(data)) {
-                        songs = data.map(item => {
-                            const vId = item.videoId;
-                            return {
-                                videoId: vId,
-                                title: item.title,
-                                artist: item.author,
-                                image: `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
-                                duration: item.lengthSeconds || 180
-                            };
-                        });
-                    }
-                    
-                    songs = songs.filter(s => s.videoId && s.videoId.length > 5);
-                    if (songs.length > 0) return songs;
-                } catch (e) {
-                    continue;
-                }
-            }
-            return [];
-        }
-
-        async function searchYouTubeMusicQuery(query) {
-            showStatus(`Searching Vibely: ${query}... ⚡`, true);
-            const songs = await searchYouTubeMusicFast(query);
-            showStatus("", false);
-            if (songs.length > 0) {
-                currentPlaylist = songs;
-                renderSongs(songs, 'songsGrid');
-            } else {
-                currentPlaylist = [
-                    { videoId: "X7Xv4wHw2lw", title: query + " - Full Song", artist: "Vibely", image: "https://i.ytimg.com/vi/X7Xv4wHw2lw/hqdefault.jpg", duration: 180 }
-                ];
-                renderSongs(currentPlaylist, 'songsGrid');
-            }
-        }
-
-        function renderSongs(songs, containerId) {
-            const grid = document.getElementById(containerId);
-            if(!songs || songs.length === 0) {
-                grid.innerHTML = `<p class="text-gray-400 text-sm col-span-full">No songs found.</p>`;
-                return;
-            }
-
-            grid.innerHTML = songs.map((song, idx) => {
-                const isFav = favorites.some(f => f.videoId === song.videoId);
-                const safeImg = `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`;
-                return `
-                    <div class="bg-vibelyCard hover:bg-vibelyHover border border-gray-100 hover:border-vibelyGreen p-3 rounded-2xl cursor-pointer transition-all duration-200 group shadow-sm hover:shadow-md relative">
-                        <div class="relative mb-3 overflow-hidden rounded-xl" onclick="playSongByIndex('${containerId}', ${idx})">
-                            <img src="${safeImg}" onerror="this.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300'" loading="lazy" class="w-full aspect-square object-cover group-hover:scale-105 transition duration-300">
-                            <span class="absolute top-2 left-2 bg-vibelyGreen text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">
-                                MUSIC
-                            </span>
-                            <button class="absolute bottom-2.5 right-2.5 w-11 h-11 bg-vibelyGreen text-white rounded-full flex items-center justify-center shadow-lg opacity-95 group-hover:scale-110 transition">
-                                <i class="fa-solid fa-play text-sm ml-0.5"></i>
-                            </button>
-                        </div>
-                        <div class="flex items-start justify-between">
-                            <div onclick="playSongByIndex('${containerId}', ${idx})" class="overflow-hidden flex-1 pr-2">
-                                <h3 class="font-bold text-sm text-gray-900 truncate">${song.title}</h3>
-                                <p class="text-xs text-gray-500 truncate mt-0.5">${song.artist}</p>
-                            </div>
-                            <button onclick="toggleFavorite('${song.videoId}', '${encodeURIComponent(song.title)}', '${encodeURIComponent(song.artist)}', '${encodeURIComponent(safeImg)}')" class="text-gray-400 hover:text-red-500 transition p-1">
-                                <i class="${isFav ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart text-base"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function toggleFavorite(videoId, titleEnc, artistEnc, imgEnc) {
-            const song = {
-                videoId,
-                title: decodeURIComponent(titleEnc),
-                artist: decodeURIComponent(artistEnc),
-                image: decodeURIComponent(imgEnc)
-            };
-
-            const index = favorites.findIndex(f => f.videoId === videoId);
-            if(index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push(song);
-            }
-
-            try {
-                await window.updateDoc(window.doc(window.db, "users", window.currentUid), {
-                    favorites: favorites
-                });
-            } catch(e) {
-                console.error("Error saving favorites to Firebase:", e);
-            }
-            
-            if(!document.getElementById('view-favorites').classList.contains('hidden')) {
-                renderSongs(favorites, 'favoritesGrid');
-            } else {
-                renderSongs(currentPlaylist, 'songsGrid');
-            }
-        }
-
-        async function createNewPlaylist() {
-            const name = prompt("Enter playlist name:");
-            if(!name) return;
-            playlists.push({ name, songs: [] });
-            
-            try {
-                await window.updateDoc(window.doc(window.db, "users", window.currentUid), {
-                    playlists: playlists
-                });
-            } catch(e) {
-                console.error("Error saving playlist:", e);
-            }
-            renderPlaylists();
-        }
-
-        function renderPlaylists() {
-            const grid = document.getElementById('playlistsGrid');
-            if(playlists.length === 0) {
-                grid.innerHTML = `<p class="text-xs text-gray-400">No playlists created yet. Click 'New Playlist' above.</p>`;
-                return;
-            }
-
-            grid.innerHTML = playlists.map((pl, pIdx) => `
-                <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-bold text-base text-gray-900"><i class="fa-solid fa-list-music text-vibelyGreen mr-2"></i>${pl.name}</h3>
-                        <span class="text-xs bg-green-100 text-vibelyDarkGreen font-semibold px-2 py-0.5 rounded-full">${pl.songs.length} songs</span>
-                    </div>
-                    <div class="space-y-2 max-h-40 overflow-y-auto no-scrollbar mb-3">
-                        ${pl.songs.length === 0 ? '<p class="text-xs text-gray-400">Playlist is empty</p>' : pl.songs.map((s, sIdx) => `
-                            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-50">
-                                <span class="truncate text-gray-700 pr-2">${s.title}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // === VIDEO IFRAME PLAYBACK & CONTROLS FIX ===
-        async function playSongByIndex(containerId, index) {
-            activeContainerId = containerId;
-            let list = currentPlaylist;
-            if(containerId === 'favoritesGrid') list = favorites;
-            
-            if(!list[index]) return;
-            currentIndex = index;
-            currentPlaylist = list;
-            const song = list[index];
-
-            const container = document.getElementById('player-container');
-            document.getElementById('player-title').innerText = song.title;
-            document.getElementById('player-artist').innerText = song.artist + " • Playing...";
-            document.getElementById('player-thumb').src = `https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg`;
-            
-            container.innerHTML = `
-                <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            `;
-            
-            const downloadBtn = document.getElementById('download-btn');
-            downloadBtn.classList.remove('hidden');
-            downloadBtn.classList.add('flex');
-            downloadBtn.href = `https://www.youtube.com/watch?v=${song.videoId}`;
-
-            isPlaying = true;
-            document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-sm";
-            showStatus("Playing via YouTube ✓", true);
-            setTimeout(()=>showStatus("", false), 1500);
-
-            songCurrentTime = 0;
-            songDuration = song.duration || 180;
-            if(timerInterval) clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                if(isPlaying) {
-                    songCurrentTime += 1;
-                    if(songCurrentTime > songDuration) {
-                        playNext();
-                        return;
-                    }
-                    const progressBar = document.getElementById('progress-bar');
-                    if(progressBar) {
-                        progressBar.value = (songCurrentTime / songDuration) * 100;
-                        document.getElementById('current-time').innerText = formatTime(songCurrentTime);
-                        document.getElementById('duration').innerText = formatTime(songDuration);
-                    }
-                }
-            }, 1000);
-        }
-
-        function togglePlayPause() {
-            if(!currentPlaylist[currentIndex]) {
-                if(currentPlaylist.length > 0) playSongByIndex(activeContainerId, 0);
-                return;
-            }
-            const container = document.getElementById('player-container');
-            const song = currentPlaylist[currentIndex];
-
-            if(isPlaying) {
-                isPlaying = false;
-                document.getElementById('play-pause-icon').className = "fa-solid fa-play text-sm ml-0.5";
-                container.innerHTML = `<span class="text-xs text-gray-500 font-semibold">Paused</span>`;
-            } else {
-                isPlaying = true;
-                document.getElementById('play-pause-icon').className = "fa-solid fa-pause text-sm";
-                container.innerHTML = `
-                    <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${Math.floor(songCurrentTime)}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                `;
-            }
-        }
-
-        function playNext() {
-            if(currentPlaylist.length === 0) return;
-            currentIndex = (currentIndex + 1) % currentPlaylist.length;
-            playSongByIndex(activeContainerId, currentIndex);
-        }
-
-        function playPrevious() {
-            if(currentPlaylist.length === 0) return;
-            currentIndex = (currentIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
-            playSongByIndex(activeContainerId, currentIndex);
-        }
-
-        document.getElementById('progress-bar').addEventListener('change', (e) => {
-            if(songDuration && currentPlaylist[currentIndex]) {
-                songCurrentTime = Math.floor((e.target.value / 100) * songDuration);
-                const song = currentPlaylist[currentIndex];
-                const container = document.getElementById('player-container');
-                if(isPlaying) {
-                    container.innerHTML = `
-                        <iframe class="w-full h-full rounded-xl" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1&start=${songCurrentTime}&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                    `;
-                }
-            }
-        });
-
-        function formatTime(seconds) {
-            if(isNaN(seconds)) return "0:00";
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-
-        function switchTab(tab) {
-            ['home', 'favorites', 'playlists'].forEach(t => {
-                const view = document.getElementById(`view-${t}`);
-                const nav = document.getElementById(`nav-${t}`);
-                if(view) view.classList.add('hidden');
-                if(nav) {
-                    nav.classList.remove('bg-vibelyGreen', 'text-white');
-                    nav.classList.add('text-gray-600', 'hover:bg-green-50', 'hover:text-vibelyGreen');
-                }
-            });
-
-            const activeView = document.getElementById(`view-${tab}`);
-            const activeNav = document.getElementById(`nav-${tab}`);
-            if(activeView) activeView.classList.remove('hidden');
-            if(activeNav) {
-                activeNav.classList.add('bg-vibelyGreen', 'text-white');
-                activeNav.classList.remove('text-gray-600', 'hover:bg-green-50', 'hover:text-vibelyGreen');
-            }
-
-            if(tab === 'favorites') {
-                renderSongs(favorites, 'favoritesGrid');
-            } else if(tab === 'playlists') {
-                renderPlaylists();
-            } else if(tab === 'home') {
-                document.getElementById('sectionHeading').innerText = "Vibely Tracks";
-            }
-        }
-    </script>
+      updateProfileDisplay();
+      closeEditProfileModal();
+    }
+  </script>
 </body>
 </html>
