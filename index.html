@@ -165,22 +165,44 @@
         <!-- CONTENT AREA (CENTER MAIN PANEL) -->
         <main class="flex-1 bg-gradient-to-b from-[#222222] to-spotifyDark rounded-lg overflow-y-auto pb-32 relative">
             <!-- Top Sticky Header -->
-            <header class="sticky top-0 bg-[#121212]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between z-20">
-                <div class="flex items-center space-x-3">
-                    <button class="w-8 h-8 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black transition">
-                        <i class="fa-solid fa-chevron-left text-xs"></i>
-                    </button>
-                    <button class="w-8 h-8 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black transition">
-                        <i class="fa-solid fa-chevron-right text-xs"></i>
-                    </button>
+            <header class="sticky top-0 bg-[#121212]/90 backdrop-blur-md px-4 sm:px-6 py-4 flex items-center justify-between z-20">
+                <!-- Clickable Logo with Dropdown Menu -->
+                <div class="relative">
+                    <div onclick="toggleMenu()" class="flex items-center space-x-2 mr-3 cursor-pointer select-none group bg-[#242424] hover:bg-[#2a2a2a] px-3 py-1.5 rounded-full transition">
+                        <div class="w-6 h-6 bg-spotifyGreen rounded-full flex items-center justify-center text-black">
+                            <i class="fa-solid fa-headphones-simple text-xs"></i>
+                        </div>
+                        <span class="font-bold text-white text-xs tracking-tight">VIBELY</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-neutral-400 ml-0.5"></i>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    <div id="logoMenu" class="hidden absolute top-12 left-0 bg-[#282828] border border-neutral-700 rounded-xl shadow-2xl py-2 w-48 z-50">
+                        <button onclick="switchTab('home'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-house w-4 text-spotifyGreen"></i><span>Home</span>
+                        </button>
+                        <button onclick="switchTab('search'); closeMenu(); document.getElementById('searchInput').focus();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-magnifying-glass w-4 text-spotifyGreen"></i><span>Search Songs</span>
+                        </button>
+                        <button onclick="switchTab('favorites'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-heart w-4 text-red-500"></i><span>Liked Songs</span>
+                        </button>
+                        <button onclick="switchTab('playlists'); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-neutral-200 hover:bg-[#3e3e3e] hover:text-white flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-list-music w-4 text-spotifyGreen"></i><span>Playlists</span>
+                        </button>
+                        <div class="border-t border-neutral-700 my-1"></div>
+                        <button onclick="handleLogout(); closeMenu();" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-950/50 flex items-center space-x-2.5 transition">
+                            <i class="fa-solid fa-right-from-bracket w-4"></i><span>Logout Account</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Search Input Header -->
-                <div class="flex items-center flex-1 max-w-md mx-4">
+                <div class="flex items-center flex-1 max-w-md mx-2">
                     <div class="relative w-full flex items-center">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 text-neutral-400 text-sm"></i>
                         <input type="text" id="searchInput" placeholder="What do you want to play?" 
-                            class="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#121212] text-white text-sm rounded-full pl-11 pr-16 py-3 border border-transparent focus:border-white transition outline-none"
+                            class="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#121212] text-white text-sm rounded-full pl-11 pr-16 py-2.5 border border-transparent focus:border-white transition outline-none"
                             onkeypress="if(event.key === 'Enter') handleSearch()">
                         <button onclick="handleSearch()" class="absolute right-2 bg-white text-black text-xs font-bold px-3 py-1.5 rounded-full hover:scale-105 transition">
                             Search
@@ -189,7 +211,7 @@
                 </div>
 
                 <!-- Profile Avatar -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 ml-2">
                     <div id="userAvatar" class="w-8 h-8 bg-neutral-700 text-white rounded-full flex items-center justify-center font-bold text-xs shadow border border-neutral-600">
                         IA
                     </div>
@@ -249,43 +271,46 @@
         </main>
     </div>
 
+    <!-- FLOATING LIKED SONGS BUTTON -->
+    <button onclick="switchTab('favorites')" class="fixed bottom-28 right-6 w-14 h-14 bg-spotifyGreen text-black rounded-full flex items-center justify-center shadow-2xl z-40 transition hover:scale-110 group" title="Liked Songs">
+        <i class="fa-solid fa-heart text-xl group-hover:scale-110 transition"></i>
+    </button>
+
     <!-- SPOTIFY BOTTOM MUSIC PLAYER BAR -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-900 px-4 py-2 flex flex-col justify-center z-30 h-20">
+    <footer class="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-900 px-4 py-2.5 flex flex-col justify-center z-30 h-24">
+        <div class="w-full flex items-center space-x-2 mb-1.5 max-w-3xl mx-auto">
+            <span class="text-[10px] font-semibold text-neutral-400 w-8 text-right" id="current-time">0:00</span>
+            <input type="range" id="progress-bar" value="0" min="0" max="100" class="w-full h-1 bg-neutral-600 rounded-lg appearance-none cursor-pointer accent-white hover:accent-spotifyGreen">
+            <span class="text-[10px] font-semibold text-neutral-400 w-8" id="duration">0:00</span>
+        </div>
+
         <div class="flex items-center justify-between w-full max-w-7xl mx-auto">
             <!-- Left Song Info -->
             <div class="flex items-center space-x-3 w-1/3 overflow-hidden">
-                <img id="player-thumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" class="w-14 h-14 rounded-md object-cover shadow">
+                <img id="player-thumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" class="w-12 h-12 rounded-md object-cover shadow">
                 <div class="overflow-hidden pr-2">
-                    <h4 id="player-title" class="text-sm font-bold truncate text-white hover:underline cursor-pointer">Select a song</h4>
-                    <p id="player-artist" class="text-xs text-neutral-400 truncate hover:underline cursor-pointer">Vibely Ready</p>
+                    <h4 id="player-title" class="text-sm font-bold truncate text-white">Select a song</h4>
+                    <p id="player-artist" class="text-xs text-neutral-400 truncate">Vibely Ready</p>
                 </div>
             </div>
 
-            <!-- Center Controls & Progress -->
-            <div class="flex flex-col items-center justify-center w-1/3">
-                <div class="flex items-center space-x-6 mb-1">
-                    <button onclick="playPrevious()" class="text-neutral-400 hover:text-white transition text-base">
-                        <i class="fa-solid fa-backward-step"></i>
-                    </button>
-                    <button onclick="togglePlayPause()" id="play-btn" class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow">
-                        <i id="play-pause-icon" class="fa-solid fa-play text-xs ml-0.5"></i>
-                    </button>
-                    <button onclick="playNext()" class="text-neutral-400 hover:text-white transition text-base">
-                        <i class="fa-solid fa-forward-step"></i>
-                    </button>
-                </div>
-                <!-- Progress Bar -->
-                <div class="w-full flex items-center space-x-2 max-w-md">
-                    <span class="text-[10px] font-semibold text-neutral-400 w-8 text-right" id="current-time">0:00</span>
-                    <input type="range" id="progress-bar" value="0" min="0" max="100" class="w-full h-1 bg-neutral-600 rounded-lg appearance-none cursor-pointer accent-white hover:accent-spotifyGreen">
-                    <span class="text-[10px] font-semibold text-neutral-400 w-8" id="duration">0:00</span>
-                </div>
+            <!-- Center Controls & Player Container -->
+            <div class="flex items-center justify-center space-x-4 w-1/3">
+                <button onclick="playPrevious()" class="text-neutral-400 hover:text-white transition text-base">
+                    <i class="fa-solid fa-backward-step"></i>
+                </button>
+                <button onclick="togglePlayPause()" id="play-btn" class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow">
+                    <i id="play-pause-icon" class="fa-solid fa-play text-sm ml-0.5"></i>
+                </button>
+                <button onclick="playNext()" class="text-neutral-400 hover:text-white transition text-base">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
             </div>
 
             <!-- Right Player Container & Download -->
-            <div class="flex items-center justify-end space-x-4 w-1/3">
-                <div id="player-container" class="w-32 h-10 flex items-center justify-center bg-[#181818] rounded-md overflow-hidden border border-neutral-800">
-                    <span class="text-[10px] text-neutral-400">Player Ready</span>
+            <div class="flex items-center justify-end space-x-3 w-1/3">
+                <div id="player-container" class="w-40 h-12 flex items-center justify-center bg-[#181818] rounded-lg overflow-hidden border border-neutral-800">
+                    <span class="text-xs text-neutral-400">Player Ready</span>
                 </div>
                 <a id="download-btn" href="#" target="_blank" class="hidden text-neutral-400 hover:text-white transition text-sm" title="Open on YouTube">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -348,7 +373,7 @@
         });
     </script>
 
-    <!-- VIBELY SPOTIFY SCRIPT -->
+    <!-- VIBELY FIXED SPOTIFY SCRIPT -->
     <script>
         let currentPlaylist = [];
         let currentIndex = 0;
@@ -445,8 +470,22 @@
             searchYouTubeMusicQuery("Malayalam Hits 2026");
         }
 
-        function toggleMenu() {}
-        function closeMenu() {}
+        function toggleMenu() {
+            const menu = document.getElementById('logoMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function closeMenu() {
+            document.getElementById('logoMenu').classList.add('hidden');
+        }
+
+        window.addEventListener('click', (e) => {
+            const menu = document.getElementById('logoMenu');
+            const logo = e.target.closest('header .relative');
+            if (!logo && menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+            }
+        });
 
         function showStatus(text, show = true) {
             const box = document.getElementById('statusMessage');
