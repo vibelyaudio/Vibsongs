@@ -13,13 +13,10 @@
   <style>
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @keyframes loopPulse {
-      0% { transform: scale(0.8); opacity: 0; filter: blur(10px); }
-      50% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .animate-loop-intro {
-      animation: loopPulse 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    
+    /* Sliding Auth Animation Styles */
+    .form-container {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
   </style>
 </head>
@@ -27,7 +24,7 @@
 
   <!-- INTRO ANIMATION SCREEN -->
   <div id="intro-screen" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-700">
-    <div class="flex flex-col items-center animate-loop-intro">
+    <div class="flex flex-col items-center">
       <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-500/50 mb-4">
         <i class="fa-solid fa-infinity text-4xl text-black font-extrabold animate-spin" style="animation-duration: 6s;"></i>
       </div>
@@ -59,54 +56,62 @@
     <!-- Dynamic Content Area -->
     <main class="flex-1 relative overflow-hidden flex flex-col" id="main-content">
       
-      <!-- AUTH SECTION -->
-      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-6 bg-gray-950 absolute inset-0 z-20">
-        <div id="login-box" class="flex flex-col gap-4">
-          <div class="text-center mb-2">
-            <h2 class="text-2xl font-bold text-white">Welcome Back</h2>
-            <p class="text-xs text-gray-400 mt-1">Please log in to continue to LOOP</p>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Username or Email</label>
-            <input type="text" id="login-identifier" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Enter username or email">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Password</label>
-            <input type="password" id="login-password" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Enter password">
-          </div>
-          <p id="login-error" class="text-red-500 text-xs hidden text-center"></p>
-          <button onclick="handleLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-sm py-3 rounded-xl transition mt-2">Log In</button>
+      <!-- ANIMATED LOGIN & SIGNUP SECTION -->
+      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-5 bg-gradient-to-br from-gray-950 via-zinc-900 to-neutral-950 absolute inset-0 z-20 overflow-hidden">
+        <div class="relative w-full max-w-sm mx-auto bg-gray-900/80 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-6 shadow-2xl shadow-rose-950/40 overflow-hidden min-h-[420px] flex flex-col justify-center">
           
-          <p class="text-xs text-gray-400 text-center mt-4">
-            Don't have an account? 
-            <button onclick="toggleAuthMode('signup')" class="text-emerald-400 font-semibold underline">Create Account</button>
-          </p>
-        </div>
+          <!-- LOGIN FORM -->
+          <div id="login-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-0 opacity-100">
+            <div class="text-center mb-4">
+              <h2 class="text-2xl font-black text-white tracking-wide">Login</h2>
+              <p class="text-[11px] text-gray-400 mt-0.5">Welcome back! Please enter your details.</p>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-1">Username</label>
+                <input type="text" id="login-identifier" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Enter username">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-1">Password</label>
+                <input type="password" id="login-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="••••••••">
+              </div>
+              <p id="login-error" class="text-rose-500 text-[10px] hidden text-center"></p>
+              <button onclick="handleLogin()" class="w-full py-3 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Login</button>
+            </div>
+            <p class="text-[11px] text-gray-400 text-center mt-4">
+              Don't have an account? 
+              <button onclick="switchToSignup()" class="text-rose-400 font-semibold underline hover:text-rose-300">Sign Up</button>
+            </p>
+          </div>
 
-        <div id="signup-box" class="hidden flex flex-col gap-4">
-          <div class="text-center mb-2">
-            <h2 class="text-2xl font-bold text-white">Create Account</h2>
-            <p class="text-xs text-gray-400 mt-1">Join LOOP today and stay connected</p>
+          <!-- SIGNUP FORM -->
+          <div id="signup-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-full opacity-0 pointer-events-none">
+            <div class="text-center mb-3">
+              <h2 class="text-2xl font-black text-white tracking-wide">Register</h2>
+              <p class="text-[11px] text-gray-400 mt-0.5">Create a new account to join LOOP.</p>
+            </div>
+            <div class="flex flex-col gap-2.5">
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Email</label>
+                <input type="email" id="signup-email" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="name@example.com">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Username</label>
+                <input type="text" id="signup-username" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Choose username">
+              </div>
+              <div>
+                <label class="block text-[10px] text-gray-400 mb-0.5">Password</label>
+                <input type="password" id="signup-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Create password">
+              </div>
+              <p id="signup-error" class="text-rose-500 text-[10px] hidden text-center"></p>
+              <button onclick="handleSignup()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Register</button>
+            </div>
+            <p class="text-[11px] text-gray-400 text-center mt-3">
+              Don't have an account? 
+              <button onclick="switchToLogin()" class="text-rose-400 font-semibold underline hover:text-rose-300">Login</button>
+            </p>
           </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Email</label>
-            <input type="email" id="signup-email" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="name@example.com">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Username</label>
-            <input type="text" id="signup-username" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Choose username">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Password</label>
-            <input type="password" id="signup-password" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Create password">
-          </div>
-          <p id="signup-error" class="text-red-500 text-xs hidden text-center"></p>
-          <button onclick="handleSignup()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-sm py-3 rounded-xl transition mt-2">Sign Up</button>
-          
-          <p class="text-xs text-gray-400 text-center mt-4">
-            Already have an account? 
-            <button onclick="toggleAuthMode('login')" class="text-emerald-400 font-semibold underline">Log In</button>
-          </p>
+
         </div>
       </div>
 
@@ -120,7 +125,6 @@
 
       <!-- LOOP SECTION (ROOM BASED INSTANT LIVE VIDEO) -->
       <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
-        <!-- Status Indicator -->
         <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
           <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Ready to connect
@@ -128,15 +132,12 @@
           <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
         </div>
 
-        <!-- Room Input Box for instant testing -->
         <div class="flex gap-2 items-center bg-gray-900 p-2 rounded-xl border border-gray-800 shrink-0">
           <input type="text" id="room-code-input" placeholder="Enter Room Name (e.g. room123)" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
           <button onclick="joinRoom()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-4 py-1.5 rounded-lg transition">Connect</button>
         </div>
 
-        <!-- Video Container Area -->
         <div class="flex-1 relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 flex flex-col">
-          <!-- Stranger / Remote Video View (Main Screen) -->
           <div class="w-full h-full relative flex items-center justify-center bg-gray-950">
             <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
             <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
@@ -145,14 +146,12 @@
             </div>
           </div>
 
-          <!-- Local User Camera Preview (Small Floating Box Top-Right) -->
           <div class="absolute top-3 right-3 w-28 h-40 bg-black rounded-xl overflow-hidden border-2 border-emerald-500/60 shadow-lg flex items-center justify-center z-10">
             <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
             <span class="absolute bottom-1 left-1 bg-black/60 text-[8px] px-1.5 py-0.5 rounded text-white">You</span>
           </div>
         </div>
 
-        <!-- Skip / Next Button -->
         <div class="shrink-0 pb-2">
           <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-forward-step text-base"></i> DISCONNECT / LEAVE
@@ -374,16 +373,31 @@
       }
     }
 
-    function toggleAuthMode(mode) {
-      document.getElementById('login-error').classList.add('hidden');
-      document.getElementById('signup-error').classList.add('hidden');
-      if (mode === 'signup') {
-        document.getElementById('login-box').classList.add('hidden');
-        document.getElementById('signup-box').classList.remove('hidden');
-      } else {
-        document.getElementById('signup-box').classList.add('hidden');
-        document.getElementById('login-box').classList.remove('hidden');
-      }
+    // Sliding Animation Functions for Login & Signup
+    function switchToSignup() {
+      const loginBox = document.getElementById('login-form-box');
+      const signupBox = document.getElementById('signup-form-box');
+      
+      loginBox.style.transform = 'translateX(-120%)';
+      loginBox.style.opacity = '0';
+      loginBox.classList.add('pointer-events-none');
+
+      signupBox.style.transform = 'translateX(0)';
+      signupBox.style.opacity = '1';
+      signupBox.classList.remove('pointer-events-none');
+    }
+
+    function switchToLogin() {
+      const loginBox = document.getElementById('login-form-box');
+      const signupBox = document.getElementById('signup-form-box');
+      
+      signupBox.style.transform = 'translateX(120%)';
+      signupBox.style.opacity = '0';
+      signupBox.classList.add('pointer-events-none');
+
+      loginBox.style.transform = 'translateX(0)';
+      loginBox.style.opacity = '1';
+      loginBox.classList.remove('pointer-events-none');
     }
 
     function handleSignup() {
@@ -429,7 +443,7 @@
 
       if (!identifier || !password) {
         errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
         return;
       }
 
@@ -507,7 +521,6 @@
       }
     }
 
-    // Room connection for testing between 2 phones instantly
     function joinRoom() {
       let roomName = document.getElementById('room-code-input').value.trim();
       if(!roomName) {
@@ -524,18 +537,15 @@
 
       if(peer) { peer.destroy(); }
 
-      // We use roomName as peer ID for user 1, and caller for user 2
       let myPeerId = roomName + "_user1";
       let targetPeerId = roomName + "_user2";
 
-      // Try creating as user 1, if taken, become user 2
       peer = new Peer(myPeerId);
 
       peer.on('open', (id) => {
         statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Waiting in room...`;
         statusText.innerText = `Joined ${roomName}. Connecting...`;
 
-        // Attempt calling user 2 if they are already there
         let call = peer.call(targetPeerId, localStream);
         if(call) {
           setupCallHandlers(call);
@@ -543,7 +553,6 @@
       });
 
       peer.on('error', (err) => {
-        // If user 1 ID is already taken, connect as user 2
         if(err.type === 'unavailable-id') {
           peer = new Peer(targetPeerId);
           peer.on('open', (id) => {
@@ -664,7 +673,9 @@
 
     function openEditProfileModal() {
       document.getElementById('input-name').value = currentUser.name || '';
-      updateProfileDisplay();
+      document.getElementById('input-username').value = currentUser.username || '';
+      document.getElementById('input-email').value = currentUser.email || '';
+      document.getElementById('input-img').value = currentUser.img || '';
       document.getElementById('edit-profile-modal').classList.remove('hidden');
     }
 
