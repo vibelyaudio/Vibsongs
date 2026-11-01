@@ -187,12 +187,12 @@
           <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
           <div>
             <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">LOOP Quotes</span>
-            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം."</p>
+            <p id="quote-1" class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം."</p>
           </div>
           <div class="flex items-center justify-between mt-4 pt-3 border-t border-emerald-800/40 text-xs text-gray-400">
             <span>- LOOP Community</span>
-            <button onclick="alert('Quote copied!')" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
-              <i class="fa-solid fa-copy"></i> Copy
+            <button onclick="copyQuote('quote-1', this)" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold transition">
+              <i class="fa-solid fa-copy"></i> <span class="copy-text">Copy</span>
             </button>
           </div>
         </div>
@@ -201,12 +201,12 @@
           <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
           <div>
             <span class="bg-teal-500/20 text-teal-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-teal-500/30">LOOP Quotes</span>
-            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക."</p>
+            <p id="quote-2" class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക."</p>
           </div>
           <div class="flex items-center justify-between mt-4 pt-3 border-t border-teal-800/40 text-xs text-gray-400">
             <span>- LOOP Community</span>
-            <button onclick="alert('Quote copied!')" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
-              <i class="fa-solid fa-copy"></i> Copy
+            <button onclick="copyQuote('quote-2', this)" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold transition">
+              <i class="fa-solid fa-copy"></i> <span class="copy-text">Copy</span>
             </button>
           </div>
         </div>
@@ -380,6 +380,23 @@
         document.getElementById('bottom-nav').classList.add('hidden');
         document.getElementById('app-title').innerText = "LOOP";
       }
+    }
+
+    // Quote Copy Function
+    function copyQuote(elementId, btn) {
+      let quoteText = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(quoteText).then(() => {
+        let textSpan = btn.querySelector('.copy-text');
+        let originalText = textSpan.innerText;
+        textSpan.innerText = "Copied!";
+        btn.classList.add('text-emerald-300');
+        setTimeout(() => {
+          textSpan.innerText = originalText;
+          btn.classList.remove('text-emerald-300');
+        }, 1500);
+      }).catch(err => {
+        alert("Failed to copy quote.");
+      });
     }
 
     function switchToSignup() {
