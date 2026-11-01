@@ -320,7 +320,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -332,12 +332,85 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    export const db = getFirestore(app);
-    window.db = db; // Make db globally accessible if needed
+    const db = getFirestore(app);
+
+    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+
+    window.handleSignup = async function() {
+      const email = document.getElementById('signup-email').value.trim();
+      const username = document.getElementById('signup-username').value.trim();
+      const password = document.getElementById('signup-password').value.trim();
+      const errorEl = document.getElementById('signup-error');
+
+      if (!email || !username || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          errorEl.innerText = "Username already exists.";
+          errorEl.classList.remove('hidden');
+          return;
+        }
+
+        const newUser = {
+          name: username,
+          username: username,
+          email: email,
+          password: password,
+          img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+        };
+
+        await addDoc(collection(db, "users"), newUser);
+        localStorage.setItem('loop_current_user', JSON.stringify(newUser));
+        currentUser = newUser;
+        errorEl.classList.add('hidden');
+        window.checkAuthState();
+      } catch (e) {
+        console.error("Signup error:", e);
+        errorEl.innerText = "Signup failed. Try again.";
+        errorEl.classList.remove('hidden');
+      }
+    };
+
+    window.handleLogin = async function() {
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorEl = document.getElementById('login-error');
+
+      if (!identifier || !password) {
+        errorEl.innerText = "Please fill in all fields.";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "users"), where("username", "==", identifier), where("password", "==", password));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          let user = querySnapshot.docs[0].data();
+          localStorage.setItem('loop_current_user', JSON.stringify(user));
+          currentUser = user;
+          errorEl.classList.add('hidden');
+          window.checkAuthState();
+        } else {
+          errorEl.innerText = "Invalid Username or Password.";
+          errorEl.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error("Login error:", e);
+        errorEl.innerText = "Login failed. Try again.";
+        errorEl.classList.remove('hidden');
+      }
+    };
   </script>
 
   <script>
-    let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
     let directMessages = JSON.parse(localStorage.getItem('loop_direct_messages')) || {};
@@ -381,12 +454,13 @@
         intro.style.opacity = '0';
         setTimeout(() => {
           intro.style.display = 'none';
-          checkAuthState();
+          window.checkAuthState();
         }, 700);
       }, 1800);
     });
 
-    function checkAuthState() {
+    window.checkAuthState = function() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (currentUser) {
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('bottom-nav').classList.remove('hidden');
@@ -442,74 +516,15 @@
       loginBox.classList.remove('pointer-events-none');
     }
 
-    function handleSignup() {
-      const email = document.getElementById('signup-email').value.trim();
-      const username = document.getElementById('signup-username').value.trim();
-      const password = document.getElementById('signup-password').value.trim();
-      const errorEl = document.getElementById('signup-error');
-
-      if (!email || !username || !password) {
-        errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.remove('hidden');
-        return;
-      }
-
-      const existingUser = users.find(u => u.email === email || u.username === username);
-      if (existingUser) {
-        errorEl.innerText = "Email or Username already exists.";
-        errorEl.classList.remove('hidden');
-        return;
-      }
-
-      const newUser = {
-        name: username,
-        username: username,
-        email: email,
-        password: password,
-        img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
-      };
-
-      users.push(newUser);
-      localStorage.setItem('loop_users', JSON.stringify(users));
-      currentUser = newUser;
-      localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-      
-      errorEl.classList.add('hidden');
-      checkAuthState();
-    }
-
-    function handleLogin() {
-      const identifier = document.getElementById('login-identifier').value.trim();
-      const password = document.getElementById('login-password').value.trim();
-      const errorEl = document.getElementById('login-error');
-
-      if (!identifier || !password) {
-        errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.remove('hidden');
-        return;
-      }
-
-      const user = users.find(u => (u.email === identifier || u.username === identifier) && u.password === password);
-      
-      if (user) {
-        currentUser = user;
-        localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-        errorEl.classList.add('hidden');
-        checkAuthState();
-      } else {
-        errorEl.innerText = "Invalid Username/Email or Password.";
-        errorEl.classList.remove('hidden');
-      }
-    }
-
     function handleLogout() {
       currentUser = null;
       localStorage.removeItem('loop_current_user');
       stopPeerConnection();
-      checkAuthState();
+      window.checkAuthState();
     }
 
     function updateProfileDisplay() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (currentUser) {
         document.getElementById('display-name').innerText = currentUser.name || currentUser.username;
         let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
@@ -570,8 +585,9 @@
     }
 
     function startChatWithUser() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       let target = document.getElementById('target-username-input').value.trim();
-      if (!target || target === currentUser.username) {
+      if (!target || !currentUser || target === currentUser.username) {
         alert("Please enter a valid different username.");
         return;
       }
@@ -587,7 +603,8 @@
     }
 
     function renderDirectMessages() {
-      if (!activeChatUser) return;
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!activeChatUser || !currentUser) return;
       let chatContainer = document.getElementById('chat-messages');
       chatContainer.innerHTML = '';
 
@@ -614,9 +631,10 @@
     }
 
     function sendDirectMessage() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       let input = document.getElementById('chat-input');
       let text = input.value.trim();
-      if (!text || !activeChatUser) return;
+      if (!text || !activeChatUser || !currentUser) return;
 
       let key = getChatKey(currentUser.username, activeChatUser);
       if (!directMessages[key]) {
@@ -744,6 +762,8 @@
     }
 
     function openEditProfileModal() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser) return;
       document.getElementById('input-name').value = currentUser.name || '';
       document.getElementById('input-username').value = currentUser.username || '';
       document.getElementById('input-email').value = currentUser.email || '';
@@ -756,6 +776,8 @@
     }
 
     function saveProfileDetails() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser) return;
       const name = document.getElementById('input-name').value;
       const username = document.getElementById('input-username').value;
       const email = document.getElementById('input-email').value;
@@ -766,13 +788,7 @@
       if(email) currentUser.email = email;
       if(imgUrl) currentUser.img = imgUrl;
 
-      const userIndex = users.findIndex(u => u.email === currentUser.email || u.username === currentUser.username);
-      if(userIndex !== -1) {
-        users[userIndex] = currentUser;
-        localStorage.setItem('loop_users', JSON.stringify(users));
-      }
       localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-
       updateProfileDisplay();
       closeEditProfileModal();
     }
