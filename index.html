@@ -317,7 +317,25 @@
 
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
+  <!-- FIREBASE & JAVASCRIPT LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
+      authDomain: "loop-10fb2.firebaseapp.com",
+      projectId: "loop-10fb2",
+      storageBucket: "loop-10fb2.firebasestorage.app",
+      messagingSenderId: "957292168220",
+      appId: "1:957292168220:web:2329aa0fcf8eb6a6bdcbd9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    export const db = getFirestore(app);
+    window.db = db; // Make db globally accessible if needed
+  </script>
+
   <script>
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
@@ -382,7 +400,6 @@
       }
     }
 
-    // Quote Copy Function
     function copyQuote(elementId, btn) {
       let quoteText = document.getElementById(elementId).innerText;
       navigator.clipboard.writeText(quoteText).then(() => {
