@@ -156,20 +156,16 @@
 
       <!-- USER TO USER DIRECT CHAT SECTION -->
       <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950">
-        <!-- Chat Header / User Search -->
-        <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex flex-col gap-2 shrink-0">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-xs">
-                <i class="fa-solid fa-user"></i>
-              </div>
-              <h3 id="active-chat-user" class="text-xs font-bold text-white">Select a user to chat</h3>
+        <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-xs">
+              <i class="fa-solid fa-user"></i>
             </div>
-            <button onclick="openUserSelectModal()" class="text-[10px] bg-emerald-500 text-black font-bold px-2.5 py-1 rounded-lg transition">New Chat</button>
+            <h3 id="active-chat-user" class="text-xs font-bold text-white">Select a user to chat</h3>
           </div>
+          <button onclick="openUserSelectModal()" class="text-[10px] bg-emerald-500 text-black font-bold px-2.5 py-1 rounded-lg transition">New Chat</button>
         </div>
 
-        <!-- Direct Messages Container -->
         <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 no-scrollbar">
           <div class="text-center text-gray-500 text-xs my-auto">
             <i class="fa-regular fa-comments text-2xl mb-1 text-gray-600"></i>
@@ -177,7 +173,6 @@
           </div>
         </div>
 
-        <!-- Chat Input Bar -->
         <div id="chat-input-box" class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2 shrink-0 hidden">
           <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
           <button onclick="sendDirectMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center justify-center">
@@ -186,17 +181,31 @@
         </div>
       </div>
 
-      <!-- QUOTES SECTION -->
-      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto">
-        <div class="bg-gradient-to-br from-indigo-900/80 to-purple-950 border border-indigo-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+      <!-- LOOP QUOTES SECTION -->
+      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar">
+        <div class="bg-gradient-to-br from-emerald-950/80 to-gray-900 border border-emerald-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
           <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
           <div>
-            <span class="bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-indigo-500/30">ShareChat Motivation</span>
-            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"വിജയം എന്നത് ഒറ്റരാത്രികൊണ്ട് ഉണ്ടാവുന്നതല്ല, ദിവസേനയുള്ള കഠിനാധ്വാനത്തിന്റെ ഫലമാണ്."</p>
+            <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">LOOP Quotes</span>
+            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം."</p>
           </div>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-indigo-800/40 text-xs text-gray-400">
-            <span>- ShareChat Quotes</span>
-            <button class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-emerald-800/40 text-xs text-gray-400">
+            <span>- LOOP Community</span>
+            <button onclick="alert('Quote copied!')" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-teal-950/80 to-gray-900 border border-teal-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+          <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
+          <div>
+            <span class="bg-teal-500/20 text-teal-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-teal-500/30">LOOP Quotes</span>
+            <p class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക."</p>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-teal-800/40 text-xs text-gray-400">
+            <span>- LOOP Community</span>
+            <button onclick="alert('Quote copied!')" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
               <i class="fa-solid fa-copy"></i> Copy
             </button>
           </div>
@@ -517,7 +526,6 @@
       }
     }
 
-    // Direct Chat Functions
     function openUserSelectModal() {
       document.getElementById('user-select-modal').classList.remove('hidden');
       document.getElementById('target-username-input').value = '';
