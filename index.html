@@ -48,7 +48,7 @@
         <button onclick="toggleTheme()" class="hover:text-emerald-400 transition">
           <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
         </button>
-        <button><i class="fa-solid fa-search text-lg"></i></button>
+        <button><i class="fa-solid search text-lg"></i></button>
         <button><i class="fa-solid fa-bell text-lg"></i></button>
       </div>
     </header>
@@ -154,6 +154,34 @@
         </div>
       </div>
 
+      <!-- CHAT SECTION (REPLACED DOWNLOAD) -->
+      <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950">
+        <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-comments text-xs"></i>
+            </div>
+            <div>
+              <h3 class="text-xs font-bold text-white">LOOP Community Chat</h3>
+              <p class="text-[9px] text-emerald-400">Chat with username</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 no-scrollbar">
+          <!-- Messages will be injected here -->
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2 shrink-0">
+          <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+          <button onclick="sendChatMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center justify-center">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- QUOTES SECTION -->
       <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto">
         <div class="bg-gradient-to-br from-indigo-900/80 to-purple-950 border border-indigo-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
@@ -250,83 +278,11 @@
       </div>
     </div>
 
-    <!-- INSTAGRAM POPUP DOWNLOADER MODAL -->
-    <div id="insta-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-sm">
-              <i class="fa-brands fa-instagram"></i>
-            </div>
-            <h3 class="text-xs font-bold text-pink-400">Instagram Downloader</h3>
-          </div>
-          <button onclick="closeInstaDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        
-        <div class="flex flex-col gap-3">
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste Instagram Reel Link</label>
-            <input type="text" id="insta-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://www.instagram.com/reel/...">
-          </div>
-          
-          <button onclick="handleInstaDownload()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
-
-          <div id="insta-result-container" class="hidden flex flex-col gap-2 mt-1">
-            <div id="result"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- YOUTUBE POPUP DOWNLOADER MODAL -->
-    <div id="yt-downloader-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-sm">
-              <i class="fa-brands fa-youtube"></i>
-            </div>
-            <h3 class="text-xs font-bold text-red-400">YouTube Downloader</h3>
-          </div>
-          <button onclick="closeYtDownloader()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        
-        <div class="flex flex-col gap-3">
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1 text-left">Paste YouTube Video Link</label>
-            <input type="text" id="yt-link-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500" placeholder="https://www.youtube.com/watch?v=...">
-          </div>
-          
-          <button onclick="handleYtDownload()" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-700 text-white font-bold text-xs rounded-xl transition">DOWNLOAD</button>
-
-          <div id="yt-result-container" class="hidden flex flex-col gap-2 mt-1">
-            <div id="yt-result"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FLOATING DOWNLOAD MENU -->
-    <div id="download-menu" class="hidden absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/95 border border-gray-700 backdrop-blur-md rounded-2xl p-4 shadow-2xl z-40 w-11/12 max-w-xs flex flex-col gap-3">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-        <h3 class="text-xs font-bold text-emerald-400">Share or Download via</h3>
-        <button onclick="toggleDownloadMenu()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="grid grid-cols-5 gap-2 py-2">
-        <a href="https://whatsapp.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-emerald-400 transition"><div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg"><i class="fa-brands fa-whatsapp"></i></div><span class="text-[9px]">WhatsApp</span></a>
-        <button onclick="openInstaDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-pink-400 transition"><div class="w-10 h-10 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center text-pink-400 text-lg"><i class="fa-brands fa-instagram"></i></div><span class="text-[9px]">Instagram</span></button>
-        <a href="https://facebook.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-blue-400 transition"><div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-lg"><i class="fa-brands fa-facebook-f"></i></div><span class="text-[9px]">Facebook</span></a>
-        <!-- YOUTUBE DOWNLOAD BUTTON -->
-        <button onclick="openYtDownloader(); toggleDownloadMenu();" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-400 transition"><div class="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 text-lg"><i class="fa-brands fa-youtube"></i></div><span class="text-[9px]">YouTube</span></button>
-        <a href="https://pinterest.com" target="_blank" class="flex flex-col items-center gap-1 text-gray-300 hover:text-red-500 transition"><div class="w-10 h-10 rounded-full bg-red-700/20 border border-red-600/50 flex items-center justify-center text-red-500 text-lg"><i class="fa-brands fa-pinterest-p"></i></div><span class="text-[9px]">Pinterest</span></a>
-      </div>
-    </div>
-
-    <!-- BOTTOM NAVIGATION BAR -->
+    <!-- BOTTOM NAVIGATION BAR (Replaced Download with Chat) -->
     <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
       <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-14 text-emerald-400 transition"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[11px] font-medium">Home</span></button>
       <button onclick="switchTab('loop')" id="nav-loop" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-video text-xl mb-1"></i><span class="text-[11px] font-medium">LOOP</span></button>
-      <button onclick="toggleDownloadMenu()" class="flex flex-col items-center justify-center"><div class="w-14 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20 active:scale-95 transition"><i class="fa-solid fa-download text-lg font-bold"></i></div><span class="text-[11px] font-medium text-gray-300 mt-1">Download</span></button>
+      <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-comments text-xl mb-1"></i><span class="text-[11px] font-medium">Chat</span></button>
       <button onclick="switchTab('quotes')" id="nav-quotes" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-quote-left text-xl mb-1"></i><span class="text-[11px] font-medium">Quotes</span></button>
       <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-regular fa-user text-xl mb-1"></i><span class="text-[11px] font-medium">Profile</span></button>
     </nav>
@@ -338,6 +294,9 @@
     let users = JSON.parse(localStorage.getItem('loop_users')) || [];
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
+    let chatMessages = JSON.parse(localStorage.getItem('loop_chat_messages')) || [
+      { sender: 'System', text: 'Welcome to LOOP Community Chat!', time: '10:00 AM' }
+    ];
     
     let peer = null;
     let localStream = null;
@@ -502,12 +461,13 @@
     function switchTab(tab) {
       document.getElementById('home-view').classList.add('hidden');
       document.getElementById('loop-view').classList.add('hidden');
+      document.getElementById('chat-view').classList.add('hidden');
       document.getElementById('quotes-view').classList.add('hidden');
       document.getElementById('profile-view').classList.add('hidden');
-      document.getElementById('download-menu').classList.add('hidden');
 
       document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
       document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      document.getElementById('nav-chat').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
       document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
       document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
 
@@ -521,6 +481,12 @@
         document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Live";
         autoJoinRoom123();
+      } else if(tab === 'chat') {
+        document.getElementById('chat-view').classList.remove('hidden');
+        document.getElementById('nav-chat').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
+        document.getElementById('app-title').innerText = "LOOP Chat";
+        stopPeerConnection();
+        renderChatMessages();
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
@@ -532,6 +498,43 @@
         document.getElementById('app-title').innerText = "My Profile";
         stopPeerConnection();
       }
+    }
+
+    // Chat Functions
+    function renderChatMessages() {
+      const chatContainer = document.getElementById('chat-messages');
+      chatContainer.innerHTML = '';
+      
+      chatMessages.forEach(msg => {
+        let isMe = currentUser && msg.sender === currentUser.username;
+        let align = isMe ? 'ml-auto bg-emerald-600/30 border-emerald-500/40 text-right' : 'mr-auto bg-gray-900 border-gray-800 text-left';
+        
+        chatContainer.innerHTML += `
+          <div class="max-w-[80%] p-3 rounded-2xl border ${align} flex flex-col gap-1">
+            <span class="text-[9px] font-bold text-emerald-400">@${msg.sender}</span>
+            <p class="text-xs text-white leading-relaxed">${msg.text}</p>
+            <span class="text-[8px] text-gray-500 self-end">${msg.time}</span>
+          </div>
+        `;
+      });
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if(!text || !currentUser) return;
+
+      let time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      chatMessages.push({
+        sender: currentUser.username,
+        text: text,
+        time: time
+      });
+
+      localStorage.setItem('loop_chat_messages', JSON.stringify(chatMessages));
+      input.value = '';
+      renderChatMessages();
     }
 
     async function autoJoinRoom123() {
@@ -639,106 +642,6 @@
       if (peer) {
         peer.destroy();
         peer = null;
-      }
-    }
-
-    function toggleDownloadMenu() {
-      document.getElementById('download-menu').classList.toggle('hidden');
-    }
-
-    function openInstaDownloader() {
-      document.getElementById('insta-downloader-modal').classList.remove('hidden');
-      document.getElementById('insta-link-input').value = '';
-      document.getElementById('insta-result-container').classList.add('hidden');
-      document.getElementById('result').innerHTML = '';
-    }
-
-    function closeInstaDownloader() {
-      document.getElementById('insta-downloader-modal').classList.add('hidden');
-    }
-
-    function openYtDownloader() {
-      document.getElementById('yt-downloader-modal').classList.remove('hidden');
-      document.getElementById('yt-link-input').value = '';
-      document.getElementById('yt-result-container').classList.add('hidden');
-      document.getElementById('yt-result').innerHTML = '';
-    }
-
-    function closeYtDownloader() {
-      document.getElementById('yt-downloader-modal').classList.add('hidden');
-    }
-
-    async function handleInstaDownload(){
-      let u = document.getElementById('insta-link-input').value.trim();
-      let r = document.getElementById('result');
-      let container = document.getElementById('insta-result-container');
-      
-      if(!u || !u.includes('instagram.com')){
-        alert('Correct Insta link paste cheyyu');
-        return;
-      }
-      
-      container.classList.remove('hidden');
-      r.innerHTML = '<p class="text-xs text-pink-400 mt-2">⏳ Fetching via Backend...</p>';
-
-      try {
-        let res = await fetch(`https://insta-api-45a7.onrender.com/api?url=${encodeURIComponent(u)}`);
-        let contentType = res.headers.get("content-type");
-        let videoUrl = "";
-        
-        if (contentType && contentType.includes("application/json")) {
-          let data = await res.json();
-          videoUrl = data.url || data.videoUrl || data.medias?.[0]?.url;
-        } else {
-          videoUrl = res.url;
-        }
-
-        if(videoUrl){
-          r.innerHTML = `
-            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
-            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
-          `;
-          return;
-        }
-        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch video. Try another link.</p>';
-      } catch(e) {
-        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server connection error. Please try again later.</p>';
-      }
-    }
-
-    async function handleYtDownload(){
-      let u = document.getElementById('yt-link-input').value.trim();
-      let r = document.getElementById('yt-result');
-      let container = document.getElementById('yt-result-container');
-      
-      if(!u || (!u.includes('youtube.com') && !u.includes('youtu.be'))){
-        alert('Correct YouTube link paste cheyyu');
-        return;
-      }
-      
-      container.classList.remove('hidden');
-      r.innerHTML = '<p class="text-xs text-red-400 mt-2">⏳ Fetching YouTube Video...</p>';
-
-      try {
-        // Using Cobalt API for YouTube download support
-        let res = await fetch('https://api.cobalt.tools/api/json', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','Accept':'application/json'},
-          body: JSON.stringify({url: u})
-        });
-        let data = await res.json();
-        let videoUrl = data.url;
-
-        if(videoUrl){
-          r.innerHTML = `
-            <video controls src="${videoUrl}" class="w-full h-36 object-cover rounded-lg mt-2"></video>
-            <a class="block bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2.5 rounded-xl text-center mt-3 transition" href="${videoUrl}" download target="_blank">📥 SAVE TO GALLERY</a>
-          `;
-          return;
-        }
-        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Failed to fetch YouTube video.</p>';
-      } catch(e) {
-        r.innerHTML = '<p class="text-xs text-red-400 mt-2">❌ Server error. Try again later.</p>';
       }
     }
 
