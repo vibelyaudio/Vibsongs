@@ -65,13 +65,11 @@
       color: #34d399;
     }
 
-    /* Filter Effects */
+    /* Filter & AR Effects */
     .filter-none { filter: none; }
     .filter-grayscale { filter: grayscale(100%); }
     .filter-sepia { filter: sepia(100%); }
     .filter-brightness { filter: brightness(140%) contrast(120%); }
-    .filter-contrast { filter: contrast(180%) saturate(120%); }
-    .filter-hue { filter: hue-rotate(120deg) saturate(200%); }
     .filter-cyber { filter: invert(90%) hue-rotate(180deg) contrast(150%); }
     .filter-vintage { filter: sepia(60%) contrast(110%) brightness(90%); }
   </style>
@@ -179,7 +177,7 @@
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex items-center gap-3 shrink-0">
           <img id="home-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
           <button onclick="openUploadModal()" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-400 text-left hover:border-emerald-500 transition">
-            Create post with Camera or Gallery...
+            Create post with Camera & AR Effects...
           </button>
           <button onclick="openUploadModal()" class="bg-emerald-500 text-black px-3.5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-emerald-400">
             <i class="fa-solid fa-plus"></i>
@@ -341,34 +339,53 @@
       </div>
     </div>
 
-    <!-- FULL SCREEN SNAPCHAT & INSTAGRAM STYLE CAMERA MODAL -->
+    <!-- FULL SCREEN SNAPCHAT & INSTAGRAM STYLE CAMERA & AR EFFECTS MODAL -->
     <div id="upload-post-modal" class="hidden absolute inset-0 bg-black z-50 flex flex-col justify-between">
       <!-- Camera Top Bar -->
       <div class="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md z-10">
         <button onclick="closeUploadModal()" class="text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-        <h3 class="text-xs font-bold text-emerald-400">LOOP Camera & Effects</h3>
+        <h3 class="text-xs font-bold text-emerald-400">LOOP AR & Camera</h3>
         <button onclick="switchCameraFacing()" class="text-white text-base"><i class="fa-solid fa-rotate-camera"></i></button>
       </div>
 
-      <!-- Full Screen Viewfinder -->
+      <!-- Full Screen Viewfinder & AR Overlays -->
       <div class="absolute inset-0 bg-black flex items-center justify-center overflow-hidden">
         <video id="camera-preview" autoplay playsinline class="w-full h-full object-cover"></video>
         <canvas id="camera-canvas" class="hidden"></canvas>
         <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
+
+        <!-- Snapchat Style AR Overlays on Preview -->
+        <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <!-- Puppy Ears & Nose -->
+          <div id="ar-puppy" class="hidden absolute top-28 flex flex-col items-center gap-1">
+            <div class="text-4xl">🐶</div>
+          </div>
+          <!-- Cooling Glass -->
+          <div id="ar-glasses" class="hidden absolute top-40 text-5xl">
+            🕶️
+          </div>
+          <!-- Golden Crown -->
+          <div id="ar-crown" class="hidden absolute top-20 text-5xl animate-bounce">
+            👑
+          </div>
+          <!-- Devil Horns -->
+          <div id="ar-horns" class="hidden absolute top-20 text-5xl">
+            😈
+          </div>
+        </div>
       </div>
 
-      <!-- Bottom Camera Controls & Sliding Filters -->
+      <!-- Bottom Camera Controls & Sliding AR Effects -->
       <div class="relative z-10 p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-3 pb-8">
-        <!-- Horizontal Sliding Filters (Snapchat Style) -->
+        <!-- Horizontal Sliding Snapchat AR Effects -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
-          <button onclick="applyFilter('filter-none', this)" class="px-3 py-1 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition">Normal</button>
-          <button onclick="applyFilter('filter-grayscale', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">B&W</button>
-          <button onclick="applyFilter('filter-sepia', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Sepia</button>
-          <button onclick="applyFilter('filter-brightness', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Vivid</button>
-          <button onclick="applyFilter('filter-contrast', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Dramatic</button>
-          <button onclick="applyFilter('filter-cyber', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Cyberpunk</button>
-          <button onclick="applyFilter('filter-vintage', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Vintage</button>
-          <button onclick="applyFilter('filter-hue', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Neon</button>
+          <button onclick="applyAREffect('none', this)" class="px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition">✨ Normal</button>
+          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🐶 Puppy Dog</button>
+          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🕶️ Cool Glasses</button>
+          <button onclick="applyAREffect('crown', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">👑 Royal Crown</button>
+          <button onclick="applyAREffect('horns', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">😈 Devil Horns</button>
+          <button onclick="applyAREffect('grayscale', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🖤 B&W</button>
+          <button onclick="applyAREffect('vintage', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">📸 Vintage</button>
         </div>
 
         <div class="flex items-center gap-2">
@@ -382,7 +399,6 @@
         <!-- Capture Button & Submit -->
         <div class="flex items-center justify-between px-6 pt-2">
           <button onclick="startCamera()" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-camera-rotate"></i></button>
-          <!-- Big Circular Capture Button -->
           <button onclick="capturePhoto()" class="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 transition">
             <div class="w-12 h-12 rounded-full bg-white"></div>
           </button>
@@ -467,7 +483,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -713,6 +729,7 @@
     let cameraStream = null;
     let capturedMediaData = "";
     let activeFilterClass = "filter-none";
+    let activeAREffect = "none";
     let useFrontCamera = true;
 
     const masterQuotesList = [
@@ -955,7 +972,7 @@
       }
     }
 
-    // Full Screen Snapchat/Instagram Camera & Filters Logic
+    // Camera & AR Effects Logic (Snapchat & Instagram style)
     async function startCamera() {
       stopCamera();
       try {
@@ -982,19 +999,41 @@
       }
     }
 
-    function applyFilter(filterName, btn) {
-      activeFilterClass = filterName;
+    function applyAREffect(effectName, btn) {
+      activeAREffect = effectName;
       let videoEl = document.getElementById('camera-preview');
       let imgEl = document.getElementById('captured-image-preview');
-      
-      videoEl.className = `w-full h-full object-cover ${filterName}`;
-      imgEl.className = `w-full h-full object-cover ${filterName}`;
+
+      // Reset AR overlays
+      document.getElementById('ar-puppy').classList.add('hidden');
+      document.getElementById('ar-glasses').classList.add('hidden');
+      document.getElementById('ar-crown').classList.add('hidden');
+      document.getElementById('ar-horns').classList.add('hidden');
+
+      videoEl.className = "w-full h-full object-cover filter-none";
+      imgEl.className = "w-full h-full object-cover filter-none";
+
+      if (effectName === 'puppy') {
+        document.getElementById('ar-puppy').classList.remove('hidden');
+      } else if (effectName === 'glasses') {
+        document.getElementById('ar-glasses').classList.remove('hidden');
+      } else if (effectName === 'crown') {
+        document.getElementById('ar-crown').classList.remove('hidden');
+      } else if (effectName === 'horns') {
+        document.getElementById('ar-horns').classList.remove('hidden');
+      } else if (effectName === 'grayscale') {
+        videoEl.className = "w-full h-full object-cover filter-grayscale";
+        imgEl.className = "w-full h-full object-cover filter-grayscale";
+      } else if (effectName === 'vintage') {
+        videoEl.className = "w-full h-full object-cover filter-vintage";
+        imgEl.className = "w-full h-full object-cover filter-vintage";
+      }
 
       let filterButtons = btn.parentElement.querySelectorAll('button');
       filterButtons.forEach(b => {
-        b.className = "px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition";
+        b.className = "px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition";
       });
-      btn.className = "px-3 py-1 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition";
+      btn.className = "px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition";
     }
 
     function capturePhoto() {
@@ -1011,14 +1050,32 @@
       canvas.height = videoEl.videoHeight || 1280;
       let ctx = canvas.getContext('2d');
 
-      ctx.filter = window.getComputedStyle(videoEl).filter;
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
+      // Draw AR stickers on canvas if active
+      ctx.font = "80px sans-serif";
+      ctx.textAlign = "center";
+      if (activeAREffect === 'puppy') {
+        ctx.fillText("🐶", canvas.width / 2, 250);
+      } else if (activeAREffect === 'glasses') {
+        ctx.fillText("🕶️", canvas.width / 2, canvas.height / 2.5);
+      } else if (activeAREffect === 'crown') {
+        ctx.fillText("👑", canvas.width / 2, 180);
+      } else if (activeAREffect === 'horns') {
+        ctx.fillText("😈", canvas.width / 2, 180);
+      }
+
       capturedMediaData = canvas.toDataURL('image/png');
-      imgPrev.className = `w-full h-full object-cover ${activeFilterClass}`;
       imgPrev.src = capturedMediaData;
       imgPrev.classList.remove('hidden');
       videoEl.classList.add('hidden');
+      
+      // Hide AR overlays temporarily on preview
+      document.getElementById('ar-puppy').classList.add('hidden');
+      document.getElementById('ar-glasses').classList.add('hidden');
+      document.getElementById('ar-crown').classList.add('hidden');
+      document.getElementById('ar-horns').classList.add('hidden');
+
       stopCamera();
     }
 
