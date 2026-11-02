@@ -18,51 +18,67 @@
       transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
 
+    /* Floating Curved Notch Navigation Styles */
+    .floating-nav {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      height: 64px;
+      background: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 8px;
+      z-index: 40;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
     .nav-btn {
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       color: #9ca3af;
+      z-index: 2;
     }
     .nav-btn.active {
-      color: #34d399;
-      transform: translateY(-8px) scale(1.15);
+      color: #000000;
+      transform: translateY(-10px) scale(1.1);
     }
-    .nav-btn.active::before {
-      content: '';
+    /* Floating Ball & Curved Notch effect */
+    .nav-indicator {
       position: absolute;
-      inset: -6px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%);
+      bottom: 10px;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #34d399, #059669);
       border-radius: 50%;
-      filter: blur(4px);
-      z-index: -1;
-      animation: liquidPulse 2s infinite ease-in-out;
-    }
-    @keyframes liquidPulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.25); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 6px 20px rgba(52, 211, 153, 0.5);
+      z-index: 1;
     }
     .nav-label {
-      font-size: 9px;
-      font-weight: 600;
+      font-size: 8px;
+      font-weight: 700;
       opacity: 0;
       transform: translateY(6px);
       transition: all 0.3s ease;
       position: absolute;
-      bottom: -14px;
+      bottom: -16px;
       white-space: nowrap;
+      color: #34d399;
     }
     .nav-btn.active .nav-label {
       opacity: 1;
       transform: translateY(0);
-      color: #34d399;
     }
 
     /* Filter & AR Effects */
@@ -111,7 +127,7 @@
     </header>
 
     <!-- Dynamic Content Area -->
-    <main class="flex-1 relative overflow-hidden flex flex-col" id="main-content">
+    <main class="flex-1 relative overflow-hidden flex flex-col pb-20" id="main-content">
       
       <!-- ANIMATED LOGIN & SIGNUP SECTION -->
       <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-5 bg-gradient-to-br from-gray-950 via-zinc-900 to-neutral-950 absolute inset-0 z-20 overflow-hidden">
@@ -184,7 +200,7 @@
           </button>
         </div>
 
-        <div id="posts-feed" class="flex flex-col gap-3 pb-16">
+        <div id="posts-feed" class="flex flex-col gap-3 pb-20">
           <div class="text-center text-gray-500 text-xs my-8">
             <i class="fa-regular fa-image text-2xl mb-1 text-gray-600"></i>
             <p>No posts yet. Be the first to share something!</p>
@@ -193,7 +209,7 @@
       </div>
 
       <!-- LOOP SECTION -->
-      <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2">
+      <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2 pb-20">
         <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
           <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting automatically...
@@ -224,7 +240,7 @@
       </div>
 
       <!-- CHAT SECTION -->
-      <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950">
+      <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 pb-20">
         <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
             <button id="back-to-inbox" onclick="showInboxList()" class="hidden text-gray-300 hover:text-white mr-1"><i class="fa-solid fa-arrow-left text-xs"></i></button>
@@ -256,7 +272,7 @@
       </div>
 
       <!-- LOOP QUOTES SECTION -->
-      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar">
+      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar pb-20">
         <div class="flex items-center justify-between mb-1">
           <div>
             <h2 class="text-base font-extrabold text-emerald-400 tracking-wider">LOOP Quotes</h2>
@@ -271,7 +287,7 @@
       </div>
 
       <!-- PROFILE SECTION -->
-      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto no-scrollbar">
+      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto no-scrollbar pb-24">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col items-center text-center relative shadow-lg">
           <div class="relative mb-3">
             <img id="display-profile-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md">
@@ -339,7 +355,7 @@
       </div>
     </div>
 
-    <!-- FULL SCREEN SNAPCHAT & INSTAGRAM STYLE CAMERA & AR EFFECTS MODAL -->
+    <!-- FULL SCREEN SNAPCHAT STYLE AR CAMERA MODAL -->
     <div id="upload-post-modal" class="hidden absolute inset-0 bg-black z-50 flex flex-col justify-between">
       <!-- Camera Top Bar -->
       <div class="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md z-10">
@@ -348,32 +364,27 @@
         <button onclick="switchCameraFacing()" class="text-white text-base"><i class="fa-solid fa-rotate-camera"></i></button>
       </div>
 
-      <!-- Full Screen Viewfinder & AR Overlays -->
+      <!-- Full Screen Viewfinder & AR Face Stickers -->
       <div class="absolute inset-0 bg-black flex items-center justify-center overflow-hidden">
         <video id="camera-preview" autoplay playsinline class="w-full h-full object-cover"></video>
         <canvas id="camera-canvas" class="hidden"></canvas>
         <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
 
-        <!-- Snapchat Style Face-Tracking AR Overlays on Preview -->
-        <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <!-- Puppy Dog Ears & Nose -->
-          <div id="ar-puppy" class="hidden absolute top-24 flex flex-col items-center gap-1">
-            <span class="text-6xl filter drop-shadow">🐶</span>
+        <!-- Face-Tracking AR Overlays -->
+        <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+          <div id="ar-puppy" class="hidden absolute top-32 flex flex-col items-center">
+            <span class="text-7xl filter drop-shadow">🐶</span>
           </div>
-          <!-- Cool Sunglasses -->
-          <div id="ar-glasses" class="hidden absolute top-36 text-6xl filter drop-shadow">
+          <div id="ar-glasses" class="hidden absolute top-44 text-7xl filter drop-shadow">
             🕶️
           </div>
-          <!-- Royal Gold Crown -->
-          <div id="ar-crown" class="hidden absolute top-16 text-6xl filter drop-shadow animate-pulse">
+          <div id="ar-crown" class="hidden absolute top-20 text-7xl filter drop-shadow animate-bounce">
             👑
           </div>
-          <!-- Devil Horns -->
-          <div id="ar-horns" class="hidden absolute top-16 text-6xl filter drop-shadow">
+          <div id="ar-horns" class="hidden absolute top-20 text-7xl filter drop-shadow">
             😈
           </div>
-          <!-- Flower Crown -->
-          <div id="ar-flowers" class="hidden absolute top-16 text-6xl filter drop-shadow">
+          <div id="ar-flowers" class="hidden absolute top-20 text-7xl filter drop-shadow">
             🌸
           </div>
         </div>
@@ -381,11 +392,10 @@
 
       <!-- Bottom Camera Controls & Sliding AR Effects -->
       <div class="relative z-10 p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-3 pb-8">
-        <!-- Horizontal Sliding Snapchat AR Effects -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
           <button onclick="applyAREffect('none', this)" class="px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition shadow">✨ Normal</button>
-          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🐶 Puppy</button>
-          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🕶️ Cool Glasses</button>
+          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🐶 Puppy Dog</button>
+          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🕶️ Cooling Glass</button>
           <button onclick="applyAREffect('crown', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">👑 Crown</button>
           <button onclick="applyAREffect('horns', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">😈 Devil Horns</button>
           <button onclick="applyAREffect('flowers', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🌸 Flowers</button>
@@ -401,7 +411,6 @@
           </label>
         </div>
 
-        <!-- Capture Button & Submit -->
         <div class="flex items-center justify-between px-6 pt-2">
           <button onclick="startCamera()" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-camera-rotate"></i></button>
           <button onclick="capturePhoto()" class="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 transition">
@@ -459,8 +468,9 @@
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION BAR WITH LIQUID BULGE ANIMATION -->
-    <nav id="bottom-nav" class="hidden h-18 bg-[#121212]/95 backdrop-blur-md border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30 pb-1">
+    <!-- FLOATING CURVED NOTCH TAB BAR WITH HOPPING BALL ANIMATION -->
+    <nav id="bottom-nav" class="hidden floating-nav">
+      <div id="nav-indicator" class="nav-indicator"></div>
       <button onclick="switchTab('home')" id="nav-home" class="nav-btn active">
         <i class="fa-solid fa-house text-lg"></i>
         <span class="nav-label">Home</span>
@@ -937,12 +947,15 @@
       document.getElementById('profile-view').classList.add('hidden');
 
       const navButtons = document.querySelectorAll('.nav-btn');
-      navButtons.forEach(btn => btn.classList.remove('active'));
-
-      const activeBtn = document.getElementById('nav-' + tab);
-      if (activeBtn) {
-        activeBtn.classList.add('active');
-      }
+      navButtons.forEach((btn, index) => {
+        btn.classList.remove('active');
+        if (btn.id === 'nav-' + tab) {
+          btn.classList.add('active');
+          // Move floating indicator ball with hopping effect
+          let indicator = document.getElementById('nav-indicator');
+          indicator.style.transform = `translateX(${index * 75}px)`;
+        }
+      });
 
       stopCamera();
 
@@ -967,8 +980,9 @@
         stopPeerConnection();
         generateRandomQuotes();
       } else if(tab === 'profile') {
-        currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-        visitedProfileUser = currentUser.username;
+        if (!visitedProfileUser || visitedProfileUser === currentUser.username) {
+          visitedProfileUser = currentUser.username;
+        }
         updateProfileDisplay();
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('app-title').innerText = "My Profile";
@@ -977,7 +991,7 @@
       }
     }
 
-    // Camera & AR Effects Logic (Snapchat & Instagram style)
+    // Camera & AR Effects Logic (Snapchat style)
     async function startCamera() {
       stopCamera();
       try {
