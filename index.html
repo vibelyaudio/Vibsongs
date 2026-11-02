@@ -65,12 +65,15 @@
       color: #34d399;
     }
 
-    /* Instagram Filter Classes */
+    /* Filter & Snapchat Effects Classes */
+    .filter-none { filter: none; }
     .filter-grayscale { filter: grayscale(100%); }
     .filter-sepia { filter: sepia(100%); }
-    .filter-brightness { filter: brightness(130%) contrast(110%); }
-    .filter-contrast { filter: contrast(150%); }
-    .filter-hue { filter: hue-rotate(90deg); }
+    .filter-brightness { filter: brightness(140%) contrast(120%); }
+    .filter-contrast { filter: contrast(180%) saturate(120%); }
+    .filter-hue { filter: hue-rotate(120deg) saturate(200%); }
+    .filter-cyber { filter: invert(90%) hue-rotate(180deg) contrast(150%); }
+    .filter-vintage { filter: sepia(60%) contrast(110%) brightness(90%); }
   </style>
 </head>
 <body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
@@ -176,7 +179,7 @@
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex items-center gap-3 shrink-0">
           <img id="home-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
           <button onclick="openUploadModal()" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-400 text-left hover:border-emerald-500 transition">
-            Create post, open camera or gallery...
+            Create post with Camera or Gallery...
           </button>
           <button onclick="openUploadModal()" class="bg-emerald-500 text-black px-3.5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-emerald-400">
             <i class="fa-solid fa-plus"></i>
@@ -338,52 +341,54 @@
       </div>
     </div>
 
-    <!-- INSTAGRAM STYLE CAMERA & UPLOAD MODAL -->
-    <div id="upload-post-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col justify-between p-4">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-        <h3 class="text-sm font-bold text-emerald-400">Create New Post</h3>
-        <button onclick="closeUploadModal()" class="text-gray-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+    <!-- FULL SCREEN SNAPCHAT & INSTAGRAM STYLE CAMERA MODAL -->
+    <div id="upload-post-modal" class="hidden absolute inset-0 bg-black z-50 flex flex-col justify-between">
+      <!-- Camera Top Bar -->
+      <div class="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md z-10">
+        <button onclick="closeUploadModal()" class="text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="text-xs font-bold text-emerald-400">LOOP Camera & Effects</h3>
+        <button onclick="switchCameraFacing()" class="text-white text-base"><i class="fa-solid fa-rotate-camera"></i></button>
       </div>
 
-      <div class="flex-1 flex flex-col gap-3 overflow-y-auto py-2">
-        <div>
-          <label class="block text-[10px] text-gray-400 mb-1">Caption</label>
-          <input type="text" id="upload-caption" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Write a caption...">
-        </div>
-
-        <!-- Camera Viewfinder & Filters Preview -->
-        <div class="relative w-full h-56 bg-black rounded-2xl overflow-hidden border border-gray-800 flex items-center justify-center">
-          <video id="camera-preview" autoplay playsinline class="w-full h-full object-cover"></video>
-          <canvas id="camera-canvas" class="hidden"></canvas>
-          <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
-          <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-950 text-gray-500 gap-2">
-            <i class="fa-solid fa-camera text-3xl"></i>
-            <p class="text-xs">Tap 'Start Camera' below</p>
-          </div>
-        </div>
-
-        <!-- Filter Buttons Bar -->
-        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
-          <button onclick="applyFilter('none')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">Normal</button>
-          <button onclick="applyFilter('filter-grayscale')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">B&W</button>
-          <button onclick="applyFilter('filter-sepia')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">Sepia</button>
-          <button onclick="applyFilter('filter-brightness')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">Vivid</button>
-          <button onclick="applyFilter('filter-contrast')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">Dramatic</button>
-          <button onclick="applyFilter('filter-hue')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-[10px] rounded-lg shrink-0">Neon</button>
-        </div>
-
-        <div class="flex gap-2">
-          <button onclick="startCamera()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-semibold text-xs py-2 rounded-xl transition">Start Camera</button>
-          <button onclick="capturePhoto()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs py-2 rounded-xl transition">Capture Photo</button>
-        </div>
-
-        <div>
-          <label class="block text-[10px] text-gray-400 mb-1">Or Choose from Gallery</label>
-          <input type="file" id="upload-file-input" accept="image/*,video/*" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-black">
-        </div>
+      <!-- Full Screen Viewfinder -->
+      <div class="absolute inset-0 bg-black flex items-center justify-center overflow-hidden">
+        <video id="camera-preview" autoplay playsinline class="w-full h-full object-cover"></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+        <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
       </div>
 
-      <button onclick="submitNewPost()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-extrabold text-xs py-3 rounded-xl shadow-lg transition mt-2">Share Post</button>
+      <!-- Bottom Camera Controls & Sliding Filters -->
+      <div class="relative z-10 p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-3 pb-8">
+        <!-- Horizontal Sliding Filters (Snapchat Style) -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+          <button onclick="applyFilter('filter-none', this)" class="px-3 py-1 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition">Normal</button>
+          <button onclick="applyFilter('filter-grayscale', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">B&W</button>
+          <button onclick="applyFilter('filter-sepia', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Sepia</button>
+          <button onclick="applyFilter('filter-brightness', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Vivid</button>
+          <button onclick="applyFilter('filter-contrast', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Dramatic</button>
+          <button onclick="applyFilter('filter-cyber', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Cyberpunk</button>
+          <button onclick="applyFilter('filter-vintage', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Vintage</button>
+          <button onclick="applyFilter('filter-hue', this)" class="px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">Neon</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" id="upload-caption" class="flex-1 bg-gray-900/80 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Add a caption...">
+          <label class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center">
+            <i class="fa-solid fa-image"></i>
+            <input type="file" id="upload-file-input" accept="image/*,video/*" class="hidden" onchange="previewGalleryFile(this)">
+          </label>
+        </div>
+
+        <!-- Capture Button & Submit -->
+        <div class="flex items-center justify-between px-6 pt-2">
+          <button onclick="startCamera()" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-camera-rotate"></i></button>
+          <!-- Big Circular Capture Button -->
+          <button onclick="capturePhoto()" class="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 transition">
+            <div class="w-12 h-12 rounded-full bg-white"></div>
+          </button>
+          <button onclick="submitNewPost()" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-black font-bold text-xs shadow-lg"><i class="fa-solid fa-check"></i></button>
+        </div>
+      </div>
     </div>
 
     <!-- SELECT USER MODAL -->
@@ -707,7 +712,8 @@
     let visitedProfileUser = null;
     let cameraStream = null;
     let capturedMediaData = "";
-    let activeFilterClass = "";
+    let activeFilterClass = "filter-none";
+    let useFrontCamera = true;
 
     const masterQuotesList = [
       "കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം.",
@@ -949,18 +955,24 @@
       }
     }
 
-    // Instagram Style Camera & Filters Logic
+    // Full Screen Snapchat/Instagram Camera & Filters Logic
     async function startCamera() {
+      stopCamera();
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        let constraints = { video: { facingMode: useFrontCamera ? 'user' : 'environment' }, audio: false };
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         let videoEl = document.getElementById('camera-preview');
         videoEl.srcObject = cameraStream;
         videoEl.classList.remove('hidden');
-        document.getElementById('camera-placeholder').classList.add('hidden');
         document.getElementById('captured-image-preview').classList.add('hidden');
       } catch (err) {
-        alert("Camera permission denied or unavailable.");
+        alert("Camera access failed or denied.");
       }
+    }
+
+    function switchCameraFacing() {
+      useFrontCamera = !useFrontCamera;
+      startCamera();
     }
 
     function stopCamera() {
@@ -970,12 +982,20 @@
       }
     }
 
-    function applyFilter(filterName) {
+    function applyFilter(filterName, btn) {
+      activeFilterClass = filterName;
       let videoEl = document.getElementById('camera-preview');
       let imgEl = document.getElementById('captured-image-preview');
+      
       videoEl.className = `w-full h-full object-cover ${filterName}`;
       imgEl.className = `w-full h-full object-cover ${filterName}`;
-      activeFilterClass = filterName;
+
+      // Highlight active filter pill
+      let filterButtons = btn.parentElement.querySelectorAll('button');
+      filterButtons.forEach(b => {
+        b.className = "px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition";
+      });
+      btn.className = "px-3 py-1 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition";
     }
 
     function capturePhoto() {
@@ -984,15 +1004,14 @@
       let imgPrev = document.getElementById('captured-image-preview');
 
       if (!cameraStream) {
-        alert("Please start camera first!");
+        alert("Camera is not active!");
         return;
       }
 
-      canvas.width = videoEl.videoWidth || 300;
-      canvas.height = videoEl.videoHeight || 300;
+      canvas.width = videoEl.videoWidth || 720;
+      canvas.height = videoEl.videoHeight || 1280;
       let ctx = canvas.getContext('2d');
 
-      // Apply filter style on canvas capture
       ctx.filter = window.getComputedStyle(videoEl).filter;
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
@@ -1003,14 +1022,29 @@
       stopCamera();
     }
 
+    function previewGalleryFile(input) {
+      if (input.files && input.files[0]) {
+        let file = input.files[0];
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          capturedMediaData = e.target.result;
+          let imgPrev = document.getElementById('captured-image-preview');
+          imgPrev.src = capturedMediaData;
+          imgPrev.classList.remove('hidden');
+          document.getElementById('camera-preview').classList.add('hidden');
+          stopCamera();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function openUploadModal() {
       document.getElementById('upload-post-modal').classList.remove('hidden');
       document.getElementById('upload-caption').value = '';
       document.getElementById('upload-file-input').value = '';
       document.getElementById('captured-image-preview').classList.add('hidden');
-      document.getElementById('camera-preview').classList.add('hidden');
-      document.getElementById('camera-placeholder').classList.remove('hidden');
       capturedMediaData = "";
+      startCamera();
     }
 
     function closeUploadModal() {
@@ -1020,30 +1054,14 @@
 
     function submitNewPost() {
       let caption = document.getElementById('upload-caption').value.trim();
-      let fileInput = document.getElementById('upload-file-input');
-      
-      if (!caption && !capturedMediaData && fileInput.files.length === 0) {
-        alert("Please write a caption or capture a photo from camera.");
+      if (!caption && !capturedMediaData) {
+        alert("Please add a caption or capture a photo/reel.");
         return;
       }
 
-      if (capturedMediaData) {
-        window.uploadPostToFirebase(caption, capturedMediaData, 'image');
-        closeUploadModal();
-      } else if (fileInput.files.length > 0) {
-        let file = fileInput.files[0];
-        let mediaType = file.type.startsWith('video') ? 'video' : 'image';
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          let base64Media = e.target.result;
-          window.uploadPostToFirebase(caption, base64Media, mediaType);
-          closeUploadModal();
-        };
-        reader.readAsDataURL(file);
-      } else {
-        window.uploadPostToFirebase(caption, "", "text");
-        closeUploadModal();
-      }
+      let mediaType = capturedMediaData.includes('data:video') ? 'video' : 'image';
+      window.uploadPostToFirebase(caption, capturedMediaData || "", mediaType);
+      closeUploadModal();
     }
 
     window.renderFeed = function(posts) {
