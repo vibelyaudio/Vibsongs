@@ -491,7 +491,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -1149,11 +1149,10 @@
           }
         }
 
-        let likedByArr = JSON.parse(localStorage.getItem('loop_liked_post_' + post.id)) || post.likedBy || [];
+        let likedByArr = post.likedBy || [];
         let isLiked = likedByArr.includes(currentUser.username);
         let heartClass = isLiked ? "fa-solid fa-heart text-rose-500" : "fa-regular fa-heart";
-        let storedLikes = localStorage.getItem('loop_likes_count_' + post.id);
-        let currentLikes = storedLikes !== null ? parseInt(storedLikes) : (post.likes || 0);
+        let currentLikes = post.likes || 0;
 
         feedContainer.innerHTML += `
           <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-md">
@@ -1228,14 +1227,12 @@
       let count = parseInt(countSpan.innerText);
 
       let isLiked = icon.classList.contains('fa-solid');
-      let likedByArr = JSON.parse(localStorage.getItem('loop_liked_post_' + postId)) || [];
 
       if (!isLiked) {
         icon.classList.remove('fa-regular', 'fa-heart');
         icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
         count += 1;
         countSpan.innerText = count;
-        if (!likedByArr.includes(currentUser.username)) likedByArr.push(currentUser.username);
         if (postOwner !== currentUser.username) {
           window.sendNotificationToFirebase(postOwner, `@${currentUser.username} liked your post`);
         }
@@ -1244,11 +1241,7 @@
         icon.classList.add('fa-regular', 'fa-heart');
         count = Math.max(0, count - 1);
         countSpan.innerText = count;
-        likedByArr = likedByArr.filter(u => u !== currentUser.username);
       }
-
-      localStorage.setItem('loop_likes_count_' + postId, count);
-      localStorage.setItem('loop_liked_post_' + postId, JSON.stringify(likedByArr));
     };
 
     function openCommentBox(postId) {
