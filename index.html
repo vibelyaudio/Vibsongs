@@ -18,67 +18,61 @@
       transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
 
-    /* Floating Curved Notch Navigation Styles */
+    /* Expanding Label Navigation Bar Styles */
     .floating-nav {
       position: absolute;
       bottom: 16px;
       left: 16px;
       right: 16px;
-      height: 64px;
+      height: 68px;
       background: rgba(18, 18, 18, 0.95);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 32px;
+      border-radius: 36px;
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      padding: 0 8px;
+      justify-content: space-between;
+      padding: 0 12px;
       z-index: 40;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     }
     .nav-btn {
-      position: relative;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      height: 48px;
+      padding: 0 12px;
+      border-radius: 24px;
+      background: transparent;
       color: #9ca3af;
-      z-index: 2;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .nav-btn.active {
-      color: #000000;
-      transform: translateY(-10px) scale(1.1);
-    }
-    /* Floating Ball & Curved Notch effect */
-    .nav-indicator {
-      position: absolute;
-      bottom: 10px;
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #34d399, #059669);
-      border-radius: 50%;
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 6px 20px rgba(52, 211, 153, 0.5);
-      z-index: 1;
-    }
-    .nav-label {
-      font-size: 8px;
-      font-weight: 700;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: all 0.3s ease;
-      position: absolute;
-      bottom: -16px;
-      white-space: nowrap;
+      background: rgba(16, 185, 129, 0.2);
       color: #34d399;
+      padding: 0 16px;
+    }
+    .nav-btn .nav-icon {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+    .nav-btn.active .nav-icon {
+      transform: scale(1.1);
+    }
+    .nav-btn .nav-label {
+      max-width: 0;
+      opacity: 0;
+      white-space: nowrap;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 0;
+      transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-left 0.3s ease;
     }
     .nav-btn.active .nav-label {
+      max-width: 80px;
       opacity: 1;
-      transform: translateY(0);
+      margin-left: 8px;
     }
 
     /* Filter & AR Effects */
@@ -372,10 +366,10 @@
 
         <!-- Face-Tracking AR Overlays -->
         <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-          <div id="ar-puppy" class="hidden absolute top-32 flex flex-col items-center">
+          <div id="ar-puppy" class="hidden absolute top-28 flex flex-col items-center">
             <span class="text-7xl filter drop-shadow">🐶</span>
           </div>
-          <div id="ar-glasses" class="hidden absolute top-44 text-7xl filter drop-shadow">
+          <div id="ar-glasses" class="hidden absolute top-40 text-7xl filter drop-shadow">
             🕶️
           </div>
           <div id="ar-crown" class="hidden absolute top-20 text-7xl filter drop-shadow animate-bounce">
@@ -468,27 +462,26 @@
       </div>
     </div>
 
-    <!-- FLOATING CURVED NOTCH TAB BAR WITH HOPPING BALL ANIMATION -->
+    <!-- FLOATING EXPANDING LABEL NAVIGATION BAR -->
     <nav id="bottom-nav" class="hidden floating-nav">
-      <div id="nav-indicator" class="nav-indicator"></div>
       <button onclick="switchTab('home')" id="nav-home" class="nav-btn active">
-        <i class="fa-solid fa-house text-lg"></i>
+        <i class="fa-solid fa-house nav-icon"></i>
         <span class="nav-label">Home</span>
       </button>
       <button onclick="switchTab('loop')" id="nav-loop" class="nav-btn">
-        <i class="fa-solid fa-video text-lg"></i>
+        <i class="fa-solid fa-video nav-icon"></i>
         <span class="nav-label">LOOP</span>
       </button>
       <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn">
-        <i class="fa-solid fa-comments text-lg"></i>
+        <i class="fa-solid fa-comments nav-icon"></i>
         <span class="nav-label">Chat</span>
       </button>
       <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn">
-        <i class="fa-solid fa-quote-left text-lg"></i>
+        <i class="fa-solid fa-quote-left nav-icon"></i>
         <span class="nav-label">Quotes</span>
       </button>
       <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn">
-        <i class="fa-regular fa-user text-lg"></i>
+        <i class="fa-regular fa-user nav-icon"></i>
         <span class="nav-label">Profile</span>
       </button>
     </nav>
@@ -498,7 +491,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -523,6 +516,7 @@
     localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
 
     let unsubscribeMessages = null;
+    let unsubscribePosts = null;
 
     window.handleSignup = async function() {
       const email = document.getElementById('signup-email').value.trim();
@@ -672,7 +666,6 @@
           mediaUrl: mediaUrl,
           mediaType: mediaType,
           likes: 0,
-          likedBy: [],
           timestamp: Date.now()
         });
         window.loadPostsFeed();
@@ -681,11 +674,12 @@
       }
     };
 
-    window.loadPostsFeed = async function() {
-      try {
-        const querySnapshot = await getDocs(collection(db, "posts"));
+    window.loadPostsFeed = function() {
+      if (unsubscribePosts) unsubscribePosts();
+      const q = collection(db, "posts");
+      unsubscribePosts = onSnapshot(q, (snapshot) => {
         let postsList = [];
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           let pData = doc.data();
           pData.id = doc.id;
           postsList.push(pData);
@@ -693,9 +687,7 @@
         postsList.sort((a, b) => b.timestamp - a.timestamp);
         window.renderFeed(postsList);
         window.renderProfilePosts(postsList);
-      } catch(e) {
-        console.error("Error loading feed:", e);
-      }
+      });
     };
 
     window.sendNotificationToFirebase = async function(recipientUsername, text) {
@@ -743,7 +735,6 @@
     let visitedProfileUser = null;
     let cameraStream = null;
     let capturedMediaData = "";
-    let activeFilterClass = "filter-none";
     let activeAREffect = "none";
     let useFrontCamera = true;
 
@@ -947,13 +938,10 @@
       document.getElementById('profile-view').classList.add('hidden');
 
       const navButtons = document.querySelectorAll('.nav-btn');
-      navButtons.forEach((btn, index) => {
+      navButtons.forEach(btn => {
         btn.classList.remove('active');
         if (btn.id === 'nav-' + tab) {
           btn.classList.add('active');
-          // Move floating indicator ball with hopping effect
-          let indicator = document.getElementById('nav-indicator');
-          indicator.style.transform = `translateX(${index * 75}px)`;
         }
       });
 
@@ -980,9 +968,8 @@
         stopPeerConnection();
         generateRandomQuotes();
       } else if(tab === 'profile') {
-        if (!visitedProfileUser || visitedProfileUser === currentUser.username) {
-          visitedProfileUser = currentUser.username;
-        }
+        currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+        if (!visitedProfileUser) visitedProfileUser = currentUser.username;
         updateProfileDisplay();
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('app-title').innerText = "My Profile";
@@ -1161,11 +1148,10 @@
           }
         }
 
-        let likedByArr = JSON.parse(localStorage.getItem('loop_liked_post_' + post.id)) || [];
-        let isLiked = likedByArr.includes(currentUser.username) || (post.likedBy && post.likedBy.includes(currentUser.username));
+        let likedByArr = post.likedBy || [];
+        let isLiked = likedByArr.includes(currentUser.username);
         let heartClass = isLiked ? "fa-solid fa-heart text-rose-500" : "fa-regular fa-heart";
-        let storedLikes = localStorage.getItem('loop_likes_count_' + post.id);
-        let currentLikes = storedLikes !== null ? parseInt(storedLikes) : (post.likes || 0);
+        let currentLikes = post.likes || 0;
 
         feedContainer.innerHTML += `
           <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-md">
@@ -1240,14 +1226,12 @@
       let count = parseInt(countSpan.innerText);
 
       let isLiked = icon.classList.contains('fa-solid');
-      let likedByArr = JSON.parse(localStorage.getItem('loop_liked_post_' + postId)) || [];
 
       if (!isLiked) {
         icon.classList.remove('fa-regular', 'fa-heart');
         icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
         count += 1;
         countSpan.innerText = count;
-        if (!likedByArr.includes(currentUser.username)) likedByArr.push(currentUser.username);
         if (postOwner !== currentUser.username) {
           window.sendNotificationToFirebase(postOwner, `@${currentUser.username} liked your post`);
         }
@@ -1256,11 +1240,7 @@
         icon.classList.add('fa-regular', 'fa-heart');
         count = Math.max(0, count - 1);
         countSpan.innerText = count;
-        likedByArr = likedByArr.filter(u => u !== currentUser.username);
       }
-
-      localStorage.setItem('loop_likes_count_' + postId, count);
-      localStorage.setItem('loop_liked_post_' + postId, JSON.stringify(likedByArr));
     };
 
     function openCommentBox(postId) {
