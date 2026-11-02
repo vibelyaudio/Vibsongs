@@ -154,30 +154,38 @@
         </div>
       </div>
 
-      <!-- USER TO USER DIRECT CHAT SECTION -->
+      <!-- CHAT INBOX & CONVERSATION SECTION -->
       <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950">
+        <!-- Inbox Header -->
         <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
+            <button id="back-to-inbox" onclick="showInboxList()" class="hidden text-gray-300 hover:text-white mr-1"><i class="fa-solid fa-arrow-left text-xs"></i></button>
             <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-xs">
-              <i class="fa-solid fa-user"></i>
+              <i class="fa-solid fa-comments"></i>
             </div>
-            <h3 id="active-chat-user" class="text-xs font-bold text-white">Select a user to chat</h3>
+            <h3 id="active-chat-title" class="text-xs font-bold text-white">Direct Messages</h3>
           </div>
-          <button onclick="openUserSelectModal()" class="text-[10px] bg-emerald-500 text-black font-bold px-2.5 py-1 rounded-lg transition">New Chat</button>
+          <button onclick="openUserSelectModal()" class="text-[10px] bg-emerald-500 text-black font-bold px-2.5 py-1 rounded-lg transition">+ New Chat</button>
         </div>
 
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 no-scrollbar">
+        <!-- Conversations List View (Inbox) -->
+        <div id="conversations-list" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2 no-scrollbar">
           <div class="text-center text-gray-500 text-xs my-auto">
             <i class="fa-regular fa-comments text-2xl mb-1 text-gray-600"></i>
-            <p>Click 'New Chat' to start messaging with any username.</p>
+            <p>No active chats. Click '+ New Chat' to message someone.</p>
           </div>
         </div>
 
-        <div id="chat-input-box" class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2 shrink-0 hidden">
-          <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
-          <button onclick="sendDirectMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center justify-center">
-            <i class="fa-solid fa-paper-plane"></i>
-          </button>
+        <!-- Active Chat Message Box (Hidden by default until a chat is opened) -->
+        <div id="active-chat-box" class="flex-1 flex flex-col hidden h-full">
+          <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 no-scrollbar"></div>
+          
+          <div class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2 shrink-0">
+            <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <button onclick="sendDirectMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center justify-center">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -320,7 +328,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -336,6 +344,7 @@
 
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let unsubscribeMessages = null;
+    let unsubscribeInbox = null;
 
     window.handleSignup = async function() {
       const email = document.getElementById('signup-email').value.trim();
@@ -410,7 +419,6 @@
       }
     };
 
-    // Firebase Real-time Direct Chat Logic
     window.sendFirebaseMessage = async function(recipient, text) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (!text || !currentUser || !recipient) return;
@@ -432,13 +440,33 @@
       }
     };
 
+    window.listenToInbox = function() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser) return;
+
+      if (unsubscribeInbox) unsubscribeInbox();
+
+      // Listen to all messages where current user is sender or recipient
+      const q1 = query(collection(db, "messages"), where("sender", "==", currentUser.username));
+      const q2 = query(collection(db, "messages"), where("recipient", "==", currentUser.username));
+
+      // We can fetch once or snapshot both. For simplicity in web, let's fetch all messages involving user
+      getDocs(collection(db, "messages")).then((snapshot) => {
+        let partners = new Set();
+        snapshot.forEach((doc) => {
+          let data = doc.data();
+          if (data.sender === currentUser.username) partners.add(data.recipient);
+          if (data.recipient === currentUser.username) partners.add(data.sender);
+        });
+        window.renderConversationsList(Array.from(partners));
+      });
+    };
+
     window.listenToMessages = function(recipient) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (!currentUser || !recipient) return;
 
-      if (unsubscribeMessages) {
-        unsubscribeMessages(); // Stop previous listener
-      }
+      if (unsubscribeMessages) unsubscribeMessages();
 
       let chatKey = [currentUser.username, recipient].sort().join('_');
       const q = query(collection(db, "messages"), where("chatKey", "==", chatKey));
@@ -448,7 +476,6 @@
         snapshot.forEach((doc) => {
           messages.push(doc.data());
         });
-        // Sort messages by timestamp
         messages.sort((a, b) => a.timestamp - b.timestamp);
         window.renderFirebaseMessages(messages);
       });
@@ -606,6 +633,8 @@
         document.getElementById('nav-chat').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "Direct Messages";
         stopPeerConnection();
+        showInboxList();
+        window.listenToInbox();
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
@@ -637,10 +666,58 @@
       }
       activeChatUser = target;
       closeUserSelectModal();
-      document.getElementById('active-chat-user').innerText = "Chat with @" + activeChatUser;
-      document.getElementById('chat-input-box').classList.remove('hidden');
+      openChatBox(activeChatUser);
+    }
+
+    function openChatBox(username) {
+      activeChatUser = username;
+      document.getElementById('active-chat-title').innerText = "@" + activeChatUser;
+      document.getElementById('back-to-inbox').classList.remove('hidden');
+      document.getElementById('conversations-list').classList.add('hidden');
+      document.getElementById('active-chat-box').classList.remove('hidden');
       window.listenToMessages(activeChatUser);
     }
+
+    function showInboxList() {
+      activeChatUser = null;
+      document.getElementById('active-chat-title').innerText = "Direct Messages";
+      document.getElementById('back-to-inbox').classList.add('hidden');
+      document.getElementById('active-chat-box').classList.add('hidden');
+      document.getElementById('conversations-list').classList.remove('hidden');
+      window.listenToInbox();
+    }
+
+    window.renderConversationsList = function(partners) {
+      let inboxContainer = document.getElementById('conversations-list');
+      if (!activeChatUser) {
+        inboxContainer.innerHTML = '';
+        if (partners.length === 0) {
+          inboxContainer.innerHTML = `
+            <div class="text-center text-gray-500 text-xs my-auto">
+              <i class="fa-regular fa-comments text-2xl mb-1 text-gray-600"></i>
+              <p>No active chats. Click '+ New Chat' to message someone.</p>
+            </div>`;
+          return;
+        }
+
+        partners.forEach(partner => {
+          inboxContainer.innerHTML += `
+            <div onclick="openChatBox('${partner}')" class="bg-gray-900 border border-gray-800 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500 transition">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xs">
+                  ${partner.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-white">@${partner}</h4>
+                  <p class="text-[10px] text-gray-400">Tap to open conversation</p>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-xs text-gray-600"></i>
+            </div>
+          `;
+        });
+      }
+    };
 
     window.renderFirebaseMessages = function(messages) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
@@ -666,7 +743,7 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    window.sendDirectMessage = function() {
+    function sendDirectMessage() {
       let input = document.getElementById('chat-input');
       let text = input.value.trim();
       if (!text || !activeChatUser) return;
