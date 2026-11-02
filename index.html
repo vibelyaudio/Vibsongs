@@ -19,30 +19,52 @@
       transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
 
-    /* Expanding Nav Label Animation Styles */
+    /* Liquid Bulge Navigation Animation Styles */
     .nav-btn {
+      position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 0px;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      padding: 6px 10px;
-      border-radius: 9999px;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      color: #9ca3af;
     }
     .nav-btn.active {
-      background-color: rgba(16, 185, 129, 0.15);
       color: #34d399;
+      transform: translateY(-8px) scale(1.15);
     }
-    .nav-btn .nav-label {
-      max-width: 0;
+    .nav-btn.active::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%);
+      border-radius: 50%;
+      filter: blur(4px);
+      z-index: -1;
+      animation: liquidPulse 2s infinite ease-in-out;
+    }
+    @keyframes liquidPulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.25); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .nav-label {
+      font-size: 9px;
+      font-weight: 600;
       opacity: 0;
+      transform: translateY(6px);
+      transition: all 0.3s ease;
+      position: absolute;
+      bottom: -14px;
       white-space: nowrap;
-      transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
     .nav-btn.active .nav-label {
-      max-width: 80px;
       opacity: 1;
-      margin-left: 6px;
+      transform: translateY(0);
+      color: #34d399;
     }
   </style>
 </head>
@@ -323,27 +345,27 @@
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION BAR WITH EXPANDING LABELS -->
-    <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
-      <button onclick="switchTab('home')" id="nav-home" class="nav-btn active text-emerald-400">
+    <!-- BOTTOM NAVIGATION BAR WITH LIQUID BULGE ANIMATION -->
+    <nav id="bottom-nav" class="hidden h-18 bg-[#121212]/95 backdrop-blur-md border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30 pb-1">
+      <button onclick="switchTab('home')" id="nav-home" class="nav-btn active">
         <i class="fa-solid fa-house text-lg"></i>
-        <span class="nav-label text-[11px] font-semibold">Home</span>
+        <span class="nav-label">Home</span>
       </button>
-      <button onclick="switchTab('loop')" id="nav-loop" class="nav-btn text-gray-400 hover:text-gray-200">
+      <button onclick="switchTab('loop')" id="nav-loop" class="nav-btn">
         <i class="fa-solid fa-video text-lg"></i>
-        <span class="nav-label text-[11px] font-semibold">LOOP</span>
+        <span class="nav-label">LOOP</span>
       </button>
-      <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn text-gray-400 hover:text-gray-200">
+      <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn">
         <i class="fa-solid fa-comments text-lg"></i>
-        <span class="nav-label text-[11px] font-semibold">Chat</span>
+        <span class="nav-label">Chat</span>
       </button>
-      <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn text-gray-400 hover:text-gray-200">
+      <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn">
         <i class="fa-solid fa-quote-left text-lg"></i>
-        <span class="nav-label text-[11px] font-semibold">Quotes</span>
+        <span class="nav-label">Quotes</span>
       </button>
-      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn text-gray-400 hover:text-gray-200">
+      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn">
         <i class="fa-regular fa-user text-lg"></i>
-        <span class="nav-label text-[11px] font-semibold">Profile</span>
+        <span class="nav-label">Profile</span>
       </button>
     </nav>
 
@@ -682,17 +704,13 @@
       document.getElementById('quotes-view').classList.add('hidden');
       document.getElementById('profile-view').classList.add('hidden');
 
-      // Update active state on expanding nav buttons
+      // Update active state with liquid bulge animation
       const navButtons = document.querySelectorAll('.nav-btn');
-      navButtons.forEach(btn => {
-        btn.classList.remove('active', 'text-emerald-400');
-        btn.classList.add('text-gray-400');
-      });
+      navButtons.forEach(btn => btn.classList.remove('active'));
 
       const activeBtn = document.getElementById('nav-' + tab);
       if (activeBtn) {
-        activeBtn.classList.add('active', 'text-emerald-400');
-        activeBtn.classList.remove('text-gray-400');
+        activeBtn.classList.add('active');
       }
 
       if(tab === 'home') {
