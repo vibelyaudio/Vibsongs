@@ -442,16 +442,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || {
-      name: "Inshad Afsal",
-      username: "inshadafsal",
-      email: "inshad@example.com",
-      img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
-      followers: 0,
-      following: 0
-    };
-    localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-
+    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let unsubscribeMessages = null;
 
     window.handleSignup = async function() {
@@ -602,6 +593,7 @@
           mediaUrl: mediaUrl,
           mediaType: mediaType,
           likes: 0,
+          likedBy: [],
           timestamp: Date.now()
         });
         window.loadPostsFeed();
@@ -758,6 +750,7 @@
       if (currentUser) {
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('bottom-nav').classList.remove('hidden');
+        visitedProfileUser = null;
         updateProfileDisplay();
         switchTab('home');
         window.loadPostsFeed();
@@ -823,20 +816,38 @@
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (currentUser) {
         let targetUser = visitedProfileUser || currentUser.username;
-        let displayName = targetUser === currentUser.username ? (currentUser.name || "Inshad Afsal") : targetUser.charAt(0).toUpperCase() + targetUser.slice(1);
+        let isOwnProfile = (targetUser === currentUser.username);
+
+        let displayName = isOwnProfile ? (currentUser.name || "Inshad Afsal") : targetUser.charAt(0).toUpperCase() + targetUser.slice(1);
         let displayUname = targetUser.startsWith('@') ? targetUser : '@' + targetUser;
 
         document.getElementById('display-name').innerText = displayName;
         document.getElementById('display-username').innerText = displayUname;
-        document.getElementById('display-email').innerText = targetUser === currentUser.username ? (currentUser.email || "inshad@example.com") : targetUser + "@example.com";
+        document.getElementById('display-email').innerText = isOwnProfile ? (currentUser.email || "inshad@example.com") : targetUser + "@example.com";
         
         let storedFollowers = JSON.parse(localStorage.getItem('loop_followers_' + targetUser)) || 0;
         document.getElementById('profile-followers-count').innerText = storedFollowers;
         document.getElementById('profile-following-count').innerText = 0;
 
-        if (currentUser.img) {
+        if (isOwnProfile && currentUser.img) {
           document.getElementById('display-profile-img').src = currentUser.img;
           document.getElementById('home-user-avatar').src = currentUser.img;
+        }
+
+        let followBtn = document.getElementById('profile-follow-btn');
+        if (isOwnProfile) {
+          followBtn.classList.add('hidden');
+        } else {
+          let isAlreadyFollowing = localStorage.getItem('loop_is_following_' + currentUser.username + '_' + targetUser) === 'true';
+          isFollowing = isAlreadyFollowing;
+          if (isFollowing) {
+            followBtn.innerText = "Following";
+            followBtn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
+          } else {
+            followBtn.innerText = "Follow";
+            followBtn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
+          }
+          followBtn.classList.remove('hidden');
         }
       }
     }
@@ -880,8 +891,6 @@
         currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
         visitedProfileUser = currentUser.username;
         updateProfileDisplay();
-        document.getElementById('profile-follow-btn').classList.add('hidden');
-        
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('app-title').innerText = "My Profile";
         stopPeerConnection();
@@ -942,6 +951,9 @@
           }
         }
 
+        let isLiked = post.likedBy && post.likedBy.includes(currentUser.username);
+        let heartClass = isLiked ? "fa-solid fa-heart text-rose-500" : "fa-regular fa-heart";
+
         feedContainer.innerHTML += `
           <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-md">
             <div class="flex items-center justify-between">
@@ -958,7 +970,7 @@
             <div class="flex items-center justify-between pt-2 border-t border-gray-800 text-gray-300 text-sm px-1">
               <div class="flex items-center gap-4">
                 <button onclick="handleLikePost('${post.id}', '${post.username}', this)" class="flex items-center gap-1.5 hover:text-rose-500 transition">
-                  <i class="fa-regular fa-heart text-base"></i>
+                  <i class="${heartClass} text-base"></i>
                   <span class="text-xs font-semibold">${post.likes || 0}</span>
                 </button>
                 <button onclick="openCommentBox('${post.id}')" class="flex items-center gap-1.5 hover:text-emerald-400 transition">
@@ -1006,7 +1018,7 @@
       });
     };
 
-    window.handleLikePost = function(postId, postOwner, btn) {
+    window.handleLikePost = async function(postId, postOwner, btn) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (!currentUser) return;
 
@@ -1014,7 +1026,9 @@
       let countSpan = btn.querySelector('span');
       let count = parseInt(countSpan.innerText);
 
-      if (icon.classList.contains('fa-regular')) {
+      let isLiked = icon.classList.contains('fa-solid');
+
+      if (!isLiked) {
         icon.classList.remove('fa-regular', 'fa-heart');
         icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
         countSpan.innerText = count + 1;
@@ -1044,36 +1058,14 @@
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       visitedProfileUser = username;
 
-      if(currentUser && currentUser.username === username) {
-        document.getElementById('profile-follow-btn').classList.add('hidden');
-      } else {
-        document.getElementById('display-name').innerText = username.charAt(0).toUpperCase() + username.slice(1);
-        document.getElementById('display-username').innerText = "@" + username;
-        
-        let storedFollowers = JSON.parse(localStorage.getItem('loop_followers_' + username)) || 0;
-        document.getElementById('profile-followers-count').innerText = storedFollowers;
-        document.getElementById('profile-following-count').innerText = 0;
-        
-        let isAlreadyFollowing = localStorage.getItem('loop_is_following_' + username) === 'true';
-        isFollowing = isAlreadyFollowing;
-        let btn = document.getElementById('profile-follow-btn');
-        if (isFollowing) {
-          btn.innerText = "Following";
-          btn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
-        } else {
-          btn.innerText = "Follow";
-          btn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
-        }
-        btn.classList.remove('hidden');
-      }
-
+      updateProfileDisplay();
       switchTab('profile');
       window.loadPostsFeed();
     }
 
     function toggleFollowUser() {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!visitedProfileUser) return;
+      if (!visitedProfileUser || visitedProfileUser === currentUser.username) return;
       
       isFollowing = !isFollowing;
       let btn = document.getElementById('profile-follow-btn');
@@ -1094,7 +1086,7 @@
       }
 
       localStorage.setItem('loop_followers_' + visitedProfileUser, currentCount);
-      localStorage.setItem('loop_is_following_' + visitedProfileUser, isFollowing);
+      localStorage.setItem('loop_is_following_' + currentUser.username + '_' + visitedProfileUser, isFollowing);
     }
 
     function openNotificationsModal() {
