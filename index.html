@@ -95,7 +95,10 @@
           <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
         </button>
         <button><i class="fa-solid search text-lg"></i></button>
-        <button><i class="fa-solid fa-bell text-lg"></i></button>
+        <button onclick="openNotificationsModal()" class="relative hover:text-emerald-400 transition">
+          <i class="fa-solid fa-bell text-lg"></i>
+          <span id="notif-badge" class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full hidden"></span>
+        </button>
       </div>
     </header>
 
@@ -161,7 +164,7 @@
         </div>
       </div>
 
-      <!-- HOME VIEW (POSTS FEED & INSTAGRAM STYLE) -->
+      <!-- HOME VIEW (FEED) -->
       <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-3 gap-3 overflow-y-auto no-scrollbar">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex items-center gap-3 shrink-0">
           <img id="home-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
@@ -315,6 +318,19 @@
 
     </main>
 
+    <!-- NOTIFICATIONS MODAL -->
+    <div id="notifications-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 w-full max-w-xs flex flex-col gap-3 shadow-2xl max-h-[80vh]">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+          <h3 class="text-xs font-bold text-emerald-400">Notifications</h3>
+          <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="notifications-list" class="flex-1 overflow-y-auto flex flex-col gap-2 no-scrollbar min-h-[200px]">
+          <div class="text-center text-gray-500 text-xs my-auto">No notifications yet.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- UPLOAD POST MODAL -->
     <div id="upload-post-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
@@ -412,7 +428,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -584,7 +600,7 @@
           userImg: currentUser.img || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
           caption: caption,
           mediaUrl: mediaUrl,
-          mediaType: mediaType, // 'image' or 'video'
+          mediaType: mediaType,
           likes: 0,
           timestamp: Date.now()
         });
@@ -610,6 +626,39 @@
         console.error("Error loading feed:", e);
       }
     };
+
+    // Firebase Notifications Sender
+    window.sendNotificationToFirebase = async function(recipientUsername, text) {
+      if (!recipientUsername || recipientUsername === currentUser.username) return;
+      try {
+        await addDoc(collection(db, "notifications"), {
+          recipient: recipientUsername,
+          text: text,
+          timestamp: Date.now(),
+          read: false
+        });
+      } catch (e) {
+        console.error("Error sending notification:", e);
+      }
+    };
+
+    window.fetchUserNotifications = async function() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser) return;
+
+      try {
+        const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.username));
+        const querySnapshot = await getDocs(q);
+        let notifs = [];
+        querySnapshot.forEach((doc) => {
+          notifs.push(doc.data());
+        });
+        notifs.sort((a, b) => b.timestamp - a.timestamp);
+        window.renderNotificationsList(notifs);
+      } catch(e) {
+        console.error("Error fetching notifications:", e);
+      }
+    };
   </script>
 
   <script>
@@ -621,6 +670,7 @@
     let localStream = null;
     let currentCall = null;
     let isFollowing = false;
+    let visitedProfileUser = null;
 
     const masterQuotesList = [
       "കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം.",
@@ -712,6 +762,7 @@
         updateProfileDisplay();
         switchTab('home');
         window.loadPostsFeed();
+        window.fetchUserNotifications();
       } else {
         document.getElementById('auth-view').classList.remove('hidden');
         document.getElementById('home-view').classList.add('hidden');
@@ -771,11 +822,13 @@
 
     function updateProfileDisplay() {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (currentUser) {
+      if (currentUser && !visitedProfileUser) {
         document.getElementById('display-name').innerText = currentUser.name || "Inshad Afsal";
         let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
         document.getElementById('display-username').innerText = formattedUsername;
         document.getElementById('display-email').innerText = currentUser.email || "inshad@example.com";
+        document.getElementById('profile-followers-count').innerText = currentUser.followers || 0;
+        document.getElementById('profile-following-count').innerText = currentUser.following || 0;
         if (currentUser.img) {
           document.getElementById('display-profile-img').src = currentUser.img;
           document.getElementById('home-user-avatar').src = currentUser.img;
@@ -819,6 +872,12 @@
         stopPeerConnection();
         generateRandomQuotes();
       } else if(tab === 'profile') {
+        if (!visitedProfileUser) {
+          currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+          visitedProfileUser = currentUser.username;
+          updateProfileDisplay();
+          document.getElementById('profile-follow-btn').classList.add('hidden');
+        }
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('app-title').innerText = "My Profile";
         stopPeerConnection();
@@ -869,7 +928,7 @@
         return;
       }
 
-      posts.forEach((post, index) => {
+      posts.forEach((post) => {
         let mediaHtml = "";
         if (post.mediaUrl) {
           if (post.mediaType === 'video') {
@@ -891,10 +950,10 @@
             ${post.caption ? `<p class="text-xs text-gray-200 leading-relaxed">${post.caption}</p>` : ''}
             ${mediaHtml}
 
-            <!-- Instagram Style Action Bar (Like, Comment, Share) -->
+            <!-- Action Bar -->
             <div class="flex items-center justify-between pt-2 border-t border-gray-800 text-gray-300 text-sm px-1">
               <div class="flex items-center gap-4">
-                <button onclick="toggleLike(this)" class="flex items-center gap-1.5 hover:text-rose-500 transition">
+                <button onclick="handleLikePost('${post.id}', '${post.username}', this)" class="flex items-center gap-1.5 hover:text-rose-500 transition">
                   <i class="fa-regular fa-heart text-base"></i>
                   <span class="text-xs font-semibold">${post.likes || 0}</span>
                 </button>
@@ -915,7 +974,8 @@
     window.renderProfilePosts = function(posts) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (!currentUser) return;
-      let userPosts = posts.filter(p => p.username === currentUser.username);
+      let targetUser = visitedProfileUser || currentUser.username;
+      let userPosts = posts.filter(p => p.username === targetUser);
       let gridContainer = document.getElementById('profile-user-posts');
       document.getElementById('profile-posts-count').innerText = userPosts.length;
       gridContainer.innerHTML = '';
@@ -942,7 +1002,10 @@
       });
     };
 
-    function toggleLike(btn) {
+    window.handleLikePost = function(postId, postOwner, btn) {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser) return;
+
       let icon = btn.querySelector('i');
       let countSpan = btn.querySelector('span');
       let count = parseInt(countSpan.innerText);
@@ -951,15 +1014,19 @@
         icon.classList.remove('fa-regular', 'fa-heart');
         icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
         countSpan.innerText = count + 1;
+        // Send notification to post owner
+        if (postOwner !== currentUser.username) {
+          window.sendNotificationToFirebase(postOwner, `@${currentUser.username} liked your post`);
+        }
       } else {
         icon.classList.remove('fa-solid', 'fa-heart', 'text-rose-500');
         icon.classList.add('fa-regular', 'fa-heart');
         countSpan.innerText = Math.max(0, count - 1);
       }
-    }
+    };
 
     function openCommentBox(postId) {
-      alert("Comment section opening for post ID: " + postId);
+      alert("Comments for post ID: " + postId);
     }
 
     function sharePost() {
@@ -972,19 +1039,25 @@
 
     function visitUserProfile(username) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      visitedProfileUser = username;
+
       if(currentUser && currentUser.username === username) {
-        switchTab('profile');
         document.getElementById('profile-follow-btn').classList.add('hidden');
-        return;
+        updateProfileDisplay();
+      } else {
+        document.getElementById('display-name').innerText = username.charAt(0).toUpperCase() + username.slice(1);
+        document.getElementById('display-username').innerText = "@" + username;
+        document.getElementById('profile-followers-count').innerText = "12";
+        document.getElementById('profile-following-count').innerText = "45";
+        document.getElementById('profile-follow-btn').classList.remove('hidden');
       }
 
       switchTab('profile');
-      document.getElementById('display-name').innerText = username.charAt(0).toUpperCase() + username.slice(1);
-      document.getElementById('display-username').innerText = "@" + username;
-      document.getElementById('profile-follow-btn').classList.remove('hidden');
+      window.loadPostsFeed();
     }
 
     function toggleFollowUser() {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       isFollowing = !isFollowing;
       let btn = document.getElementById('profile-follow-btn');
       let countEl = document.getElementById('profile-followers-count');
@@ -994,12 +1067,43 @@
         btn.innerText = "Following";
         btn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
         countEl.innerText = currentCount + 1;
+        if (visitedProfileUser) {
+          window.sendNotificationToFirebase(visitedProfileUser, `@${currentUser.username} followed you`);
+        }
       } else {
         btn.innerText = "Follow";
         btn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
         countEl.innerText = Math.max(0, currentCount - 1);
       }
     }
+
+    function openNotificationsModal() {
+      document.getElementById('notifications-modal').classList.remove('hidden');
+      window.fetchUserNotifications();
+    }
+
+    function closeNotificationsModal() {
+      document.getElementById('notifications-modal').classList.add('hidden');
+    }
+
+    window.renderNotificationsList = function(notifs) {
+      let listContainer = document.getElementById('notifications-list');
+      listContainer.innerHTML = '';
+
+      if (notifs.length === 0) {
+        listContainer.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">No notifications yet.</div>`;
+        return;
+      }
+
+      notifs.forEach(n => {
+        listContainer.innerHTML += `
+          <div class="bg-gray-950 border border-gray-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
+            <span class="text-gray-200">${n.text}</span>
+            <span class="text-[9px] text-gray-500">${n.time || 'Just now'}</span>
+          </div>
+        `;
+      });
+    };
 
     function openUserSelectModal() {
       document.getElementById('user-select-modal').classList.remove('hidden');
@@ -1231,7 +1335,7 @@
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
       if (!currentUser) return;
       const name = document.getElementById('input-name').value;
-      const username = document.getElementById('input-username-value') ? document.getElementById('input-username-value').value : document.getElementById('input-username').value;
+      const username = document.getElementById('input-username').value;
       const email = document.getElementById('input-email').value;
       const imgUrl = document.getElementById('input-img').value;
 
@@ -1241,6 +1345,7 @@
       if(imgUrl) currentUser.img = imgUrl;
 
       localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+      visitedProfileUser = null;
       updateProfileDisplay();
       closeEditProfileModal();
     }
