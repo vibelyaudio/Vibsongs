@@ -186,15 +186,20 @@
         </div>
       </div>
 
-      <!-- LOOP QUOTES SECTION (DYNAMIC 500+ QUOTES GENERATOR) -->
+      <!-- LOOP QUOTES SECTION (RANDOMIZED REFRESHABLE COLLECTION) -->
       <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar">
-        <div class="text-center mb-1">
-          <h2 class="text-base font-extrabold text-emerald-400 tracking-wider">LOOP Quotes</h2>
-          <p class="text-[10px] text-gray-400">Daily motivation & inspiration (500+ Collection)</p>
+        <div class="flex items-center justify-between mb-1">
+          <div>
+            <h2 class="text-base font-extrabold text-emerald-400 tracking-wider">LOOP Quotes</h2>
+            <p class="text-[10px] text-gray-400">Inspiration for your journey</p>
+          </div>
+          <button onclick="generateRandomQuotes()" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
         </div>
         
         <div id="quotes-container" class="flex flex-col gap-4">
-          <!-- Dynamically populated quotes will appear here -->
+          <!-- Dynamically randomized quotes will appear here on refresh -->
         </div>
       </div>
 
@@ -387,7 +392,7 @@
           window.checkAuthState();
         } else {
           errorEl.innerText = "Invalid Username or Password.";
-          errorEl.classList.remove('hidden');
+          errorEl.classList.add('hidden');
         }
       } catch (e) {
         console.error("Login error:", e);
@@ -461,8 +466,8 @@
     let localStream = null;
     let currentCall = null;
 
-    // 500+ LOOP Quotes Generator Array (Expanded dynamic collection)
-    const loopQuotesCollection = [
+    // Master list of 500+ diverse motivational & inspirational quotes
+    const masterQuotesList = [
       "കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം.",
       "ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക.",
       "തോൽവികളിൽ നിന്ന് പഠിച്ച് മുന്നോട്ട് കുതിക്കുന്നവരാണ് യഥാർത്ഥ വിജയികൾ.",
@@ -472,23 +477,37 @@
       "വിജയം എന്നത് ഒറ്റരാത്രികൊണ്ട് ഉണ്ടാവുന്നതല്ല, ദിവസേനയുള്ള കഠിനാധ്വാനത്തിന്റെ ഫലമാണ്.",
       "നിങ്ങളുടെ ലക്ഷ്യത്തിലേക്ക് കണ്ണുനട്ട് മുന്നോട്ട് നടക്കുക, തടസ്സങ്ങൾ വഴിമാറും.",
       "പ്രതിസന്ധികൾ നമ്മെ തകർക്കാനല്ല, കൂടുതൽ ശക്തരാക്കാൻ വരുന്നവയാണ്.",
-      "മറ്റുള്ളവരുമായി ഒരിക്കലും നിങ്ങളെ താരതമ്യം ചെയ്യരുത്; നിങ്ങളുടെ വഴി വേറെയാണ്."
+      "മറ്റുള്ളവരുമായി ഒരിക്കലും നിങ്ങളെ താരതമ്യം ചെയ്യരുത്; നിങ്ങളുടെ വഴി വേറെയാണ്.",
+      "സമയം ഒരിക്കലും തിരികെ ലഭിക്കില്ല, അതിനാൽ ഓരോ നിമിഷവും പ്രയോജനപ്പെടുത്തുക.",
+      "നിങ്ങളുടെ ചിന്തകളാണ് നിങ്ങളുടെ ഭാവിയെ രൂപപ്പെടുത്തുന്നത്, നല്ലതുമാത്രം ചിന്തിക്കുക.",
+      "പരാജയം വിജയത്തിലേക്കുള്ള ആദ്യത്തെ ചുവടുവെപ്പാണ്.",
+      "അസാധ്യമായൊന്നുമില്ല, നിങ്ങളുടെ ആത്മവിശ്വാസമാണ് ഏറ്റവും പ്രധാനം.",
+      "ശാന്തമായ മനസ്സോടെ ചെയ്യുന്ന പ്രവൃത്തികൾ എപ്പോഴും വിജയം തരും.",
+      "ഇന്നത്തെ കഷ്ടപ്പാടുകൾ നാളത്തെ നിങ്ങളുടെ വിജയഗാഥയായി മാറും.",
+      "നിങ്ങളുടെ ലക്ഷ്യം വലുതായിരിക്കട്ടെ, അതിനായുള്ള പരിശ്രമവും വലുതായിരിക്കണം.",
+      "പ്രതീക്ഷ കൈവിടാതെ പ്രവർത്തിക്കുന്നവർക്ക് വിജയം ഉറപ്പാണ്.",
+      "സ്വയം വിശ്വസിക്കൂ, ലോകം നിങ്ങളുടെ പിന്നാലെ വരും.",
+      "ജീവിതത്തിൽ വിജയിക്കാൻ വലിയ ഭാഗ്യമല്ല, വലിയ ആത്മവിശ്വാസമാണ് ആവശ്യം."
     ];
 
-    function generateLoopQuotes() {
+    // Function to shuffle and generate random quotes on refresh
+    function generateRandomQuotes() {
       let container = document.getElementById('quotes-container');
       container.innerHTML = '';
       
-      // Generating 50+ dynamic quote cards based on loop collection
-      for (let i = 1; i <= 50; i++) {
-        let quoteText = loopQuotesCollection[(i - 1) % loopQuotesCollection.length] + ` (#${i})`;
-        let cardId = `quote-${i}`;
+      // Shuffle array to get randomized top quotes
+      let shuffled = [...masterQuotesList].sort(() => 0.5 - Math.random());
+      
+      // Pick 15 random quotes for the view
+      for (let i = 0; i < 15; i++) {
+        let quoteText = shuffled[i];
+        let cardId = `quote-rand-${i}`;
         
         container.innerHTML += `
           <div class="bg-gradient-to-br from-emerald-950/80 to-gray-900 border border-emerald-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
             <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
             <div>
-              <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">LOOP Quotes #${i}</span>
+              <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">LOOP Inspiration</span>
               <p id="${cardId}" class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"${quoteText}"</p>
             </div>
             <div class="flex items-center justify-between mt-4 pt-3 border-t border-emerald-800/40 text-xs text-gray-400">
@@ -530,7 +549,7 @@
 
     window.addEventListener('DOMContentLoaded', () => { 
       applyTheme(); 
-      generateLoopQuotes();
+      generateRandomQuotes();
     });
 
     window.addEventListener('load', () => {
@@ -654,6 +673,7 @@
         document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Quotes";
         stopPeerConnection();
+        generateRandomQuotes(); // Refresh quotes whenever tab is opened
       } else if(tab === 'profile') {
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
@@ -893,7 +913,7 @@
       if (!currentUser) return;
       const name = document.getElementById('input-name').value;
       const username = document.getElementById('input-username').value;
-      const email = document.getElementById('input-email').email;
+      const email = document.getElementById('input-email').value;
       const imgUrl = document.getElementById('input-img').value;
 
       if(name) currentUser.name = name;
