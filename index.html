@@ -428,7 +428,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -627,9 +627,8 @@
       }
     };
 
-    // Firebase Notifications Sender
     window.sendNotificationToFirebase = async function(recipientUsername, text) {
-      if (!recipientUsername || recipientUsername === currentUser.username) return;
+      if (!recipientUsername || !currentUser || recipientUsername === currentUser.username) return;
       try {
         await addDoc(collection(db, "notifications"), {
           recipient: recipientUsername,
@@ -822,13 +821,19 @@
 
     function updateProfileDisplay() {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (currentUser && !visitedProfileUser) {
-        document.getElementById('display-name').innerText = currentUser.name || "Inshad Afsal";
-        let formattedUsername = currentUser.username.startsWith('@') ? currentUser.username : '@' + currentUser.username;
-        document.getElementById('display-username').innerText = formattedUsername;
-        document.getElementById('display-email').innerText = currentUser.email || "inshad@example.com";
-        document.getElementById('profile-followers-count').innerText = currentUser.followers || 0;
-        document.getElementById('profile-following-count').innerText = currentUser.following || 0;
+      if (currentUser) {
+        let targetUser = visitedProfileUser || currentUser.username;
+        let displayName = targetUser === currentUser.username ? (currentUser.name || "Inshad Afsal") : targetUser.charAt(0).toUpperCase() + targetUser.slice(1);
+        let displayUname = targetUser.startsWith('@') ? targetUser : '@' + targetUser;
+
+        document.getElementById('display-name').innerText = displayName;
+        document.getElementById('display-username').innerText = displayUname;
+        document.getElementById('display-email').innerText = targetUser === currentUser.username ? (currentUser.email || "inshad@example.com") : targetUser + "@example.com";
+        
+        let storedFollowers = JSON.parse(localStorage.getItem('loop_followers_' + targetUser)) || 0;
+        document.getElementById('profile-followers-count').innerText = storedFollowers;
+        document.getElementById('profile-following-count').innerText = 0;
+
         if (currentUser.img) {
           document.getElementById('display-profile-img').src = currentUser.img;
           document.getElementById('home-user-avatar').src = currentUser.img;
@@ -872,12 +877,11 @@
         stopPeerConnection();
         generateRandomQuotes();
       } else if(tab === 'profile') {
-        if (!visitedProfileUser) {
-          currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-          visitedProfileUser = currentUser.username;
-          updateProfileDisplay();
-          document.getElementById('profile-follow-btn').classList.add('hidden');
-        }
+        currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+        visitedProfileUser = currentUser.username;
+        updateProfileDisplay();
+        document.getElementById('profile-follow-btn').classList.add('hidden');
+        
         document.getElementById('profile-view').classList.remove('hidden');
         document.getElementById('app-title').innerText = "My Profile";
         stopPeerConnection();
@@ -1014,7 +1018,6 @@
         icon.classList.remove('fa-regular', 'fa-heart');
         icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
         countSpan.innerText = count + 1;
-        // Send notification to post owner
         if (postOwner !== currentUser.username) {
           window.sendNotificationToFirebase(postOwner, `@${currentUser.username} liked your post`);
         }
@@ -1043,13 +1046,25 @@
 
       if(currentUser && currentUser.username === username) {
         document.getElementById('profile-follow-btn').classList.add('hidden');
-        updateProfileDisplay();
       } else {
         document.getElementById('display-name').innerText = username.charAt(0).toUpperCase() + username.slice(1);
         document.getElementById('display-username').innerText = "@" + username;
-        document.getElementById('profile-followers-count').innerText = "12";
-        document.getElementById('profile-following-count').innerText = "45";
-        document.getElementById('profile-follow-btn').classList.remove('hidden');
+        
+        let storedFollowers = JSON.parse(localStorage.getItem('loop_followers_' + username)) || 0;
+        document.getElementById('profile-followers-count').innerText = storedFollowers;
+        document.getElementById('profile-following-count').innerText = 0;
+        
+        let isAlreadyFollowing = localStorage.getItem('loop_is_following_' + username) === 'true';
+        isFollowing = isAlreadyFollowing;
+        let btn = document.getElementById('profile-follow-btn');
+        if (isFollowing) {
+          btn.innerText = "Following";
+          btn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
+        } else {
+          btn.innerText = "Follow";
+          btn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
+        }
+        btn.classList.remove('hidden');
       }
 
       switchTab('profile');
@@ -1058,6 +1073,8 @@
 
     function toggleFollowUser() {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!visitedProfileUser) return;
+      
       isFollowing = !isFollowing;
       let btn = document.getElementById('profile-follow-btn');
       let countEl = document.getElementById('profile-followers-count');
@@ -1066,15 +1083,18 @@
       if (isFollowing) {
         btn.innerText = "Following";
         btn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
-        countEl.innerText = currentCount + 1;
-        if (visitedProfileUser) {
-          window.sendNotificationToFirebase(visitedProfileUser, `@${currentUser.username} followed you`);
-        }
+        currentCount += 1;
+        countEl.innerText = currentCount;
+        window.sendNotificationToFirebase(visitedProfileUser, `@${currentUser.username} followed you`);
       } else {
         btn.innerText = "Follow";
         btn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
-        countEl.innerText = Math.max(0, currentCount - 1);
+        currentCount = Math.max(0, currentCount - 1);
+        countEl.innerText = currentCount;
       }
+
+      localStorage.setItem('loop_followers_' + visitedProfileUser, currentCount);
+      localStorage.setItem('loop_is_following_' + visitedProfileUser, isFollowing);
     }
 
     function openNotificationsModal() {
@@ -1099,7 +1119,7 @@
         listContainer.innerHTML += `
           <div class="bg-gray-950 border border-gray-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
             <span class="text-gray-200">${n.text}</span>
-            <span class="text-[9px] text-gray-500">${n.time || 'Just now'}</span>
+            <span class="text-[9px] text-gray-500">New</span>
           </div>
         `;
       });
