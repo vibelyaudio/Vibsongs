@@ -802,7 +802,7 @@
       if (currentUser) {
         document.getElementById('auth-view').classList.add('hidden');
         document.getElementById('bottom-nav').classList.remove('hidden');
-        visitedProfileUser = null;
+        visitedProfileUser = currentUser.username;
         updateProfileDisplay();
         switchTab('home');
         window.loadPostsFeed();
@@ -990,7 +990,6 @@
       videoEl.className = `w-full h-full object-cover ${filterName}`;
       imgEl.className = `w-full h-full object-cover ${filterName}`;
 
-      // Highlight active filter pill
       let filterButtons = btn.parentElement.querySelectorAll('button');
       filterButtons.forEach(b => {
         b.className = "px-3 py-1 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition";
@@ -1016,6 +1015,7 @@
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
       capturedMediaData = canvas.toDataURL('image/png');
+      imgPrev.className = `w-full h-full object-cover ${activeFilterClass}`;
       imgPrev.src = capturedMediaData;
       imgPrev.classList.remove('hidden');
       videoEl.classList.add('hidden');
