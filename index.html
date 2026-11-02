@@ -18,6 +18,32 @@
     .form-container {
       transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
+
+    /* Expanding Nav Label Animation Styles */
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 0px;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 6px 10px;
+      border-radius: 9999px;
+    }
+    .nav-btn.active {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .nav-btn .nav-label {
+      max-width: 0;
+      opacity: 0;
+      white-space: nowrap;
+      transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+    .nav-btn.active .nav-label {
+      max-width: 80px;
+      opacity: 1;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
@@ -186,7 +212,7 @@
         </div>
       </div>
 
-      <!-- LOOP QUOTES SECTION (RANDOMIZED REFRESHABLE COLLECTION) -->
+      <!-- LOOP QUOTES SECTION -->
       <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between mb-1">
           <div>
@@ -199,7 +225,7 @@
         </div>
         
         <div id="quotes-container" class="flex flex-col gap-4">
-          <!-- Dynamically randomized quotes will appear here on refresh -->
+          <!-- Dynamically randomized quotes -->
         </div>
       </div>
 
@@ -297,13 +323,28 @@
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION BAR -->
+    <!-- BOTTOM NAVIGATION BAR WITH EXPANDING LABELS -->
     <nav id="bottom-nav" class="hidden h-16 bg-[#121212] border-t border-gray-800 flex items-center justify-around px-2 shrink-0 z-30">
-      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center w-14 text-emerald-400 transition"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[11px] font-medium">Home</span></button>
-      <button onclick="switchTab('loop')" id="nav-loop" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-video text-xl mb-1"></i><span class="text-[11px] font-medium">LOOP</span></button>
-      <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-comments text-xl mb-1"></i><span class="text-[11px] font-medium">Chat</span></button>
-      <button onclick="switchTab('quotes')" id="nav-quotes" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-solid fa-quote-left text-xl mb-1"></i><span class="text-[11px] font-medium">Quotes</span></button>
-      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition"><i class="fa-regular fa-user text-xl mb-1"></i><span class="text-[11px] font-medium">Profile</span></button>
+      <button onclick="switchTab('home')" id="nav-home" class="nav-btn active text-emerald-400">
+        <i class="fa-solid fa-house text-lg"></i>
+        <span class="nav-label text-[11px] font-semibold">Home</span>
+      </button>
+      <button onclick="switchTab('loop')" id="nav-loop" class="nav-btn text-gray-400 hover:text-gray-200">
+        <i class="fa-solid fa-video text-lg"></i>
+        <span class="nav-label text-[11px] font-semibold">LOOP</span>
+      </button>
+      <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn text-gray-400 hover:text-gray-200">
+        <i class="fa-solid fa-comments text-lg"></i>
+        <span class="nav-label text-[11px] font-semibold">Chat</span>
+      </button>
+      <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn text-gray-400 hover:text-gray-200">
+        <i class="fa-solid fa-quote-left text-lg"></i>
+        <span class="nav-label text-[11px] font-semibold">Quotes</span>
+      </button>
+      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn text-gray-400 hover:text-gray-200">
+        <i class="fa-regular fa-user text-lg"></i>
+        <span class="nav-label text-[11px] font-semibold">Profile</span>
+      </button>
     </nav>
 
   </div>
@@ -392,7 +433,7 @@
           window.checkAuthState();
         } else {
           errorEl.innerText = "Invalid Username or Password.";
-          errorEl.classList.add('hidden');
+          errorEl.classList.remove('hidden');
         }
       } catch (e) {
         console.error("Login error:", e);
@@ -466,7 +507,6 @@
     let localStream = null;
     let currentCall = null;
 
-    // Master list of 500+ diverse motivational & inspirational quotes
     const masterQuotesList = [
       "കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം.",
       "ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക.",
@@ -490,15 +530,12 @@
       "ജീവിതത്തിൽ വിജയിക്കാൻ വലിയ ഭാഗ്യമല്ല, വലിയ ആത്മവിശ്വാസമാണ് ആവശ്യം."
     ];
 
-    // Function to shuffle and generate random quotes on refresh
     function generateRandomQuotes() {
       let container = document.getElementById('quotes-container');
       container.innerHTML = '';
       
-      // Shuffle array to get randomized top quotes
       let shuffled = [...masterQuotesList].sort(() => 0.5 - Math.random());
       
-      // Pick 15 random quotes for the view
       for (let i = 0; i < 15; i++) {
         let quoteText = shuffled[i];
         let cardId = `quote-rand-${i}`;
@@ -645,38 +682,40 @@
       document.getElementById('quotes-view').classList.add('hidden');
       document.getElementById('profile-view').classList.add('hidden');
 
-      document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
-      document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
-      document.getElementById('nav-chat').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
-      document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
-      document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-gray-400 hover:text-gray-200 transition";
+      // Update active state on expanding nav buttons
+      const navButtons = document.querySelectorAll('.nav-btn');
+      navButtons.forEach(btn => {
+        btn.classList.remove('active', 'text-emerald-400');
+        btn.classList.add('text-gray-400');
+      });
+
+      const activeBtn = document.getElementById('nav-' + tab);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'text-emerald-400');
+        activeBtn.classList.remove('text-gray-400');
+      }
 
       if(tab === 'home') {
         document.getElementById('home-view').classList.remove('hidden');
-        document.getElementById('nav-home').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP";
         stopPeerConnection();
       } else if(tab === 'loop') {
         document.getElementById('loop-view').classList.remove('hidden');
-        document.getElementById('nav-loop').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Live";
         autoJoinRoom123();
       } else if(tab === 'chat') {
         document.getElementById('chat-view').classList.remove('hidden');
-        document.getElementById('nav-chat').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "Direct Messages";
         stopPeerConnection();
         showInboxList();
         window.listenToInbox();
       } else if(tab === 'quotes') {
         document.getElementById('quotes-view').classList.remove('hidden');
-        document.getElementById('nav-quotes').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "LOOP Quotes";
         stopPeerConnection();
-        generateRandomQuotes(); // Refresh quotes whenever tab is opened
+        generateRandomQuotes();
       } else if(tab === 'profile') {
         document.getElementById('profile-view').classList.remove('hidden');
-        document.getElementById('nav-profile').className = "flex flex-col items-center justify-center w-14 text-emerald-400 transition";
         document.getElementById('app-title').innerText = "My Profile";
         stopPeerConnection();
       }
