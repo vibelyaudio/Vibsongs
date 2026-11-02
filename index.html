@@ -177,7 +177,7 @@
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex items-center gap-3 shrink-0">
           <img id="home-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
           <button onclick="openUploadModal()" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-400 text-left hover:border-emerald-500 transition">
-            Create post with Camera & AR Effects...
+            Create post with Camera & Snapchat AR Effects...
           </button>
           <button onclick="openUploadModal()" class="bg-emerald-500 text-black px-3.5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-emerald-400">
             <i class="fa-solid fa-plus"></i>
@@ -344,7 +344,7 @@
       <!-- Camera Top Bar -->
       <div class="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md z-10">
         <button onclick="closeUploadModal()" class="text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-        <h3 class="text-xs font-bold text-emerald-400">LOOP AR & Camera</h3>
+        <h3 class="text-xs font-bold text-emerald-400">LOOP Snapchat Camera</h3>
         <button onclick="switchCameraFacing()" class="text-white text-base"><i class="fa-solid fa-rotate-camera"></i></button>
       </div>
 
@@ -354,23 +354,27 @@
         <canvas id="camera-canvas" class="hidden"></canvas>
         <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
 
-        <!-- Snapchat Style AR Overlays on Preview -->
+        <!-- Snapchat Style Face-Tracking AR Overlays on Preview -->
         <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <!-- Puppy Ears & Nose -->
-          <div id="ar-puppy" class="hidden absolute top-28 flex flex-col items-center gap-1">
-            <div class="text-4xl">🐶</div>
+          <!-- Puppy Dog Ears & Nose -->
+          <div id="ar-puppy" class="hidden absolute top-24 flex flex-col items-center gap-1">
+            <span class="text-6xl filter drop-shadow">🐶</span>
           </div>
-          <!-- Cooling Glass -->
-          <div id="ar-glasses" class="hidden absolute top-40 text-5xl">
+          <!-- Cool Sunglasses -->
+          <div id="ar-glasses" class="hidden absolute top-36 text-6xl filter drop-shadow">
             🕶️
           </div>
-          <!-- Golden Crown -->
-          <div id="ar-crown" class="hidden absolute top-20 text-5xl animate-bounce">
+          <!-- Royal Gold Crown -->
+          <div id="ar-crown" class="hidden absolute top-16 text-6xl filter drop-shadow animate-pulse">
             👑
           </div>
           <!-- Devil Horns -->
-          <div id="ar-horns" class="hidden absolute top-20 text-5xl">
+          <div id="ar-horns" class="hidden absolute top-16 text-6xl filter drop-shadow">
             😈
+          </div>
+          <!-- Flower Crown -->
+          <div id="ar-flowers" class="hidden absolute top-16 text-6xl filter drop-shadow">
+            🌸
           </div>
         </div>
       </div>
@@ -379,13 +383,14 @@
       <div class="relative z-10 p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-3 pb-8">
         <!-- Horizontal Sliding Snapchat AR Effects -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
-          <button onclick="applyAREffect('none', this)" class="px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition">✨ Normal</button>
-          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🐶 Puppy Dog</button>
-          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🕶️ Cool Glasses</button>
-          <button onclick="applyAREffect('crown', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">👑 Royal Crown</button>
-          <button onclick="applyAREffect('horns', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">😈 Devil Horns</button>
-          <button onclick="applyAREffect('grayscale', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">🖤 B&W</button>
-          <button onclick="applyAREffect('vintage', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition">📸 Vintage</button>
+          <button onclick="applyAREffect('none', this)" class="px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition shadow">✨ Normal</button>
+          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🐶 Puppy</button>
+          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🕶️ Cool Glasses</button>
+          <button onclick="applyAREffect('crown', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">👑 Crown</button>
+          <button onclick="applyAREffect('horns', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">😈 Devil Horns</button>
+          <button onclick="applyAREffect('flowers', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🌸 Flowers</button>
+          <button onclick="applyAREffect('grayscale', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🖤 B&W</button>
+          <button onclick="applyAREffect('vintage', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">📸 Vintage</button>
         </div>
 
         <div class="flex items-center gap-2">
@@ -1004,11 +1009,11 @@
       let videoEl = document.getElementById('camera-preview');
       let imgEl = document.getElementById('captured-image-preview');
 
-      // Reset AR overlays
       document.getElementById('ar-puppy').classList.add('hidden');
       document.getElementById('ar-glasses').classList.add('hidden');
       document.getElementById('ar-crown').classList.add('hidden');
       document.getElementById('ar-horns').classList.add('hidden');
+      document.getElementById('ar-flowers').classList.add('hidden');
 
       videoEl.className = "w-full h-full object-cover filter-none";
       imgEl.className = "w-full h-full object-cover filter-none";
@@ -1021,6 +1026,8 @@
         document.getElementById('ar-crown').classList.remove('hidden');
       } else if (effectName === 'horns') {
         document.getElementById('ar-horns').classList.remove('hidden');
+      } else if (effectName === 'flowers') {
+        document.getElementById('ar-flowers').classList.remove('hidden');
       } else if (effectName === 'grayscale') {
         videoEl.className = "w-full h-full object-cover filter-grayscale";
         imgEl.className = "w-full h-full object-cover filter-grayscale";
@@ -1031,9 +1038,9 @@
 
       let filterButtons = btn.parentElement.querySelectorAll('button');
       filterButtons.forEach(b => {
-        b.className = "px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition";
+        b.className = "px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow";
       });
-      btn.className = "px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition";
+      btn.className = "px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition shadow";
     }
 
     function capturePhoto() {
@@ -1052,17 +1059,18 @@
 
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
-      // Draw AR stickers on canvas if active
       ctx.font = "80px sans-serif";
       ctx.textAlign = "center";
       if (activeAREffect === 'puppy') {
-        ctx.fillText("🐶", canvas.width / 2, 250);
+        ctx.fillText("🐶", canvas.width / 2, 280);
       } else if (activeAREffect === 'glasses') {
-        ctx.fillText("🕶️", canvas.width / 2, canvas.height / 2.5);
+        ctx.fillText("🕶️", canvas.width / 2, canvas.height / 2.3);
       } else if (activeAREffect === 'crown') {
         ctx.fillText("👑", canvas.width / 2, 180);
       } else if (activeAREffect === 'horns') {
         ctx.fillText("😈", canvas.width / 2, 180);
+      } else if (activeAREffect === 'flowers') {
+        ctx.fillText("🌸", canvas.width / 2, 180);
       }
 
       capturedMediaData = canvas.toDataURL('image/png');
@@ -1070,11 +1078,11 @@
       imgPrev.classList.remove('hidden');
       videoEl.classList.add('hidden');
       
-      // Hide AR overlays temporarily on preview
       document.getElementById('ar-puppy').classList.add('hidden');
       document.getElementById('ar-glasses').classList.add('hidden');
       document.getElementById('ar-crown').classList.add('hidden');
       document.getElementById('ar-horns').classList.add('hidden');
+      document.getElementById('ar-flowers').classList.add('hidden');
 
       stopCamera();
     }
