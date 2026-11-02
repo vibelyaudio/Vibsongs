@@ -320,7 +320,7 @@
   <!-- FIREBASE & JAVASCRIPT LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
@@ -335,6 +335,7 @@
     const db = getFirestore(app);
 
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+    let unsubscribeMessages = null;
 
     window.handleSignup = async function() {
       const email = document.getElementById('signup-email').value.trim();
@@ -408,12 +409,55 @@
         errorEl.classList.remove('hidden');
       }
     };
+
+    // Firebase Real-time Direct Chat Logic
+    window.sendFirebaseMessage = async function(recipient, text) {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!text || !currentUser || !recipient) return;
+
+      let chatKey = [currentUser.username, recipient].sort().join('_');
+      let time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      try {
+        await addDoc(collection(db, "messages"), {
+          chatKey: chatKey,
+          sender: currentUser.username,
+          recipient: recipient,
+          text: text,
+          timestamp: Date.now(),
+          time: time
+        });
+      } catch (e) {
+        console.error("Error sending message:", e);
+      }
+    };
+
+    window.listenToMessages = function(recipient) {
+      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+      if (!currentUser || !recipient) return;
+
+      if (unsubscribeMessages) {
+        unsubscribeMessages(); // Stop previous listener
+      }
+
+      let chatKey = [currentUser.username, recipient].sort().join('_');
+      const q = query(collection(db, "messages"), where("chatKey", "==", chatKey));
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        let messages = [];
+        snapshot.forEach((doc) => {
+          messages.push(doc.data());
+        });
+        // Sort messages by timestamp
+        messages.sort((a, b) => a.timestamp - b.timestamp);
+        window.renderFirebaseMessages(messages);
+      });
+    };
   </script>
 
   <script>
     let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
     let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
-    let directMessages = JSON.parse(localStorage.getItem('loop_direct_messages')) || {};
     let activeChatUser = null;
     
     let peer = null;
@@ -595,21 +639,13 @@
       closeUserSelectModal();
       document.getElementById('active-chat-user').innerText = "Chat with @" + activeChatUser;
       document.getElementById('chat-input-box').classList.remove('hidden');
-      renderDirectMessages();
+      window.listenToMessages(activeChatUser);
     }
 
-    function getChatKey(user1, user2) {
-      return [user1, user2].sort().join('_');
-    }
-
-    function renderDirectMessages() {
+    window.renderFirebaseMessages = function(messages) {
       currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!activeChatUser || !currentUser) return;
       let chatContainer = document.getElementById('chat-messages');
       chatContainer.innerHTML = '';
-
-      let key = getChatKey(currentUser.username, activeChatUser);
-      let messages = directMessages[key] || [];
 
       if (messages.length === 0) {
         chatContainer.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">No messages yet with @${activeChatUser}. Say hello!</div>`;
@@ -630,27 +666,13 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function sendDirectMessage() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
+    window.sendDirectMessage = function() {
       let input = document.getElementById('chat-input');
       let text = input.value.trim();
-      if (!text || !activeChatUser || !currentUser) return;
+      if (!text || !activeChatUser) return;
 
-      let key = getChatKey(currentUser.username, activeChatUser);
-      if (!directMessages[key]) {
-        directMessages[key] = [];
-      }
-
-      let time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      directMessages[key].push({
-        sender: currentUser.username,
-        text: text,
-        time: time
-      });
-
-      localStorage.setItem('loop_direct_messages', JSON.stringify(directMessages));
+      window.sendFirebaseMessage(activeChatUser, text);
       input.value = '';
-      renderDirectMessages();
     }
 
     async function autoJoinRoom123() {
