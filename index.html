@@ -73,7 +73,7 @@
         
         /* YouTube Player Container */
         .yt-video-wrapper {
-            width: 80px; height: 45px; /* 16:9 Aspect Ratio */
+            width: 80px; height: 45px;
             border-radius: 6px;
             overflow: hidden;
             flex-shrink: 0;
@@ -441,11 +441,13 @@
                 videoId: '',
                 playerVars: {
                     'playsinline': 1,
-                    'controls': 0, // Hide YouTube controls
+                    'controls': 0,
                     'disablekb': 1,
                     'fs': 0,
                     'modestbranding': 1,
-                    'rel': 0
+                    'rel': 0,
+                    // FIX: Add referrerpolicy to solve Error 153
+                    'origin': window.location.origin
                 },
                 events: {
                     'onReady': () => console.log('YT Player Ready'),
@@ -488,28 +490,36 @@
         // ==========================================
 
         // ==========================================
-        // SEARCH LOGIC (Invidious API)
+        // SEARCH LOGIC (Multiple Invidious/Piped APIs)
         // ==========================================
         
-        const INVIDIOUS_INSTANCES = [
-            'https://inv.nadeko.net',
-            'https://invidious.nerdvpn.de',
-            'https://yewtu.be'
+        const SEARCH_APIS = [
+            'https://invidious.nerdvpn.de/api/v1/search?q=',
+            'https://yewtu.be/api/v1/search?q=',
+            'https://invidious.f5.si/api/v1/search?q=',
+            'https://pipedapi.kavin.rocks/search?q='
         ];
 
         async function fetchSearchResults(query, limit = 50) {
-            for (let instance of INVIDIOUS_INSTANCES) {
+            for (let api of SEARCH_APIS) {
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
-                    const res = await fetch(`${instance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, { signal: controller.signal });
+                    let url = `${api}${encodeURIComponent(query)}`;
+                    
+                    if (api.includes('pipedapi')) url += `&filter=music_songs`;
+                    else url += `&type=video`;
+                    
+                    const res = await fetch(url, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
                     if (!res.ok) continue;
                     const data = await res.json();
                     
+                    let songs = [];
                     if (Array.isArray(data) && data.length > 0) {
-                        const songs = data.filter(i => i.type === 'video').map(item => ({
+                        // Invidious format
+                        songs = data.filter(i => i.type === 'video').map(item => ({
                             id: item.videoId,
                             videoId: item.videoId,
                             song: item.title,
@@ -517,8 +527,22 @@
                             image: item.videoThumbnails?.[0]?.url || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
                             duration: item.lengthSeconds
                         }));
-                        if (songs.length > 0) return songs;
+                    } else if (data.items) {
+                        // Piped format
+                        songs = data.items.filter(i => i.url?.includes('/watch')).map(item => {
+                            const vId = item.url.split('v=')[1];
+                            return {
+                                id: vId,
+                                videoId: vId,
+                                song: item.title,
+                                primary_artists: item.uploaderName,
+                                image: item.thumbnail,
+                                duration: item.duration
+                            };
+                        });
                     }
+                    
+                    if (songs.length > 0) return songs;
                 } catch (e) { }
             }
             return [];
@@ -759,7 +783,6 @@
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
             
-            // Update active view to show equalizer
             updateAllViews();
         }
 
