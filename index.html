@@ -270,7 +270,7 @@
         });
     </script>
 
-    <!-- APP LOGIC (Using Saavn API for all songs) -->
+    <!-- APP LOGIC (Using New Working Saavn API) -->
     <script>
         let currentPlaylist = [];
         let currentIndex = -1;
@@ -280,26 +280,26 @@
         let errorCount = 0;
 
         const audio = document.getElementById('audio-player');
-        const API_BASE = 'https://saavn.dev/api';
+        // Using a reliable working Saavn API instance
+        const API_BASE = 'https://saavnapi-nine.vercel.app/result/';
 
-        // Fetch trending songs (Searching for a general trending term)
         async function fetchTrending() {
             try {
-                const res = await fetch(`${API_BASE}/search/songs?query=trending+malayalam+2024&limit=20`);
+                // Search for a broad trending term
+                const res = await fetch(`${API_BASE}?query=trending+malayalam+hits`);
                 const data = await res.json();
-                return data.data.results || [];
+                return data || [];
             } catch (e) { 
                 console.error("Error fetching trending", e);
                 return []; 
             }
         }
 
-        // Search songs
         async function searchTracks(query) {
             try {
-                const res = await fetch(`${API_BASE}/search/songs?query=${encodeURIComponent(query)}&limit=30`);
+                const res = await fetch(`${API_BASE}?query=${encodeURIComponent(query)}`);
                 const data = await res.json();
-                return data.data.results || [];
+                return data || [];
             } catch (e) { return []; }
         }
 
@@ -309,26 +309,23 @@
             renderGrid(currentPlaylist, 'homeGrid');
         }
 
-        // Extract best image and audio link from Saavn data
+        // Extract data based on the NEW API structure
         function getImage(track) {
-            if(!track.image || track.image.length === 0) return 'https://via.placeholder.com/150';
-            return track.image[track.image.length - 1].url; // Highest quality
+            return track.image || 'https://via.placeholder.com/150';
         }
 
         function getAudioUrl(track) {
-            if(!track.downloadUrl || track.downloadUrl.length === 0) return null;
-            return track.downloadUrl[track.downloadUrl.length - 1].url; // Highest quality (320kbps)
+            return track.media_url || null;
         }
 
         function getArtistName(track) {
-            if(!track.artists || !track.artists.primary) return "Unknown Artist";
-            return track.artists.primary.map(a => a.name).join(', ');
+            return track.primary_artists || "Unknown Artist";
         }
 
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<p class="text-gray-400 col-span-full text-center mt-10">No songs found.</p>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. Try another search.</p></div>`;
                 return;
             }
 
@@ -349,7 +346,7 @@
                                 ${playIconHTML}
                             </div>
                         </div>
-                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${track.name}</h3>
+                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${track.song}</h3>
                         <p class="text-spotify-textSub text-xs mt-1 truncate">${getArtistName(track)}</p>
                     </div>
                 `;
@@ -370,14 +367,14 @@
             const streamUrl = getAudioUrl(track);
             
             if(!streamUrl) {
-                console.log("No audio URL for this track, skipping...");
+                console.log("No audio URL, skipping...");
                 playNext();
                 return;
             }
 
             audio.src = streamUrl;
             
-            document.getElementById('player-title').innerText = track.name;
+            document.getElementById('player-title').innerText = track.song;
             document.getElementById('player-artist').innerText = getArtistName(track);
             document.getElementById('player-thumb').src = getImage(track);
             
@@ -398,7 +395,7 @@
         }
 
         audio.addEventListener('error', (e) => {
-            console.log("Audio error occurred, skipping track...");
+            console.log("Audio error, skipping track...");
             if (errorCount < 3 && currentPlaylist.length > 1) {
                 errorCount++;
                 setTimeout(playNext, 1000); 
