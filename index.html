@@ -419,29 +419,41 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
-        // ** UPDATED SEARCH: Fetch from all APIs concurrently **
+        // ** UPDATED: Multi-query search to find ALL songs of an artist/movie **
         async function fetchWithFallback(query, limit = 50) {
-            const fetchPromises = API_SERVERS.map(async (server) => {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 sec timeout
-                    const url = `${server}${encodeURIComponent(query)}&limit=${limit}`;
-                    const res = await fetch(url, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) return [];
-                    const data = await res.json();
-                    
-                    if (data.data && Array.isArray(data.data.results)) return data.data.results;
-                    if (Array.isArray(data)) return data;
-                    if (data.results) return data.results;
-                    return [];
-                } catch (e) {
-                    return [];
-                }
-            });
+            const searchQueries = [
+                query,
+                `${query} songs`,
+                `${query} Malayalam`,
+                `${query} audio`
+            ];
 
-            // Wait for all servers to respond and combine results
+            const fetchPromises = [];
+            
+            for (let q of searchQueries) {
+                for (let server of API_SERVERS) {
+                    fetchPromises.push(async () => {
+                        try {
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), 6000);
+                            const url = `${server}${encodeURIComponent(q)}&limit=${limit}`;
+                            const res = await fetch(url, { signal: controller.signal });
+                            clearTimeout(timeoutId);
+                            
+                            if (!res.ok) return [];
+                            const data = await res.json();
+                            
+                            if (data.data && Array.isArray(data.data.results)) return data.data.results;
+                            if (Array.isArray(data)) return data;
+                            if (data.results) return data.results;
+                            return [];
+                        } catch (e) {
+                            return [];
+                        }
+                    }());
+                }
+            }
+
             const resultsArray = await Promise.all(fetchPromises);
             return resultsArray.flat();
         }
@@ -818,13 +830,14 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
+        // ** UPDATED: Multi-query search in handleSearch **
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            // Fetch 50 songs from all servers and combine them
+            // Multi-query search to get all songs
             let results = await fetchWithFallback(query, 50); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
