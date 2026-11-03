@@ -83,7 +83,7 @@
         <p class="text-[#1DB954] text-sm font-bold mt-2 tracking-widest splash-text-anim" style="animation-delay: 1s;">MUSIC FOR EVERYONE</p>
     </div>
 
-    <!-- LOGIN SCREEN (Removed 'hidden' so it shows immediately) -->
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 bg-spotify-base z-50 flex flex-col items-center justify-center p-4">
         <div class="bg-spotify-elevated p-8 rounded-2xl shadow-2xl border border-gray-800 max-w-md w-full text-center">
             <div class="w-16 h-16 bg-spotify-green rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-spotify-green/30">
@@ -413,6 +413,7 @@
 
         const audio = document.getElementById('audio-player');
 
+        // ** CRITICAL FIX: Multiple APIs + Offset Pagination **
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
@@ -420,27 +421,32 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
-        // ** FIXED: Normal fetch, 50 limit, no crashing **
         async function fetchWithFallback(query, limit = 50) {
-            for (let server of API_SERVERS) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    
-                    let songs = [];
-                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
-                    else if (Array.isArray(data)) songs = data;
-                    else if (data.results) songs = data.results;
+            let allSongs = [];
+            const seenIds = new Set();
 
-                    if (songs.length > 0) return songs;
-                } catch (e) { }
+            // Try multiple search queries and pages to get more songs
+            const searchTerms = [query, `${query} songs`, `${query} audio`, `${query} Malayalam`];
+            
+            for (let term of searchTerms) {
+                for (let server of API_SERVERS) {
+                    try {
+                        // Fetch page 1
+                        const url1 = `${server}${encodeURIComponent(term)}&limit=${limit}&offset=0`;
+                        const res1 = await fetch(url1);
+                        if (res1.ok) {
+                            const data1 = await res1.json();
+                            let songs1 = data1.data?.results || data1.results || (Array.isArray(data1) ? data1 : []);
+                            songs1.forEach(s => {
+                                const id = String(s.id || s.media_url);
+                                if (!seenIds.has(id)) { seenIds.add(id); allSongs.push(s); }
+                            });
+                        }
+                    } catch (e) { }
+                }
             }
-            return [];
+            
+            return allSongs;
         }
 
         function getPlaceholderImage(title) {
@@ -820,13 +826,13 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
+        // ** CRITICAL FIX: handleSearch now fetches from multiple terms **
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            // Limit 100
             let results = await fetchWithFallback(query, 100); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
