@@ -83,8 +83,8 @@
         <p class="text-[#1DB954] text-sm font-bold mt-2 tracking-widest splash-text-anim" style="animation-delay: 1s;">MUSIC FOR EVERYONE</p>
     </div>
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 bg-spotify-base z-50 flex flex-col items-center justify-center p-4 hidden">
+    <!-- LOGIN SCREEN (Removed 'hidden' so it shows immediately) -->
+    <div id="login-screen" class="fixed inset-0 bg-spotify-base z-50 flex flex-col items-center justify-center p-4">
         <div class="bg-spotify-elevated p-8 rounded-2xl shadow-2xl border border-gray-800 max-w-md w-full text-center">
             <div class="w-16 h-16 bg-spotify-green rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-spotify-green/30">
                 <i class="fa-solid fa-headphones-simple text-black text-2xl"></i>
@@ -355,10 +355,11 @@
         window.collection = collection; window.addDoc = addDoc; window.getDocs = getDocs; window.query = query; window.orderBy = orderBy;
 
         setTimeout(() => {
-            document.getElementById('splash-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('splash-screen').style.display = 'none';
-            }, 700); 
+            const splash = document.getElementById('splash-screen');
+            if(splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 700); 
+            }
         }, 2000);
 
         onAuthStateChanged(auth, async (user) => {
@@ -419,43 +420,27 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
-        // ** UPDATED: Multi-query search to find ALL songs of an artist/movie **
+        // ** FIXED: Normal fetch, 50 limit, no crashing **
         async function fetchWithFallback(query, limit = 50) {
-            const searchQueries = [
-                query,
-                `${query} songs`,
-                `${query} Malayalam`,
-                `${query} audio`
-            ];
+            for (let server of API_SERVERS) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    
+                    let songs = [];
+                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    else if (Array.isArray(data)) songs = data;
+                    else if (data.results) songs = data.results;
 
-            const fetchPromises = [];
-            
-            for (let q of searchQueries) {
-                for (let server of API_SERVERS) {
-                    fetchPromises.push(async () => {
-                        try {
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 6000);
-                            const url = `${server}${encodeURIComponent(q)}&limit=${limit}`;
-                            const res = await fetch(url, { signal: controller.signal });
-                            clearTimeout(timeoutId);
-                            
-                            if (!res.ok) return [];
-                            const data = await res.json();
-                            
-                            if (data.data && Array.isArray(data.data.results)) return data.data.results;
-                            if (Array.isArray(data)) return data;
-                            if (data.results) return data.results;
-                            return [];
-                        } catch (e) {
-                            return [];
-                        }
-                    }());
-                }
+                    if (songs.length > 0) return songs;
+                } catch (e) { }
             }
-
-            const resultsArray = await Promise.all(fetchPromises);
-            return resultsArray.flat();
+            return [];
         }
 
         function getPlaceholderImage(title) {
@@ -500,10 +485,15 @@
         }
 
         async function initApp() {
-            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
-            await loadPublicPlaylists(); 
-            homeSongs = await fetchTrending();
-            renderGrid(homeSongs, 'homeGrid');
+            try {
+                document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
+                await loadPublicPlaylists(); 
+                homeSongs = await fetchTrending();
+                renderGrid(homeSongs, 'homeGrid');
+            } catch(e) {
+                console.error(e);
+                document.getElementById('homeGrid').innerHTML = `<p class="text-red-500">Error loading songs. Please refresh.</p>`;
+            }
         }
 
         async function fetchTrending() {
@@ -830,15 +820,14 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        // ** UPDATED: Multi-query search in handleSearch **
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            // Multi-query search to get all songs
-            let results = await fetchWithFallback(query, 50); 
+            // Limit 100
+            let results = await fetchWithFallback(query, 100); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
