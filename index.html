@@ -115,8 +115,9 @@
                 <button onclick="navigate('search')" id="nav-search" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i> Search
                 </button>
+                <!-- CHANGED ICON TO FREE FA-LIST-UL -->
                 <button onclick="navigate('playlists')" id="nav-playlists" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
-                    <i class="fa-solid fa-list-music text-xl"></i> Playlists
+                    <i class="fa-solid fa-list-ul text-xl"></i> Playlists
                 </button>
             </nav>
             <div class="h-[1px] bg-gray-800 mx-5 my-4"></div>
@@ -198,7 +199,7 @@
         </main>
     </div>
 
-    <!-- PLAYER BAR (Fixed Next/Prev on Mobile) -->
+    <!-- PLAYER BAR -->
     <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
         <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
             <span id="current-time-mob">0:00</span>
@@ -225,7 +226,6 @@
 
             <div class="flex flex-col items-center justify-center w-[50%] md:w-2/4 max-w-xl">
                 <div class="flex items-center gap-3 md:gap-6 mb-0 md:mb-2">
-                    <!-- REMOVED 'hidden md:block' so they show on mobile -->
                     <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-backward-step text-lg md:text-xl"></i></button>
                     <button onclick="togglePlayPause()" id="play-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow-md">
                         <i id="play-pause-icon" class="fa-solid fa-play text-xs md:text-sm ml-0.5"></i>
@@ -256,8 +256,9 @@
             <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
             <span class="text-[10px] font-semibold">Search</span>
         </button>
+        <!-- CHANGED ICON TO FREE FA-LIST-UL -->
         <button onclick="navigate('playlists')" id="mnav-playlists" class="flex flex-col items-center text-spotify-textSub w-16 transition">
-            <i class="fa-solid fa-list-music text-lg mb-1"></i>
+            <i class="fa-solid fa-list-ul text-lg mb-1"></i>
             <span class="text-[10px] font-semibold">Playlists</span>
         </button>
         <button onclick="navigate('liked')" id="mnav-liked" class="flex flex-col items-center text-spotify-textSub w-16 transition">
@@ -448,7 +449,6 @@
             return uniqueTracks.slice(0, 100);
         }
 
-        // === FIXED PLAYLIST UI (Added Gradients & Music Icons) ===
         async function loadPublicPlaylists() {
             try {
                 const q = query(window.collection(window.db, "public_playlists"), window.orderBy("createdAt", "desc"));
@@ -468,7 +468,6 @@
             }
 
             grid.innerHTML = allPlaylists.map(pl => {
-                // Check if playlist has songs, if so use first song's image as cover
                 let coverHTML = `
                     <div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3">
                         <i class="fa-solid fa-music text-4xl text-white/80"></i>
