@@ -418,167 +418,46 @@
         const audio = document.getElementById('audio-player');
 
         // ==========================================
-        // 50 API ENDPOINTS (Piped + Invidious + Proxies)
+        // JIOSAAVN API LOGIC (100% Stable for Audio)
         // ==========================================
-
-        const API_PROXIES = [
-            // Piped Instances
-            'https://pipedapi.kavin.rocks',
-            'https://pipedapi.adminforge.de',
-            'https://api.piped.private.coffee',
-            'https://pipedapi.ducks.party',
-            'https://pipedapi.leptons.xyz',
-            'https://pipedapi.reallyaweso.me',
-            'https://pipedapi.astartes.nl',
-            'https://pipedapi.drgns.space',
-            'https://pipedapi.orangenet.cc',
-            'https://pipedapi.nosebs.ru',
-            'https://pipedapi.smnz.de',
-            'https://pipedapi.astartes.nl',
-            'https://pipedapi.darkness.services',
-            'https://pipedapi.r4fo.com',
-            'https://pipedapi.orangenet.cc',
-            'https://pipedapi.leptons.xyz',
-            'https://pipedapi.reallyaweso.me',
-            'https://pipedapi.ducks.party',
-            'https://pipedapi.nosebs.ru',
-            'https://pipedapi.smnz.de',
-            'https://pipedapi.drgns.space',
-            'https://pipedapi.adminforge.de',
-            'https://pipedapi.kavin.rocks',
-            'https://api.piped.private.coffee',
-            'https://pipedapi.tokhmi.xyz',
-
-            // Invidious Instances
-            'https://invidious.nerdvpn.de',
-            'https://inv.nadeko.net',
-            'https://invidious.f5.si',
-            'https://invidious.privacyredirect.com',
-            'https://iv.ggtyler.dev',
-            'https://invidious.dhusch.de',
-            'https://invidious.jing.rocks',
-            'https://invidious.einfachzocken.eu',
-            'https://invidious.perennialte.ch',
-            'https://yewtu.be',
-            'https://vid.puffyan.us',
-            'https://invidious.weblibre.org',
-            'https://invidious.lunar.icu',
-            'https://invidious.materialio.us',
-            'https://iv.datura.network',
-            'https://invidious.darkness.services',
-            'https://invidious.moomoo.me',
-            'https://invidious.reallyaweso.me',
-            'https://invidious.slipfox.xyz',
-            'https://invidious.nerdvpn.de',
-            'https://inv.nadeko.net',
-            'https://invidious.f5.si',
-            'https://invidious.privacyredirect.com',
-            'https://iv.ggtyler.dev',
-            'https://invidious.dhusch.de'
+        
+        const SAAVN_SERVERS = [
+            'https://jiosavan-api.vercel.app/result/?query=',
+            'https://saavnapi-nine.vercel.app/result/?query=',
+            'https://saavn.dev/api/search/songs?query='
         ];
 
-        // Audio Link Cache to avoid refetching
-        let audioCache = {};
-
-        async function fetchAudioStream(videoId) {
-            if (audioCache[videoId]) return audioCache[videoId];
-
-            for (let api of API_PROXIES) {
+        async function fetchSaavn(query, limit = 50) {
+            for (let server of SAAVN_SERVERS) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 sec timeout per API
-                    
-                    let streamUrl = '';
-                    if (api.includes('pipedapi')) {
-                        const res = await fetch(`${api}/streams/${videoId}`, { signal: controller.signal });
-                        if (res.ok) {
-                            const data = await res.json();
-                            const audioStreams = data.audioStreams || [];
-                            audioStreams.sort((a, b) => b.bitrate - a.bitrate);
-                            if (audioStreams[0]) streamUrl = audioStreams[0].url;
-                        }
-                    } else {
-                        const res = await fetch(`${api}/api/v1/videos/${videoId}`, { signal: controller.signal });
-                        if (res.ok) {
-                            const data = await res.json();
-                            const audioStreams = data.adaptiveFormats.filter(f => f.type.includes('audio'));
-                            audioStreams.sort((a, b) => b.bitrate - a.bitrate);
-                            if (audioStreams[0]) streamUrl = audioStreams[0].url;
-                        }
-                    }
-                    
+                    const timeoutId = setTimeout(() => controller.abort(), 6000);
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
-                    if (streamUrl) {
-                        audioCache[videoId] = streamUrl;
-                        return streamUrl;
-                    }
-                } catch (e) { }
-            }
-            return null;
-        }
-
-        async function fetchSearchResults(query) {
-            for (let api of API_PROXIES) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 sec per API
+                    
+                    if (!res.ok) continue;
+                    const data = await res.json();
                     
                     let songs = [];
-                    if (api.includes('pipedapi')) {
-                        const res = await fetch(`${api}/search?q=${encodeURIComponent(query)}&filter=music_songs`, { signal: controller.signal });
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.items) {
-                                songs = data.items.filter(i => i.url?.includes('/watch')).map(item => {
-                                    const vId = item.url.split('v=')[1];
-                                    return {
-                                        id: 'yt_' + vId,
-                                        videoId: vId,
-                                        song: item.title,
-                                        primary_artists: item.uploaderName || 'Unknown',
-                                        image: item.thumbnail,
-                                        duration: item.duration
-                                    };
-                                });
-                            }
-                        }
-                    } else {
-                        const res = await fetch(`${api}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, { signal: controller.signal });
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (Array.isArray(data)) {
-                                songs = data.filter(i => i.type === 'video').map(item => ({
-                                    id: 'yt_' + item.videoId,
-                                    videoId: item.videoId,
-                                    song: item.title,
-                                    primary_artists: item.author,
-                                    image: item.videoThumbnails?.[0]?.url || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
-                                    duration: item.lengthSeconds
-                                }));
-                            }
-                        }
-                    }
+                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    else if (Array.isArray(data)) songs = data;
+                    else if (data.results) songs = data.results;
 
-                    clearTimeout(timeoutId);
                     if (songs.length > 0) return songs;
                 } catch (e) { }
             }
             return [];
         }
 
-        // ==========================================
+        async function fetchTrending() {
+            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop', 'punjabi hits'];
+            const promises = queries.map(q => fetchSaavn(q, 20)); 
+            const results = await Promise.all(promises);
+            let allTracks = results.flat();
+            return removeDuplicates(allTracks).slice(0, 100);
+        }
 
-        // Static fallback for Home Page so it's never empty
-        const STATIC_TRENDING = [
-            { id: 'yt_dQw4w9WgXcQ', videoId: 'dQw4w9WgXcQ', song: 'Never Gonna Give You Up', primary_artists: 'Rick Astley', image: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', duration: 213 },
-            { id: 'yt_9bZkp7q19f0', videoId: '9bZkp7q19f0', song: 'Gangnam Style', primary_artists: 'PSY', image: 'https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg', duration: 253 },
-            { id: 'yt_kJQP7kiw5Fk', videoId: 'kJQP7kiw5Fk', song: 'Despacito', primary_artists: 'Luis Fonsi', image: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg', duration: 282 },
-            { id: 'yt_JGwWNGJdvx8', videoId: 'JGwWNGJdvx8', song: 'Shape of You', primary_artists: 'Ed Sheeran', image: 'https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg', duration: 263 },
-            { id: 'yt_RgKAFK5djSk', videoId: 'RgKAFK5djSk', song: 'See You Again', primary_artists: 'Wiz Khalifa', image: 'https://i.ytimg.com/vi/RgKAFK5djSk/hqdefault.jpg', duration: 237 },
-            { id: 'yt_OPf0YbXqDm0', videoId: 'OPf0YbXqDm0', song: 'Uptown Funk', primary_artists: 'Mark Ronson', image: 'https://i.ytimg.com/vi/OPf0YbXqDm0/hqdefault.jpg', duration: 270 },
-            { id: 'yt_fJ9rUzIMcZQ', videoId: 'fJ9rUzIMcZQ', song: 'Bohemian Rhapsody', primary_artists: 'Queen', image: 'https://i.ytimg.com/vi/fJ9rUzIMcZQ/hqdefault.jpg', duration: 354 },
-            { id: 'yt_2Vv-BfVoq4g', videoId: '2Vv-BfVoq4g', song: 'Perfect', primary_artists: 'Ed Sheeran', image: 'https://i.ytimg.com/vi/2Vv-BfVoq4g/hqdefault.jpg', duration: 279 }
-        ];
+        // ==========================================
 
         function getPlaceholderImage(title) {
             const colors = ['#1DB954', '#1ed760', '#1aa34a', '#282828', '#121212'];
@@ -607,6 +486,12 @@
             return getPlaceholderImage(track.song || track.name || track.title || 'Music');
         }
 
+        function getAudioUrl(track) {
+            if (track.media_url) return track.media_url;
+            if (track.downloadUrl && track.downloadUrl.length > 0) return track.downloadUrl[track.downloadUrl.length - 1].url;
+            return null;
+        }
+
         function getArtistName(track) {
             return track.primary_artists || track.artists?.primary?.map(a => a.name).join(', ') || "Unknown Artist";
         }
@@ -619,19 +504,16 @@
             try {
                 document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
                 await loadPublicPlaylists(); 
+                homeSongs = await fetchTrending();
                 
-                // Use static trending as default to ensure UI loads instantly
-                homeSongs = STATIC_TRENDING;
-                renderGrid(homeSongs, 'homeGrid');
-
-                // Optionally try to fetch real trending in background
-                const trendingApi = await fetchSearchResults('trending music 2024');
-                if (trendingApi.length > 0) {
-                    homeSongs = trendingApi.slice(0, 20);
+                if(homeSongs.length === 0) {
+                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><p class="text-red-400">No songs found. Please refresh.</p></div>`;
+                } else {
                     renderGrid(homeSongs, 'homeGrid');
                 }
             } catch(e) {
                 console.error(e);
+                document.getElementById('homeGrid').innerHTML = `<p class="text-red-500 text-center col-span-full">Error loading songs. Please refresh.</p>`;
             }
         }
 
@@ -756,7 +638,7 @@
             }
             const trackToSave = {
                 id: String(track.id), song: getSongName(track), primary_artists: getArtistName(track),
-                image: getImage(track), videoId: track.videoId // Save videoId for lazy loading
+                image: getImage(track), media_url: getAudioUrl(track), downloadUrl: track.downloadUrl || []
             };
             const updatedSongs = [...(pl.songs || []), trackToSave];
             try {
@@ -801,14 +683,13 @@
             }).join('');
         }
 
-        async function playTrack(containerId, index) {
+        function playTrack(containerId, index) {
             if (containerId === 'homeGrid') playQueue = [...homeSongs];
             else if (containerId === 'searchGrid') playQueue = [...searchSongs];
             else if (containerId === 'likedGrid') playQueue = [...likedSongs];
             else if (containerId === 'singlePlaylistGrid') playQueue = [...currentViewPlaylistSongs];
-            
             currentIndex = index;
-            await loadAndPlay(playQueue[currentIndex]);
+            loadAndPlay(playQueue[currentIndex]);
         }
 
         function updateMediaSession(track) {
@@ -866,31 +747,18 @@
             if (mediaSessionInterval) clearInterval(mediaSessionInterval);
         }
 
-        async function loadAndPlay(track) {
+        function loadAndPlay(track) {
             if (!track) return;
-            
-            // Show loading state
-            document.getElementById('player-title').innerText = "Loading audio...";
-            document.getElementById('player-artist').innerText = getArtistName(track);
-            document.getElementById('player-thumb').src = getImage(track);
-
-            // Fetch stream URL lazily
-            const streamUrl = await fetchAudioStream(track.videoId);
-            
-            if(!streamUrl) { 
-                alert("Could not load audio stream. Trying next song.");
-                playNext(); 
-                return; 
-            }
-
+            const streamUrl = getAudioUrl(track);
+            if(!streamUrl) { playNext(); return; }
             audio.src = streamUrl;
             document.getElementById('player-title').innerText = getSongName(track);
-            
+            document.getElementById('player-artist').innerText = getArtistName(track);
+            document.getElementById('player-thumb').src = getImage(track);
             document.getElementById('like-btn').classList.remove('hidden');
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
             updateMediaSession(track);
-            
             audio.play().then(() => {
                 isPlaying = true;
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
@@ -898,9 +766,7 @@
                 updateAllViews();
                 startMediaSessionTracker();
                 updateNotificationProgress(); 
-            }).catch((e) => { 
-                if(errorCount < 3) { errorCount++; playNext(); } 
-            });
+            }).catch((e) => { if(errorCount < 3) { errorCount++; playNext(); } });
         }
 
         audio.addEventListener('loadedmetadata', () => {
@@ -972,7 +838,7 @@
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            let results = await fetchSearchResults(query); 
+            let results = await fetchSaavn(query, 50); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
@@ -1043,7 +909,7 @@
             else {
                 likedSongs.push({
                     id: trackId, song: getSongName(track), primary_artists: getArtistName(track),
-                    image: getImage(track), videoId: track.videoId
+                    image: getImage(track), media_url: getAudioUrl(track), downloadUrl: track.downloadUrl || []
                 });
             }
             updateLikeIcon(trackId);
