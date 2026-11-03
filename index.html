@@ -141,7 +141,7 @@
 
             <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
                 <div id="view-home" class="space-y-4">
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now (100+ Songs)</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
                 </div>
 
@@ -163,9 +163,8 @@
         </main>
     </div>
 
-    <!-- PLAYER BAR (Now with Mobile Progress Bar) -->
+    <!-- PLAYER BAR -->
     <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
-        
         <!-- Mobile Progress Bar -->
         <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
             <span id="current-time-mob">0:00</span>
@@ -174,7 +173,6 @@
         </div>
 
         <div class="flex items-center justify-between w-full h-full">
-            <!-- Left: Song Info -->
             <div class="flex items-center gap-3 w-[60%] md:w-1/4 overflow-hidden">
                 <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
                 <div class="overflow-hidden">
@@ -186,7 +184,6 @@
                 </button>
             </div>
 
-            <!-- Center: Controls & Desktop Progress Bar -->
             <div class="flex flex-col items-center justify-center w-[40%] md:w-2/4 max-w-xl">
                 <div class="flex items-center gap-4 md:gap-6 mb-0 md:mb-2">
                     <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-backward-step text-xl"></i></button>
@@ -203,7 +200,6 @@
                 </div>
             </div>
 
-            <!-- Right: Volume (Desktop Only) -->
             <div class="hidden md:flex items-center justify-end gap-3 w-1/4 pr-4">
                 <i class="fa-solid fa-volume-high text-gray-400"></i>
                 <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
@@ -281,7 +277,6 @@
 
         const audio = document.getElementById('audio-player');
         
-        // Added highly reliable saavn.dev API which supports better search
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
@@ -293,8 +288,8 @@
             for (let server of API_SERVERS) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000);
-                    // Added &limit=30 to get more songs per request
+                    const timeoutId = setTimeout(() => controller.abort(), 6000);
+                    // Request up to 30 songs per query
                     const res = await fetch(`${server}${encodeURIComponent(query)}&limit=30`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -302,16 +297,12 @@
                     const data = await res.json();
                     
                     let songs = [];
-                    // Handle saavn.dev format
                     if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
-                    // Handle other formats
                     else if (Array.isArray(data)) songs = data;
                     else if (data.results) songs = data.results;
 
                     if (songs.length > 0) return songs;
-                } catch (e) {
-                    console.log(`Server ${server} failed or timed out.`);
-                }
+                } catch (e) { }
             }
             return [];
         }
@@ -324,52 +315,54 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
+        // === EXTREME DUPLICATE FILTER ===
         function removeDuplicates(tracks) {
-            const seenIds = new Set();
-            const seenUrls = new Set();
-            const seenKeys = new Set();
+            const seenTitles = new Set();
 
             return tracks.filter(track => {
-                if (track.id) {
-                    if (seenIds.has(track.id)) return false;
-                    seenIds.add(track.id);
-                }
-
-                let url = track.media_url;
-                if (!url && track.downloadUrl && track.downloadUrl.length > 0) {
-                    url = track.downloadUrl[track.downloadUrl.length - 1].url;
-                }
-                if (url) {
-                    if (seenUrls.has(url)) return false;
-                    seenUrls.add(url);
-                }
-
                 let rawTitle = (track.song || track.name || track.title || '').toLowerCase();
-                rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '').replace(/from\s+.*/g, '').trim();
                 
-                const artist = (track.primary_artists || track.artists?.primary?.map(a => a.name).join(', ') || '').toLowerCase().replace(/[^a-z0-9]/g, ''); 
-                const uniqueKey = `${rawTitle}_${artist}`;
-
-                if (seenKeys.has(uniqueKey)) return false;
-                seenKeys.add(uniqueKey);
+                // Remove everything in brackets/parentheses, special characters, and "from" text
+                rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '')
+                                   .replace(/remix/gi, '')
+                                   .replace(/from\s+.*/g, '')
+                                   .replace(/[^a-z0-9]/g, '')
+                                   .trim();
+                
+                // If the clean title is empty or already seen, filter it out
+                if (!rawTitle || seenTitles.has(rawTitle)) return false;
+                seenTitles.add(rawTitle);
 
                 return true;
             });
         }
 
         async function fetchTrending() {
-            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop'];
+            // Use 8 categories to get 100+ raw songs
+            const queries = [
+                'malayalam hits 2024', 
+                'tamil hits 2024', 
+                'hindi hits 2024', 
+                'english pop hits', 
+                'punjabi hits', 
+                'telugu hits',
+                'lofi chill',
+                'trending songs'
+            ];
+            
             const promises = queries.map(q => fetchWithFallback(q));
             const results = await Promise.all(promises);
             
             let allTracks = results.flat();
+            // Remove duplicates
             const uniqueTracks = removeDuplicates(allTracks);
             
-            return uniqueTracks.slice(0, 30);
+            // Return top 100 songs (or however many we got)
+            return uniqueTracks.slice(0, 100);
         }
 
         async function initApp() {
-            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
+            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i><p class="text-gray-400 mt-2 text-sm">Loading 100+ songs...</p></div>`;
             currentPlaylist = await fetchTrending();
             renderGrid(currentPlaylist, 'homeGrid');
         }
@@ -441,7 +434,6 @@
             const streamUrl = getAudioUrl(track);
             
             if(!streamUrl) {
-                console.log("No audio URL, skipping...");
                 playNext();
                 return;
             }
@@ -460,7 +452,6 @@
                 errorCount = 0;
                 updateUI();
             }).catch((e) => {
-                console.error("Play error:", e);
                 if(errorCount < 3) {
                     errorCount++;
                     playNext();
@@ -469,7 +460,6 @@
         }
 
         audio.addEventListener('error', (e) => {
-            console.log("Audio error, skipping track...");
             if (errorCount < 3 && currentPlaylist.length > 1) {
                 errorCount++;
                 setTimeout(playNext, 1000); 
@@ -507,16 +497,13 @@
             else if (activeView === 'search') renderGrid(currentPlaylist, 'searchGrid');
         }
 
-        // Update both Mobile and Desktop Seek Bars
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             const progress = (audio.currentTime / audio.duration) * 100;
             
-            // Desktop
             document.getElementById('progress-bar').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             
-            // Mobile
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
         });
@@ -529,7 +516,6 @@
         
         audio.addEventListener('ended', playNext);
 
-        // Seek Event Listeners
         document.getElementById('progress-bar').addEventListener('input', (e) => {
             if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
         });
