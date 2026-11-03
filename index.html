@@ -438,7 +438,8 @@
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 6000);
-                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}&page=${page}`, { signal: controller.signal });
+                    // Added p= as well, as JioSaavn often uses 'p' for pagination
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}&page=${page}&p=${page}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
                     if (!res.ok) continue;
@@ -456,10 +457,9 @@
         }
 
         // ==========================================
-        // INFINITE SCROLL LOGIC
+        // INFINITE SCROLL LOGIC (Fixed Duplicates)
         // ==========================================
         scrollContainer.addEventListener('scroll', async () => {
-            // Check if scrolled near bottom (100px from bottom)
             if (scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100) {
                 if (isLoadingMore || !hasMoreSongs) return;
                 
@@ -474,13 +474,23 @@
                 if (newSongs.length === 0) {
                     hasMoreSongs = false;
                 } else {
-                    let uniqueNewSongs = removeDuplicates(newSongs);
-                    if (isSearchView) {
-                        searchSongs = [...searchSongs, ...uniqueNewSongs];
-                        renderGrid(searchSongs, 'searchGrid');
+                    // STRICT DUPLICATE CHECK: Only add songs that are NOT already in the current list
+                    let currentList = isSearchView ? searchSongs : homeSongs;
+                    const existingIds = new Set(currentList.map(s => String(s.id)));
+                    
+                    let trulyNewSongs = newSongs.filter(s => !existingIds.has(String(s.id)));
+
+                    if (trulyNewSongs.length === 0) {
+                        // API is returning the exact same songs, stop infinite scroll to prevent loop
+                        hasMoreSongs = false;
                     } else {
-                        homeSongs = [...homeSongs, ...uniqueNewSongs];
-                        renderGrid(homeSongs, 'homeGrid');
+                        if (isSearchView) {
+                            searchSongs = [...searchSongs, ...trulyNewSongs];
+                            renderGrid(searchSongs, 'searchGrid');
+                        } else {
+                            homeSongs = [...homeSongs, ...trulyNewSongs];
+                            renderGrid(homeSongs, 'homeGrid');
+                        }
                     }
                 }
 
