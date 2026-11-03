@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Vibely — Music for everyone</title>
+<title>Vibely — YouTube Music Player</title>
 <meta name="theme-color" content="#0a0a0f" />
-<meta name="description" content="Vibely — stream, discover and upload music. Your sound, your vibe." />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='black'/><path d='M30 65V45c0-11 9-20 20-20s20 9 20 20v20' fill='none' stroke='%231ed760' stroke-width='8'/><rect x='25' y='55' width='12' height='20' rx='4' fill='%231ed760'/><rect x='63' y='55' width='12' height='20' rx='4' fill='%231ed760'/></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,501 +22,125 @@
     --accent: #1ed760;
     --accent-hover: #3be477;
     --border: #22222f;
-    --radius: 10px;
     --sidebar-w: 248px;
-    --player-h: 88px;
+    --player-h: 100px; /* Increased for video */
   }
   html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 14px;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
+    height: 100%; background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    overflow: hidden; -webkit-font-smoothing: antialiased;
   }
   button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
   input { font-family: inherit; }
-  a { color: inherit; text-decoration: none; }
   ::selection { background: var(--accent); color: black; }
 
   #app {
-    display: grid;
-    grid-template-columns: var(--sidebar-w) 1fr;
-    grid-template-rows: 1fr var(--player-h);
-    height: 100vh;
-    gap: 8px;
-    padding: 8px 8px 0;
+    display: grid; grid-template-columns: var(--sidebar-w) 1fr; grid-template-rows: 1fr var(--player-h);
+    height: 100vh; gap: 8px; padding: 8px 8px 0;
   }
 
   /* ---------- Sidebar ---------- */
   #sidebar {
-    background: var(--bg-elev);
-    border-radius: 12px;
-    padding: 20px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    background: var(--bg-elev); border-radius: 12px; padding: 20px 12px;
+    display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden;
   }
-  #sidebar::-webkit-scrollbar { width: 8px; }
-  #sidebar::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
-  
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 4px 12px 20px;
-    font-weight: 900;
-    font-size: 24px;
-    letter-spacing: -0.5px;
-    cursor: pointer;
-  }
-  .logo-mark {
-    width: 36px; height: 36px;
-    background: #000;
-    border: 1.5px solid var(--accent);
-    border-radius: 10px;
-    display: grid; place-items: center;
-    color: var(--accent);
-    box-shadow: 0 0 15px rgba(30, 215, 96, 0.2);
-  }
+  .logo { display: flex; align-items: center; gap: 12px; padding: 4px 12px 20px; font-weight: 900; font-size: 24px; cursor: pointer; }
+  .logo-mark { width: 36px; height: 36px; background: #000; border: 1.5px solid var(--accent); border-radius: 10px; display: grid; place-items: center; color: var(--accent); box-shadow: 0 0 15px rgba(30, 215, 96, 0.2); }
   .logo-mark svg { width: 20px; height: 20px; stroke-width: 2.5; }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    color: var(--text-dim);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .nav-item { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 8px; color: var(--text-dim); font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nav-item:hover { color: var(--text); background: var(--bg-hover); }
   .nav-item.active { color: var(--text); background: var(--bg-hover); }
   .nav-item.active svg { color: var(--accent); }
-  .nav-item svg { flex-shrink: 0; }
-
   .sidebar-divider { height: 1px; background: var(--border); margin: 12px 0; }
-  
-  .sidebar-heading {
-    padding: 6px 14px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--text-faint);
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-  }
-  .sidebar-heading button {
-    color: var(--text-dim);
-    font-size: 20px;
-    line-height: 1;
-    padding: 0 4px;
-    border-radius: 4px;
-    transition: all 0.15s;
-  }
-  .sidebar-heading button:hover { color: var(--text); background: var(--bg-hover); }
-
+  .sidebar-heading { padding: 6px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-faint); font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
   .playlist-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
   .playlist-item:hover { background: var(--bg-hover); }
-  .playlist-item.active { background: var(--bg-hover); }
-  .playlist-thumb {
-    width: 36px; height: 36px;
-    border-radius: 6px;
-    background: var(--bg-elev2);
-    border: 1px solid var(--border);
-    display: grid; place-items: center;
-    flex-shrink: 0;
-    color: var(--text-dim);
-    font-size: 14px;
-  }
-  .playlist-meta { min-width: 0; flex: 1; }
-  .playlist-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .playlist-count { font-size: 11px; color: var(--text-faint); }
-  
-  .sidebar-upload {
-    margin-top: auto;
-    padding: 12px;
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-dim);
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-weight: 600;
-    justify-content: center;
-  }
-  .sidebar-upload:hover { border-color: var(--accent); color: var(--accent); background: rgba(30, 215, 96, 0.05); }
+  .playlist-thumb { width: 36px; height: 36px; border-radius: 6px; background: var(--bg-elev2); border: 1px solid var(--border); display: grid; place-items: center; color: var(--text-dim); }
+  .sidebar-upload { margin-top: auto; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 12.5px; cursor: pointer; font-weight: 600; justify-content: center; }
+  .sidebar-upload:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ---------- Main ---------- */
-  #main {
-    background: var(--bg-elev);
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: rgba(18, 18, 26, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    gap: 16px;
-    flex-shrink: 0;
-  }
-  .search-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg-elev2);
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 9px 16px;
-    width: 100%;
-    max-width: 440px;
-    transition: border-color 0.15s;
-  }
-  .search-wrap:focus-within { border-color: var(--accent); }
-  .search-wrap svg { color: var(--text-faint); flex-shrink: 0; }
-  .search-wrap input {
-    flex: 1;
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-size: 13.5px;
-  }
-  .search-wrap input::placeholder { color: var(--text-faint); }
-  .topbar-actions { display: flex; align-items: center; gap: 8px; }
-  .btn-icon {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    color: var(--text-dim);
-    transition: all 0.15s;
-  }
-  .btn-icon:hover { color: var(--text); background: var(--bg-hover); }
-  .avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1ed760, #10b981);
-    display: grid; place-items: center;
-    font-weight: 800;
-    font-size: 14px;
-    color: black;
-    cursor: pointer;
-  }
-
-  #content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px 24px 60px;
-  }
-  #content::-webkit-scrollbar { width: 12px; }
-  #content::-webkit-scrollbar-track { background: transparent; }
-  #content::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 6px; border: 3px solid var(--bg-elev); }
-  #content::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
-
-  /* ---------- Content blocks ---------- */
-  .section-title { font-size: 22px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.3px; }
-  .section-title.small { font-size: 16px; margin-bottom: 12px; }
-  .greeting { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 24px; }
-  .section { margin-bottom: 36px; }
-
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 16px;
-  }
-  .card {
-    background: var(--bg-elev2);
-    border-radius: 10px;
-    padding: 14px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
+  #main { background: var(--bg-elev); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: rgba(18, 18, 26, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); gap: 16px; flex-shrink: 0; }
+  .search-wrap { display: flex; align-items: center; gap: 10px; background: var(--bg-elev2); border-radius: 999px; padding: 9px 16px; width: 100%; max-width: 440px; }
+  .search-wrap input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 13.5px; }
+  #content { flex: 1; overflow-y: auto; padding: 24px 24px 60px; }
+  
+  .section-title { font-size: 22px; font-weight: 800; margin-bottom: 16px; }
+  .greeting { font-size: 30px; font-weight: 900; margin-bottom: 24px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+  .card { background: var(--bg-elev2); border-radius: 10px; padding: 14px; cursor: pointer; transition: background 0.2s; position: relative; }
   .card:hover { background: #23233a; }
+  .card-cover { width: 100%; aspect-ratio: 1; border-radius: 8px; margin-bottom: 12px; position: relative; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; }
+  .card-play { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; color: black; opacity: 0; transform: translateY(6px); transition: all 0.2s; }
   .card:hover .card-play { opacity: 1; transform: translateY(0); }
-  
-  .card-cover {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    position: relative;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.2);
-  }
-  
-  .card-play {
-    position: absolute;
-    right: 8px; bottom: 8px;
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: grid; place-items: center;
-    color: black;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: all 0.2s;
-    box-shadow: 0 8px 16px rgba(30, 215, 96, 0.4);
-    z-index: 2;
-  }
-  .card-play:hover { background: var(--accent-hover); transform: scale(1.06) translateY(0); }
   .card-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card-sub { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---------- Track list ---------- */
   .track-list { display: flex; flex-direction: column; }
-  .track-row {
-    display: grid;
-    grid-template-columns: 28px 48px 1fr 140px 60px 40px 32px;
-    align-items: center;
-    gap: 14px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.1s;
-    font-size: 13.5px;
-  }
+  .track-row { display: grid; grid-template-columns: 28px 48px 1fr 60px 40px; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
   .track-row:hover { background: var(--bg-hover); }
   .track-row.playing { color: var(--accent); }
-  .track-num { color: var(--text-faint); text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
+  .track-num { color: var(--text-faint); text-align: right; }
   .track-row:hover .track-num { display: none; }
   .track-row .row-play { display: none; color: var(--text); }
   .track-row:hover .row-play { display: block; }
-  
-  .track-cover {
-    width: 40px; height: 40px;
-    border-radius: 4px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.3);
-  }
-  
+  .track-cover { width: 40px; height: 40px; border-radius: 4px; background-size: cover; background-position: center; }
   .track-info { min-width: 0; }
   .track-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .track-artist { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track-row.playing .track-artist { color: var(--accent-hover); }
-  .track-album { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .track-dur { color: var(--text-dim); text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; }
-  .track-like, .track-more { color: var(--text-faint); display: grid; place-items: center; opacity: 0; transition: all 0.15s; width: 32px; height: 32px; border-radius: 50%; }
-  .track-row:hover .track-like, .track-row:hover .track-more { opacity: 1; }
-  .track-like:hover { color: var(--text); transform: scale(1.1); }
-  .track-like.liked { color: var(--accent); opacity: 1; }
-  .track-more:hover { color: var(--text); background: rgba(255,255,255,0.1); }
   
   .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; }
   .eq span { width: 3px; background: var(--accent); border-radius: 2px; animation: eq 0.9s ease-in-out infinite; }
   .eq span:nth-child(1) { animation-delay: -0.4s; }
   .eq span:nth-child(2) { animation-delay: -0.7s; }
   .eq span:nth-child(3) { animation-delay: -0.2s; }
-  .eq.paused span { animation-play-state: paused; }
   @keyframes eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
-
-  /* ---------- Hero / playlist header ---------- */
-  .playlist-hero { display: flex; gap: 24px; align-items: flex-end; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
-  .playlist-hero-cover {
-    width: 200px; height: 200px;
-    border-radius: 12px;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-    color: rgba(255,255,255,0.4);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-  }
-  .playlist-hero-info { flex: 1; min-width: 0; }
-  .playlist-type { text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; }
-  .playlist-hero-title { font-size: 48px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 12px; word-break: break-word; }
-  .playlist-hero-meta { font-size: 13px; color: var(--text-dim); }
-  .playlist-hero-meta strong { color: var(--text); }
-  .playlist-actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
-  .btn-play-big {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: black;
-    display: grid; place-items: center;
-    transition: all 0.15s;
-    box-shadow: 0 8px 20px rgba(30, 215, 96, 0.3);
-  }
-  .btn-play-big:hover { transform: scale(1.06); background: var(--accent-hover); }
-  .btn-secondary {
-    display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
-    border: 1px solid var(--border); color: var(--text-dim); font-weight: 600; font-size: 13px; transition: all 0.15s;
-  }
-  .btn-secondary:hover { color: var(--text); border-color: var(--text-dim); }
-  .btn-primary {
-    display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px;
-    background: var(--accent); color: black; font-weight: 700; font-size: 13px; transition: all 0.15s;
-  }
-  .btn-primary:hover { background: var(--accent-hover); }
-
-  /* ---------- Empty state ---------- */
-  .empty { text-align: center; padding: 80px 20px; color: var(--text-dim); }
-  .empty-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--bg-elev2); display: grid; place-items: center; margin: 0 auto 20px; color: var(--text-faint); }
-  .empty h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; font-weight: 700; }
-  .empty p { font-size: 14px; }
 
   /* ---------- Player ---------- */
   #player {
-    grid-column: 1 / -1;
-    background: var(--bg-elev);
-    border-radius: 12px 12px 0 0;
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
-    align-items: center;
-    padding: 0 16px;
-    gap: 16px;
-    border-top: 1px solid var(--border);
-    z-index: 10;
+    grid-column: 1 / -1; background: var(--bg-elev); border-radius: 12px 12px 0 0;
+    display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center;
+    padding: 0 16px; gap: 16px; border-top: 1px solid var(--border); z-index: 10;
   }
   .player-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .player-cover {
-    width: 56px; height: 56px;
-    border-radius: 6px;
-    display: grid; place-items: center;
-    flex-shrink: 0;
-    color: rgba(255,255,255,0.3);
-    background: var(--bg-elev2);
+  
+  /* YouTube Video Container */
+  .yt-video-container {
+    width: 100px; height: 75px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: #000;
+    display: flex; align-items: center; justify-content: center;
   }
+  .yt-video-container iframe { width: 100%; height: 100%; border: none; }
+
   .player-meta { min-width: 0; flex: 1; }
   .player-title { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .player-artist { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .player-like { color: var(--text-faint); transition: all 0.15s; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; }
-  .player-like:hover { color: var(--text); }
-  .player-like.liked { color: var(--accent); }
 
   .player-center { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 600px; margin: 0 auto; }
   .player-controls { display: flex; align-items: center; gap: 16px; }
-  .ctl {
-    color: var(--text-dim);
-    transition: all 0.15s;
-    display: grid; place-items: center;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-  }
+  .ctl { color: var(--text-dim); transition: all 0.15s; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; }
   .ctl:hover { color: var(--text); }
-  .ctl.active { color: var(--accent); }
-  .ctl.active::after { content: ''; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-top: 30px; }
-  .play-btn {
-    width: 34px; height: 34px;
-    background: white;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    color: black;
-    transition: transform 0.1s;
-    flex-shrink: 0;
-  }
+  .play-btn { width: 34px; height: 34px; background: white; border-radius: 50%; display: grid; place-items: center; color: black; transition: transform 0.1s; }
   .play-btn:hover { transform: scale(1.06); }
 
   .progress-wrap { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
   .seek { position: relative; flex: 1; height: 4px; background: #2a2a3a; border-radius: 2px; cursor: pointer; }
-  .seek-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 2px; width: 0; pointer-events: none; transition: background 0.1s; }
-  .seek-thumb { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; background: white; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .seek-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 2px; width: 0; pointer-events: none; }
   .seek:hover .seek-fill { background: var(--accent); }
-  .seek:hover .seek-thumb { opacity: 1; }
-  .time-label { min-width: 34px; text-align: center; }
-  .time-label.right { text-align: right; }
-
-  .player-right { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-  .volume-wrap { display: flex; align-items: center; gap: 8px; width: 120px; }
-  .vol { position: relative; flex: 1; height: 4px; background: #2a2a3a; border-radius: 2px; cursor: pointer; }
-  .vol-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 2px; pointer-events: none; }
-  .vol:hover .vol-fill { background: var(--accent); }
-
-  /* ---------- Modal ---------- */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-    display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
-  }
-  .modal-overlay.active { display: flex; }
-  .modal {
-    background: var(--bg-elev2); border: 1px solid var(--border); border-radius: 14px;
-    padding: 28px; max-width: 440px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-  }
-  .modal h2 { font-size: 22px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.4px; }
-  .modal input {
-    width: 100%; padding: 12px 14px; background: var(--bg-elev); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.15s;
-  }
-  .modal input:focus { border-color: var(--accent); }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-  .pl-choice { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
-  .pl-choice:hover { background: var(--bg-hover); }
-
-  /* ---------- Toast ---------- */
-  #toast-container {
-    position: fixed; bottom: calc(var(--player-h) + 16px); left: 50%; transform: translateX(-50%);
-    z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
-  }
-  .toast {
-    background: var(--accent); color: black; padding: 12px 20px; border-radius: 10px;
-    font-size: 13.5px; font-weight: 700; box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-    animation: toastIn 0.25s ease; white-space: nowrap;
-  }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ---------- Drop zone ---------- */
-  #main.dragover::after {
-    content: 'Drop your music here to upload'; position: absolute; inset: 12px;
-    border: 2px dashed var(--accent); border-radius: 12px; background: rgba(30, 215, 96, 0.1);
-    display: grid; place-items: center; font-size: 20px; font-weight: 800; color: var(--accent); z-index: 50; pointer-events: none;
-  }
-
+  
   /* ---------- Responsive ---------- */
   @media (max-width: 900px) {
     #app { grid-template-columns: 72px 1fr; }
     .logo span, .nav-item span, .sidebar-heading, .playlist-meta, .sidebar-upload span { display: none; }
     .nav-item { justify-content: center; padding: 14px; }
-    .nav-item svg { width: 24px; height: 24px; }
-    .playlist-item { justify-content: center; padding: 10px 0; }
-    .playlist-thumb { width: 42px; height: 42px; }
-    .sidebar-upload { padding: 14px; justify-content: center; border: none; background: var(--bg-hover); }
-    .playlist-hero { flex-direction: column; align-items: flex-start; }
-    .playlist-hero-title { font-size: 32px; }
-    .playlist-hero-cover { width: 140px; height: 140px; }
+    .playlist-item { justify-content: center; }
     .track-row { grid-template-columns: 28px 40px 1fr 40px; }
-    .track-album, .track-dur, .track-more { display: none; }
+    .track-dur { display: none; }
     #player { grid-template-columns: 1fr auto; }
     .player-right { display: none; }
-    .logo { padding: 4px 0 20px; justify-content: center; }
-  }
-  @media (max-width: 600px) {
-    .topbar { padding: 10px 14px; }
-    #content { padding: 16px 14px 40px; }
-    .card-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-    .greeting { font-size: 22px; }
-    .player-center { max-width: none; }
-    .progress-wrap { display: none; } /* Hide progress bar on very small screens to save space */
+    .yt-video-container { width: 70px; height: 50px; }
   }
 </style>
 </head>
@@ -527,14 +150,8 @@
   <main id="main">
     <div class="topbar">
       <div class="search-wrap">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input id="search-input" placeholder="Search songs, artists, playlists" autocomplete="off" />
-      </div>
-      <div class="topbar-actions">
-        <button class="btn-icon" id="upload-btn" title="Upload music">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <div class="avatar">V</div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search-input" placeholder="Search songs, artists..." autocomplete="off" />
       </div>
     </div>
     <div id="content"></div>
@@ -543,22 +160,17 @@
 
 <footer id="player">
   <div class="player-left">
-    <div class="player-cover" id="p-cover">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <!-- YouTube Video Player Wrapper -->
+    <div class="yt-video-container" id="yt-wrapper">
+      <div id="yt-player"></div>
     </div>
     <div class="player-meta">
       <div class="player-title" id="p-title">Nothing playing</div>
       <div class="player-artist" id="p-artist">Pick a track to start</div>
     </div>
-    <button class="player-like" id="p-like" title="Like" style="visibility:hidden;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-    </button>
   </div>
   <div class="player-center">
     <div class="player-controls">
-      <button class="ctl" id="ctl-shuffle" title="Shuffle">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-      </button>
       <button class="ctl" id="ctl-prev" title="Previous">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
       </button>
@@ -568,192 +180,128 @@
       <button class="ctl" id="ctl-next" title="Next">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
       </button>
-      <button class="ctl" id="ctl-repeat" title="Repeat">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      </button>
     </div>
     <div class="progress-wrap">
       <span class="time-label" id="time-now">0:00</span>
       <div class="seek" id="seek">
         <div class="seek-fill" id="seek-fill"></div>
-        <div class="seek-thumb" id="seek-thumb"></div>
       </div>
       <span class="time-label right" id="time-total">0:00</span>
     </div>
   </div>
-  <div class="player-right">
-    <div class="volume-wrap">
-      <button class="ctl" id="ctl-mute" title="Mute">
-        <svg id="vol-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      </button>
-      <div class="vol" id="vol">
-        <div class="vol-fill" id="vol-fill"></div>
-      </div>
-    </div>
-  </div>
+  <div class="player-right"></div>
 </footer>
 
-<input type="file" id="file-input" accept="audio/*" multiple hidden />
-<div id="toast-container"></div>
+<!-- YouTube IFrame API Script -->
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
 /* =========================================================
-   VIBELY — full client-side music app
+   VIBELY — YouTube Music Integration
    ========================================================= */
 
 const I = {
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>`,
-  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
-  library: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M8 19V5M12 19V5M20 6l-4 14"/></svg>`,
-  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-  heartFilled: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>`,
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+  library: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M8 19V5M12 19V5M20 6l-4 14"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
-  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>`,
-  more: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
-  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
-  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
-  volume: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
-  volumeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`,
-  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>`
 };
 const svg = (name, size = 20) => `<span style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${I[name]}</span>`;
 
 const STATE = {
   view: 'home', param: null, search: '',
-  tracks: [], playlists: [], liked: [], history: [],
-  player: { queue: [], index: -1, playing: false, volume: 0.8, shuffle: false, repeat: 'off' }
+  tracks: [], history: [],
+  player: { queue: [], index: -1, playing: false }
 };
 
+// Real YouTube Video IDs for Demo
 const DEMO = [
-  ['d1',  'Neon Dreams',  'Aria Volt',  'Electronic', 1],
-  ['d2',  'Midnight Rain','Kova',       'Chill',      2],
-  ['d3',  'Golden Hour',  'Lyra Sky',   'Indie',      3],
-  ['d4',  'Static',       'Nova Flare', 'Rock',       4],
-  ['d5',  'Ocean Drive',  'Vega',       'Electronic', 5],
-  ['d6',  'Paper Planes', 'Indigo',     'Pop',        6],
-  ['d7',  'Lost in Tokyo','Sora',       'Lo-fi',      7],
-  ['d8',  'Fireflies',    'Aria Volt',  'Electronic', 8],
-  ['d9',  'Echoes',       'Kova',       'Ambient',    9],
-  ['d10', 'Wildfire',     'Nova Flare', 'Rock',       10],
-  ['d11', 'Serotonin',    'Lyra Sky',   'Indie',      11],
-  ['d12', 'Velvet Sky',   'Sora',       'Chill',      12]
+  { id: 'yt1', title: 'Shape of You', artist: 'Ed Sheeran', ytId: 'JGwWNGJdvx8', duration: 263 },
+  { id: 'yt2', title: 'Blinding Lights', artist: 'The Weeknd', ytId: '4NRXx6U8ABQ', duration: 262 },
+  { id: 'yt3', title: 'Perfect', artist: 'Ed Sheeran', ytId: '2Vv-BfVoq4g', duration: 279 },
+  { id: 'yt4', title: 'Believer', artist: 'Imagine Dragons', ytId: '7wtfhZwyrcc', duration: 217 },
+  { id: 'yt5', title: 'Levitating', artist: 'Dua Lipa', ytId: 'TUVcZfQe-Kw', duration: 203 },
+  { id: 'yt6', title: 'Stay', artist: 'The Kid LAROI, Justin Bieber', ytId: 'kTJczUoc26U', duration: 141 },
+  { id: 'yt7', title: 'Bad Habits', artist: 'Ed Sheeran', ytId: 'orJSJGHjBLI', duration: 231 },
+  { id: 'yt8', title: 'Save Your Tears', artist: 'The Weeknd', ytId: 'XXYlFuWEuKI', duration: 215 }
 ];
 
-function buildDemoTracks() {
-  return DEMO.map(([id, title, artist, genre, n]) => ({
-    id, title, artist, genre, album: 'Vibely Sessions',
-    src: `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`,
-    duration: [372, 425, 302, 344, 500, 290, 380, 340, 420, 360, 315, 385][n-1],
-    uploaded: false
-  }));
-}
-
-/* Robust CSS Gradient Covers - Fixes the blank images on mobile */
 const PALETTES = [
   ['#8b5cf6', '#ec4899'], ['#06b6d4', '#3b82f6'], ['#f59e0b', '#ef4444'],
-  ['#10b981', '#059669'], ['#f43f5e', '#8b5cf6'], ['#3b82f6', '#8b5cf6'],
-  ['#eab308', '#f97316'], ['#14b8a6', '#06b6d4'], ['#a855f7', '#6366f1']
+  ['#10b981', '#059669'], ['#f43f5e', '#8b5cf6'], ['#3b82f6', '#8b5cf6']
 ];
-function hashStr(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
-}
-function getCoverStyle(seed) {
-  const p = PALETTES[hashStr(seed) % PALETTES.length];
-  return `background: linear-gradient(135deg, ${p[0]}, ${p[1]});`;
-}
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function getCoverStyle(seed) { const p = PALETTES[hashStr(seed) % PALETTES.length]; return `background: linear-gradient(135deg, ${p[0]}, ${p[1]});`; }
 
 const $ = sel => document.querySelector(sel);
-const $$ = sel => document.querySelectorAll(sel);
-const fmtTime = s => {
-  if (!s || !isFinite(s)) return '0:00';
-  return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
-};
+const fmtTime = s => { if (!s || !isFinite(s)) return '0:00'; return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  $('#toast-container').appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; }, 2200);
-  setTimeout(() => el.remove(), 2500);
-}
+/* =========================================
+   YOUTUBE PLAYER SETUP
+   ========================================= */
+let ytPlayer;
+let progressInterval;
 
-const audio = new Audio();
-audio.preload = 'metadata';
-const DB_NAME = 'vibely', STORE = 'audio';
-
-function openDB() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
-async function putBlob(key, blob) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(blob, key);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  });
-}
-async function getBlob(key) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readonly');
-    const r = tx.objectStore(STORE).get(key);
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+// This function is called automatically by the YouTube API
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('yt-player', {
+    height: '100%',
+    width: '100%',
+    videoId: '', // Empty initially
+    playerVars: {
+      'playsinline': 1,
+      'controls': 0, // Hide YouTube controls (we use our own)
+      'disablekb': 1,
+      'fs': 0,
+      'modestbranding': 1,
+      'rel': 0
+    },
+    events: {
+      'onReady': onPlayerReady,
+      'onStateChange': onPlayerStateChange
+    }
   });
 }
 
-function save() {
-  try {
-    localStorage.setItem('vibely_v1', JSON.stringify({
-      playlists: STATE.playlists,
-      liked: STATE.liked,
-      history: STATE.history.slice(0, 100),
-      volume: STATE.player.volume,
-      uploaded: STATE.tracks.filter(t => t.uploaded).map(t => ({
-        id: t.id, title: t.title, artist: t.artist, duration: t.duration, uploaded: true, idbId: t.idbId
-      }))
-    }));
-  } catch (e) { console.warn('save failed', e); }
+function onPlayerReady(event) {
+  // Player is ready
 }
 
-async function loadState() {
-  let raw = null;
-  try { raw = localStorage.getItem('vibely_v1'); } catch {}
-  if (!raw) return;
-  const s = JSON.parse(raw);
-  STATE.playlists = s.playlists || [];
-  STATE.liked = s.liked || [];
-  STATE.history = s.history || [];
-  STATE.player.volume = s.volume ?? 0.8;
-  audio.volume = STATE.player.volume;
-
-  for (const t of (s.uploaded || [])) {
-    try {
-      const blob = await getBlob(t.idbId);
-      if (blob) {
-        t.src = URL.createObjectURL(blob);
-        STATE.tracks.push(t);
-      }
-    } catch {}
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING) {
+    STATE.player.playing = true;
+    updatePlayIcon();
+    startProgressTracker();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    STATE.player.playing = false;
+    updatePlayIcon();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    nextTrack();
   }
 }
 
-const trackById = id => STATE.tracks.find(t => t.id === id);
-const currentTrack = () => STATE.player.index >= 0 ? trackById(STATE.player.queue[STATE.player.index]) : null;
-const isLiked = id => STATE.liked.includes(id);
-const playlistById = id => STATE.playlists.find(p => p.id === id);
+function startProgressTracker() {
+  clearInterval(progressInterval);
+  progressInterval = setInterval(() => {
+    if (ytPlayer && ytPlayer.getCurrentTime) {
+      const current = ytPlayer.getCurrentTime();
+      const total = ytPlayer.getDuration();
+      if (total > 0) {
+        $('#seek-fill').style.width = (current / total * 100) + '%';
+        $('#time-now').textContent = fmtTime(current);
+        $('#time-total').textContent = fmtTime(total);
+      }
+    }
+  }, 1000);
+}
+
+/* =========================================
+   APP LOGIC
+   ========================================= */
 
 function setQueue(ids, startId) {
   if (!ids.length) return;
@@ -763,640 +311,125 @@ function setQueue(ids, startId) {
 }
 
 function playCurrent() {
-  const t = currentTrack();
-  if (!t) return;
-  audio.src = t.src;
-  audio.volume = STATE.player.volume;
-  audio.play().catch(err => {
-    console.warn(err);
-    toast('Could not play track');
-  });
-  STATE.player.playing = true;
+  const t = STATE.tracks.find(x => x.id === STATE.player.queue[STATE.player.index]);
+  if (!t || !ytPlayer) return;
+  
+  ytPlayer.loadVideoById(t.ytId);
+  
+  $('#p-title').textContent = t.title;
+  $('#p-artist').textContent = t.artist;
+  
   addToHistory(t.id);
-  renderPlayerBar();
-}
-
-function togglePlay() {
-  if (!currentTrack()) {
-    if (STATE.tracks.length) setQueue(STATE.tracks.map(t => t.id), STATE.tracks[0].id);
-    return;
-  }
-  if (audio.paused) { audio.play(); STATE.player.playing = true; }
-  else { audio.pause(); STATE.player.playing = false; }
-  updatePlayIcon();
   updateAllTrackRows();
 }
 
-function nextTrack(auto = false) {
-  const q = STATE.player.queue;
-  if (!q.length) return;
-  let i = STATE.player.index;
-  if (STATE.player.shuffle) {
-    if (q.length > 1) { do { i = Math.floor(Math.random() * q.length); } while (i === STATE.player.index); }
-    else i = 0;
-  } else {
-    i++;
-    if (i >= q.length) {
-      if (STATE.player.repeat === 'all' || (auto && STATE.player.repeat !== 'off')) i = 0;
-      else { i = q.length - 1; STATE.player.playing = false; updatePlayIcon(); return; }
-    }
-  }
+function togglePlay() {
+  if (!ytPlayer || !ytPlayer.playVideo) return;
+  if (STATE.player.playing) { ytPlayer.pauseVideo(); }
+  else { ytPlayer.playVideo(); }
+}
+
+function nextTrack() {
+  let i = STATE.player.index + 1;
+  if (i >= STATE.player.queue.length) i = 0; // Loop
   STATE.player.index = i;
   playCurrent();
 }
 
 function prevTrack() {
-  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
-  const q = STATE.player.queue;
-  if (!q.length) return;
+  if (ytPlayer && ytPlayer.getCurrentTime() > 3) { ytPlayer.seekTo(0); return; }
   let i = STATE.player.index - 1;
-  if (i < 0) i = STATE.player.repeat === 'all' ? q.length - 1 : 0;
+  if (i < 0) i = STATE.player.queue.length - 1;
   STATE.player.index = i;
   playCurrent();
 }
 
 function addToHistory(id) {
-  STATE.history = [id, ...STATE.history.filter(x => x !== id)].slice(0, 100);
-  save();
+  STATE.history = [id, ...STATE.history.filter(x => x !== id)].slice(0, 50);
 }
 
-document.addEventListener('click', e => {
-  const row = e.target.closest('.track-row');
-  if (row && !e.target.closest('.track-like') && !e.target.closest('.track-more')) {
-    const id = row.dataset.id;
-    const list = [...row.parentElement.querySelectorAll('.track-row')].map(r => r.dataset.id);
-    if (STATE.player.queue[STATE.player.index] === id) togglePlay();
-    else setQueue(list, id);
-  }
-  const like = e.target.closest('.track-like');
-  if (like) { e.stopPropagation(); toggleLike(like.dataset.id); }
-  const more = e.target.closest('.track-more');
-  if (more) { e.stopPropagation(); openTrackMenu(more.dataset.id); }
-  const cardPlay = e.target.closest('.card-play');
-  if (cardPlay) { e.stopPropagation(); setQueue([cardPlay.dataset.id], cardPlay.dataset.id); }
-  const card = e.target.closest('.card[data-artist]');
-  if (card && !e.target.closest('.card-play')) navigate('artist', card.dataset.artist);
-});
+/* =========================================
+   UI RENDERING
+   ========================================= */
 
-function toggleLike(id) {
-  if (isLiked(id)) STATE.liked = STATE.liked.filter(x => x !== id);
-  else { STATE.liked.unshift(id); toast('Added to Liked Songs'); }
-  save();
-  refreshUI();
-  if (STATE.view === 'liked') renderContent();
-}
-
-function createPlaylist(name) {
-  if (!name || !name.trim()) return;
-  const p = { id: 'pl_' + Date.now(), name: name.trim(), trackIds: [], createdAt: Date.now() };
-  STATE.playlists.unshift(p);
-  save(); renderSidebar(); navigate('playlist', p.id);
-  toast(`Playlist "${p.name}" created`);
-}
-
-function deletePlaylist(id) {
-  STATE.playlists = STATE.playlists.filter(p => p.id !== id);
-  save(); renderSidebar();
-  if (STATE.view === 'playlist' && STATE.param === id) navigate('library');
-}
-
-function addToPlaylist(plId, trackId) {
-  const p = playlistById(plId);
-  if (!p) return;
-  if (!p.trackIds.includes(trackId)) {
-    p.trackIds.push(trackId);
-    save(); toast(`Added to "${p.name}"`);
-    if (STATE.view === 'playlist' && STATE.param === plId) renderContent();
-  } else toast('Already in playlist');
-}
-
-function navigate(view, param = null) {
-  STATE.view = view; STATE.param = param;
-  if (view !== 'search') STATE.search = '';
-  $('#search-input').value = STATE.search;
-  renderSidebar(); renderContent();
-  $('#content').scrollTop = 0;
-}
-
-function setSearch(q) {
-  STATE.search = q; STATE.view = 'search'; STATE.param = null;
-  renderContent(); renderSidebar();
-}
-
-/* ---------- CLEAN SIDEBAR AS REQUESTED ---------- */
 function renderSidebar() {
-  const active = (v, p) => (STATE.view === v && (p === undefined || STATE.param === p)) ? 'active' : '';
-  const html = `
+  const active = (v) => STATE.view === v ? 'active' : '';
+  $('#sidebar').innerHTML = `
     <div class="logo" onclick="navigate('home')">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-        </svg>
-      </div>
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg></div>
       <span>Vibely</span>
     </div>
-
-    <!-- Only Home, Search, Library -->
     <div class="nav-item ${active('home')}" onclick="navigate('home')">${svg('home', 20)}<span>Home</span></div>
     <div class="nav-item ${active('search')}" onclick="navigate('search')">${svg('search', 20)}<span>Search</span></div>
     <div class="nav-item ${active('library')}" onclick="navigate('library')">${svg('library', 20)}<span>Library</span></div>
-
     <div class="sidebar-divider"></div>
-
-    <!-- Like & History -->
-    <div class="nav-item ${active('liked')}" onclick="navigate('liked')">${svg('heart', 20)}<span>Liked Songs</span></div>
     <div class="nav-item ${active('recently')}" onclick="navigate('recently')">${svg('clock', 20)}<span>History</span></div>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- Playlists -->
-    <div class="sidebar-heading"><span>Playlists</span><button onclick="openCreatePlaylist()" title="New playlist">+</button></div>
-    ${STATE.playlists.length ? STATE.playlists.map(p => `
-      <div class="playlist-item ${active('playlist', p.id)}" onclick="navigate('playlist', '${p.id}')">
-        <div class="playlist-thumb">${svg('music', 16)}</div>
-        <div class="playlist-meta">
-          <div class="playlist-name">${esc(p.name)}</div>
-          <div class="playlist-count">${p.trackIds.length} track${p.trackIds.length === 1 ? '' : 's'}</div>
-        </div>
-      </div>
-    `).join('') : `<div style="padding: 8px 14px; font-size:12px; color: var(--text-faint);">No playlists yet</div>`}
-
-    <div class="sidebar-upload" onclick="openUpload()">${svg('upload', 20)}<span>Upload</span></div>
   `;
-  $('#sidebar').innerHTML = html;
 }
 
 function renderContent() {
   const el = $('#content');
-  if (STATE.view === 'home') el.innerHTML = viewHome();
-  else if (STATE.view === 'search') el.innerHTML = viewSearch();
-  else if (STATE.view === 'library') el.innerHTML = viewLibrary();
-  else if (STATE.view === 'liked') el.innerHTML = viewLiked();
-  else if (STATE.view === 'recently') el.innerHTML = viewRecently();
-  else if (STATE.view === 'playlist') el.innerHTML = viewPlaylist();
-  else if (STATE.view === 'artist') el.innerHTML = viewArtist();
-}
-
-function viewHome() {
-  const recents = STATE.history.slice(0, 6).map(trackById).filter(Boolean);
-  const featured = STATE.tracks.slice(0, 10);
-  const byGenre = {};
-  STATE.tracks.forEach(t => { if (t.genre) (byGenre[t.genre] = byGenre[t.genre] || []).push(t); });
-
-  return `
-    <div class="greeting">Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'} 👋</div>
-    ${recents.length ? `
-      <div class="section">
-        <div class="section-title small">Jump back in</div>
-        <div class="card-grid">${recents.map(t => cardHTML(t)).join('')}</div>
-      </div>
-    ` : ''}
-    <div class="section">
-      <div class="section-title">Made for you</div>
-      <div class="card-grid">${featured.map(t => cardHTML(t)).join('')}</div>
-    </div>
-    ${Object.entries(byGenre).slice(0, 4).map(([genre, tracks]) => `
-      <div class="section">
-        <div class="section-title small">${esc(genre)}</div>
-        <div class="card-grid">${tracks.slice(0, 6).map(t => cardHTML(t)).join('')}</div>
-      </div>
-    `).join('')}
-  `;
-}
-
-function cardHTML(t) {
-  return `
-    <div class="card" data-artist="${esc(t.artist)}">
-      <div class="card-cover" style="${getCoverStyle(t.id)}">
-        ${svg('music', 44)}
-        <button class="card-play" data-id="${t.id}" title="Play">${svg('play', 18)}</button>
-      </div>
-      <div class="card-title">${esc(t.title)}</div>
-      <div class="card-sub">${esc(t.artist)}</div>
-    </div>
-  `;
-}
-
-function viewSearch() {
-  const q = STATE.search.trim().toLowerCase();
-  if (!q) {
-    return `
-      <div class="section-title">Browse all</div>
+  if (STATE.view === 'home') {
+    el.innerHTML = `
+      <div class="greeting">Good ${new Date().getHours() < 12 ? 'morning' : 'afternoon'} 👋</div>
+      <div class="section-title">Made for you (YouTube Hits)</div>
       <div class="card-grid">
-        ${['Electronic', 'Chill', 'Indie', 'Rock', 'Pop', 'Lo-fi', 'Ambient'].map(c => `
-          <div class="card" style="background: linear-gradient(135deg, ${PALETTES[hashStr(c) % PALETTES.length][0]}, ${PALETTES[hashStr(c) % PALETTES.length][1]}); padding: 18px; aspect-ratio: 1.4;">
-            <div class="card-title" style="font-size:18px; color:black;">${esc(c)}</div>
+        ${STATE.tracks.map(t => `
+          <div class="card">
+            <div class="card-cover" style="${getCoverStyle(t.id)}">
+              ${svg('music', 40)}
+              <button class="card-play" onclick="setQueue(STATE.tracks.map(x=>x.id), '${t.id}')">${svg('play', 18)}</button>
+            </div>
+            <div class="card-title">${esc(t.title)}</div>
+            <div class="card-sub">${esc(t.artist)}</div>
           </div>
         `).join('')}
       </div>
     `;
-  }
-  const results = STATE.tracks.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q) || (t.genre || '').toLowerCase().includes(q));
-  if (!results.length) return emptyHTML('search', `No results for "${esc(STATE.search)}"`, 'Try a different search term');
-  return `<div class="section-title">Results for "${esc(STATE.search)}"</div>${trackListHTML(results)}`;
-}
-
-function viewLibrary() {
-  if (!STATE.playlists.length) return emptyHTML('library', 'Your library is empty', 'Create a playlist to get started');
-  return `
-    <div class="section-title">Your Library</div>
-    <div class="card-grid">
-      ${STATE.playlists.map(p => `
-        <div class="card" onclick="navigate('playlist', '${p.id}')">
-          <div class="card-cover" style="${getCoverStyle(p.id)}">${svg('music', 40)}</div>
-          <div class="card-title">${esc(p.name)}</div>
-          <div class="card-sub">${p.trackIds.length} track${p.trackIds.length === 1 ? '' : 's'}</div>
+  } else if (STATE.view === 'recently') {
+    el.innerHTML = `<div class="section-title">Recently Played</div><div class="track-list">
+      ${STATE.history.map(id => STATE.tracks.find(t => t.id === id)).filter(Boolean).map((t, i) => `
+        <div class="track-row" onclick="setQueue(STATE.history, '${t.id}')">
+          <div class="track-num">${i+1}</div>
+          <div class="track-cover" style="${getCoverStyle(t.id)}"></div>
+          <div class="track-info"><div class="track-title">${esc(t.title)}</div><div class="track-artist">${esc(t.artist)}</div></div>
+          <div class="track-dur">${fmtTime(t.duration)}</div>
         </div>
       `).join('')}
-    </div>
-  `;
-}
-
-function viewLiked() {
-  const tracks = STATE.liked.map(trackById).filter(Boolean);
-  if (!tracks.length) return emptyHTML('heart', 'Songs you like will appear here', 'Tap the heart on any track');
-  return `
-    <div class="playlist-hero">
-      <div class="playlist-hero-cover" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white;">
-        ${svg('heartFilled', 80)}
-      </div>
-      <div class="playlist-hero-info">
-        <div class="playlist-type">Playlist</div>
-        <div class="playlist-hero-title">Liked Songs</div>
-        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> song${tracks.length === 1 ? '' : 's'}</div>
-        <div class="playlist-actions">
-          <button class="btn-play-big" onclick="playAllLiked()" title="Play all">${svg('play', 22)}</button>
-        </div>
-      </div>
-    </div>
-    ${trackListHTML(tracks)}
-  `;
-}
-
-function viewRecently() {
-  const tracks = STATE.history.map(trackById).filter(Boolean);
-  if (!tracks.length) return emptyHTML('clock', 'No recent plays', 'Start listening and your history will appear here');
-  return `<div class="section-title">Recently Played</div>${trackListHTML(tracks)}`;
-}
-
-function viewPlaylist() {
-  const p = playlistById(STATE.param);
-  if (!p) return emptyHTML('music', 'Playlist not found', '');
-  const tracks = p.trackIds.map(trackById).filter(Boolean);
-  return `
-    <div class="playlist-hero">
-      <div class="playlist-hero-cover" style="${getCoverStyle(p.id)}">${tracks.length ? '' : svg('music', 60)}</div>
-      <div class="playlist-hero-info">
-        <div class="playlist-type">Playlist</div>
-        <div class="playlist-hero-title">${esc(p.name)}</div>
-        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> track${tracks.length === 1 ? '' : 's'}</div>
-        <div class="playlist-actions">
-          <button class="btn-play-big" onclick="playPlaylist('${p.id}')" title="Play">${svg('play', 22)}</button>
-          <button class="btn-secondary" onclick="deletePlaylistConfirm('${p.id}')">${svg('trash', 16)} Delete</button>
-        </div>
-      </div>
-    </div>
-    ${tracks.length ? trackListHTML(tracks) : `<div class="empty"><h3>This playlist is empty</h3><p>Search for music and add it to this playlist</p></div>`}
-  `;
-}
-
-function viewArtist() {
-  const name = STATE.param;
-  const tracks = STATE.tracks.filter(t => t.artist === name);
-  if (!tracks.length) return emptyHTML('music', 'Artist not found', '');
-  return `
-    <div class="playlist-hero">
-      <div class="playlist-hero-cover" style="${getCoverStyle('artist_' + name)}; border-radius: 50%;">${svg('music', 60)}</div>
-      <div class="playlist-hero-info">
-        <div class="playlist-type">Artist</div>
-        <div class="playlist-hero-title">${esc(name)}</div>
-        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> track${tracks.length === 1 ? '' : 's'} on Vibely</div>
-        <div class="playlist-actions">
-          <button class="btn-play-big" onclick="playArtist('${esc(name)}')" title="Play">${svg('play', 22)}</button>
-        </div>
-      </div>
-    </div>
-    ${trackListHTML(tracks)}
-  `;
-}
-
-function emptyHTML(icon, title, sub) {
-  return `<div class="empty"><div class="empty-icon">${svg(icon, 36)}</div><h3>${title}</h3><p>${sub}</p></div>`;
-}
-
-function trackListHTML(tracks) {
-  return `<div class="track-list">${tracks.map((t, i) => trackRowHTML(t, i)).join('')}</div>`;
-}
-
-function trackRowHTML(t, i) {
-  const cur = currentTrack();
-  const playing = cur && cur.id === t.id;
-  const isPlayingNow = playing && STATE.player.playing;
-  return `
-    <div class="track-row ${playing ? 'playing' : ''}" data-id="${t.id}">
-      <div class="track-num">${playing && isPlayingNow ? `<div class="eq"><span></span><span></span><span></span></div>` : `<span>${i + 1}</span>`}</div>
-      <div class="row-play">${playing && isPlayingNow ? svg('pause', 16) : svg('play', 16)}</div>
-      <div style="display:flex; gap:12px; align-items:center; min-width:0;">
-        <div class="track-cover" style="${getCoverStyle(t.id)}">${svg('music', 20)}</div>
-        <div class="track-info">
-          <div class="track-title">${esc(t.title)}</div>
-          <div class="track-artist">${esc(t.artist)}</div>
-        </div>
-      </div>
-      <div class="track-album">${esc(t.album || '')}</div>
-      <div class="track-dur">${fmtTime(t.duration)}</div>
-      <button class="track-like ${isLiked(t.id) ? 'liked' : ''}" data-id="${t.id}" title="Like">${isLiked(t.id) ? svg('heartFilled', 15) : svg('heart', 15)}</button>
-      <button class="track-more" data-id="${t.id}" title="More">${svg('more', 16)}</button>
-    </div>
-  `;
-}
-
-function refreshUI() {
-  $$('.track-like').forEach(btn => {
-    const id = btn.dataset.id;
-    if (isLiked(id)) { btn.classList.add('liked'); btn.innerHTML = svg('heartFilled', 15); }
-    else { btn.classList.remove('liked'); btn.innerHTML = svg('heart', 15); }
-  });
-  const t = currentTrack();
-  const pl = $('#p-like');
-  if (t && isLiked(t.id)) { pl.classList.add('liked'); pl.innerHTML = svg('heartFilled', 18); }
-  else { pl.classList.remove('liked'); pl.innerHTML = svg('heart', 18); }
-}
-
-function updateAllTrackRows() {
-  const cur = currentTrack();
-  $$('.track-row').forEach(row => {
-    const id = row.dataset.id;
-    const playing = cur && cur.id === id;
-    row.classList.toggle('playing', playing);
-    const num = row.querySelector('.track-num');
-    const rowPlay = row.querySelector('.row-play');
-    if (playing && STATE.player.playing) {
-      num.innerHTML = `<div class="eq"><span></span><span></span><span></span></div>`;
-      rowPlay.innerHTML = svg('pause', 16);
-    } else {
-      const idx = [...row.parentElement.children].indexOf(row);
-      num.innerHTML = `<span>${idx + 1}</span>`;
-      rowPlay.innerHTML = svg('play', 16);
-    }
-  });
-}
-
-function renderPlayerBar() {
-  const t = currentTrack();
-  if (!t) {
-    $('#p-title').textContent = 'Nothing playing';
-    $('#p-artist').textContent = 'Pick a track to start';
-    $('#p-cover').style = '';
-    $('#p-cover').innerHTML = svg('music', 24);
-    $('#p-like').style.visibility = 'hidden';
-    updatePlayIcon(); return;
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="greeting">Coming Soon...</div>`;
   }
-  $('#p-title').textContent = t.title;
-  $('#p-artist').textContent = t.artist;
-  $('#p-cover').style.cssText = getCoverStyle(t.id);
-  $('#p-cover').innerHTML = '';
-  $('#p-like').style.visibility = 'visible';
-  refreshUI(); updatePlayIcon(); updateShuffleRepeat(); updateProgress(); updateAllTrackRows();
 }
 
 function updatePlayIcon() {
   const iconEl = $('#play-icon');
-  if (STATE.player.playing) iconEl.outerHTML = `<svg id="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>`;
-  else iconEl.outerHTML = `<svg id="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
-  updateAllTrackRows();
+  if (STATE.player.playing) iconEl.innerHTML = `<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>`;
+  else iconEl.innerHTML = `<path d="M8 5v14l11-7z"/>`;
 }
 
-function updateShuffleRepeat() {
-  $('#ctl-shuffle').classList.toggle('active', STATE.player.shuffle);
-  $('#ctl-repeat').classList.toggle('active', STATE.player.repeat !== 'off');
+function updateAllTrackRows() {
+  // Sync UI if needed
 }
 
-function updateProgress() {
-  if (!audio.duration || !isFinite(audio.duration)) {
-    $('#seek-fill').style.width = '0%'; $('#seek-thumb').style.left = '0%';
-    $('#time-now').textContent = '0:00'; $('#time-total').textContent = fmtTime(currentTrack()?.duration);
-    return;
-  }
-  const pct = (audio.currentTime / audio.duration) * 100;
-  $('#seek-fill').style.width = pct + '%'; $('#seek-thumb').style.left = pct + '%';
-  $('#time-now').textContent = fmtTime(audio.currentTime); $('#time-total').textContent = fmtTime(audio.duration);
+function navigate(view) {
+  STATE.view = view;
+  renderSidebar(); renderContent();
 }
-
-audio.addEventListener('timeupdate', updateProgress);
-audio.addEventListener('loadedmetadata', () => {
-  const t = currentTrack();
-  if (t && isFinite(audio.duration)) t.duration = Math.floor(audio.duration);
-  updateProgress();
-});
-audio.addEventListener('play', () => { STATE.player.playing = true; updatePlayIcon(); });
-audio.addEventListener('pause', () => { STATE.player.playing = false; updatePlayIcon(); });
-audio.addEventListener('ended', () => {
-  if (STATE.player.repeat === 'one') { audio.currentTime = 0; audio.play(); }
-  else nextTrack(true);
-});
-audio.addEventListener('error', () => console.warn('audio error'));
-
-(function raf() { if (!audio.paused) updateProgress(); requestAnimationFrame(raf); })();
-
-let seeking = false;
-function seekFromEvent(e) {
-  const rect = $('#seek').getBoundingClientRect();
-  const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-  if (audio.duration && isFinite(audio.duration)) { audio.currentTime = pct * audio.duration; updateProgress(); }
-}
-$('#seek').addEventListener('mousedown', e => { seeking = true; seekFromEvent(e); });
-document.addEventListener('mousemove', e => { if (seeking) seekFromEvent(e); });
-document.addEventListener('mouseup', () => { seeking = false; });
-
-function setVolume(v) {
-  STATE.player.volume = Math.min(1, Math.max(0, v));
-  audio.volume = STATE.player.volume;
-  $('#vol-fill').style.width = (STATE.player.volume * 100) + '%';
-  $('#vol-icon').outerHTML = STATE.player.volume === 0
-    ? `<span id="vol-icon" style="display:inline-flex">${I.volumeOff}</span>`
-    : `<span id="vol-icon" style="display:inline-flex">${I.volume}</span>`;
-  save();
-}
-$('#vol').addEventListener('click', e => {
-  const rect = $('#vol').getBoundingClientRect();
-  setVolume((e.clientX - rect.left) / rect.width);
-});
 
 $('#ctl-play').addEventListener('click', togglePlay);
-$('#ctl-next').addEventListener('click', () => nextTrack());
+$('#ctl-next').addEventListener('click', nextTrack);
 $('#ctl-prev').addEventListener('click', prevTrack);
-$('#ctl-shuffle').addEventListener('click', () => {
-  STATE.player.shuffle = !STATE.player.shuffle; updateShuffleRepeat();
-  toast(STATE.player.shuffle ? 'Shuffle on' : 'Shuffle off');
-});
-$('#ctl-repeat').addEventListener('click', () => {
-  const order = ['off', 'all', 'one'];
-  STATE.player.repeat = order[(order.indexOf(STATE.player.repeat) + 1) % 3];
-  updateShuffleRepeat();
-  toast(STATE.player.repeat === 'off' ? 'Repeat off' : STATE.player.repeat === 'all' ? 'Repeat all' : 'Repeat one');
-});
-$('#ctl-mute').addEventListener('click', () => {
-  if (STATE.player.volume > 0) { STATE.player._lastVolume = STATE.player.volume; setVolume(0); }
-  else setVolume(STATE.player._lastVolume || 0.8);
-});
-$('#p-like').addEventListener('click', () => {
-  const t = currentTrack();
-  if (t) toggleLike(t.id);
+$('#seek').addEventListener('click', e => {
+  if (!ytPlayer || !ytPlayer.getDuration) return;
+  const rect = $('#seek').getBoundingClientRect();
+  const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  ytPlayer.seekTo(pct * ytPlayer.getDuration(), true);
 });
 
-$('#search-input').addEventListener('input', e => setSearch(e.target.value));
-$('#search-input').addEventListener('focus', () => { if (STATE.view !== 'search') setSearch($('#search-input').value); });
-
-$('#upload-btn').addEventListener('click', openUpload);
-function openUpload() { $('#file-input').value = ''; $('#file-input').click(); }
-
-$('#file-input').addEventListener('change', async e => {
-  const files = [...e.target.files];
-  if (files.length) await handleUploads(files);
-});
-
-async function handleUploads(files) {
-  const audios = files.filter(f => f.type.startsWith('audio/'));
-  if (!audios.length) { toast('Please select audio files'); return; }
-  toast(`Uploading ${audios.length} track${audios.length > 1 ? 's' : ''}…`);
-  for (const file of audios) {
-    try {
-      const id = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      await putBlob(id, file);
-      const src = URL.createObjectURL(file);
-      const duration = await getAudioDuration(file);
-      const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'Untitled';
-      STATE.tracks.push({ id, idbId: id, title, artist: 'You', album: 'My uploads', genre: 'Uploaded', duration, src, uploaded: true });
-    } catch (err) { console.error(err); }
-  }
-  save(); toast('Upload complete'); renderContent();
-}
-
-function getAudioDuration(file) {
-  return new Promise(res => {
-    const url = URL.createObjectURL(file);
-    const a = new Audio();
-    a.preload = 'metadata'; a.src = url;
-    a.addEventListener('loadedmetadata', () => { URL.revokeObjectURL(url); res(Math.floor(a.duration) || 0); });
-    a.addEventListener('error', () => { URL.revokeObjectURL(url); res(0); });
-    setTimeout(() => res(0), 3000);
-  });
-}
-
-const mainEl = $('#main');
-['dragenter', 'dragover'].forEach(ev => mainEl.addEventListener(ev, e => { e.preventDefault(); mainEl.classList.add('dragover'); }));
-['dragleave', 'drop'].forEach(ev => mainEl.addEventListener(ev, e => {
-  e.preventDefault();
-  if (ev === 'dragleave' && e.relatedTarget && mainEl.contains(e.relatedTarget)) return;
-  mainEl.classList.remove('dragover');
-}));
-mainEl.addEventListener('drop', async e => {
-  e.preventDefault(); mainEl.classList.remove('dragover');
-  const files = [...e.dataTransfer.files];
-  if (files.length) await handleUploads(files);
-});
-
-function showModal(html) {
-  let m = $('#modal-root');
-  if (!m) {
-    m = document.createElement('div'); m.id = 'modal-root'; m.className = 'modal-overlay';
-    m.innerHTML = '<div class="modal"></div>';
-    m.addEventListener('click', e => { if (e.target === m) closeModal(); });
-    document.body.appendChild(m);
-  }
-  m.querySelector('.modal').innerHTML = html;
-  m.classList.add('active');
-}
-function closeModal() { const m = $('#modal-root'); if (m) m.classList.remove('active'); }
-
-function openCreatePlaylist() {
-  showModal(`
-    <h2>Create playlist</h2>
-    <input id="pl-name" placeholder="Playlist name" autocomplete="off" maxlength="60" />
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="confirmCreatePlaylist()">Create</button>
-    </div>
-  `);
-  setTimeout(() => {
-    const inp = $('#pl-name');
-    if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if (e.key === 'Enter') confirmCreatePlaylist(); }); }
-  }, 50);
-}
-
-function confirmCreatePlaylist() {
-  const name = $('#pl-name')?.value;
-  closeModal();
-  if (name) createPlaylist(name);
-}
-
-function openTrackMenu(trackId) {
-  const t = trackById(trackId);
-  if (!t) return;
-  showModal(`
-    <h2>${esc(t.title)}</h2>
-    <div style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">${esc(t.artist)} · ${fmtTime(t.duration)}</div>
-    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:16px; max-height:260px; overflow-y:auto;">
-      <div style="font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-faint); font-weight:700; padding: 4px 8px;">Add to playlist</div>
-      ${STATE.playlists.length ? STATE.playlists.map(p => `
-        <div class="pl-choice" onclick="addToPlaylist('${p.id}', '${trackId}'); closeModal();">
-          <div class="playlist-thumb">${svg('music', 14)}</div>
-          <div style="flex:1; font-weight:600; font-size:13px;">${esc(p.name)}</div>
-          ${p.trackIds.includes(trackId) ? svg('check', 16) : svg('plus', 16)}
-        </div>
-      `).join('') : `<div style="padding: 8px; font-size: 12px; color: var(--text-faint);">No playlists. Create one first.</div>`}
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Close</button>
-      <button class="btn-primary" onclick="openCreatePlaylist();">New playlist</button>
-    </div>
-  `);
-}
-
-function deletePlaylistConfirm(id) {
-  const p = playlistById(id);
-  if (!p) return;
-  showModal(`
-    <h2>Delete "${esc(p.name)}"?</h2>
-    <div style="color: var(--text-dim); margin-bottom: 20px; font-size:13px;">This action cannot be undone.</div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" style="background:#ef4444; color:white;" onclick="closeModal(); deletePlaylist('${id}'); toast('Playlist deleted');">Delete</button>
-    </div>
-  `);
-}
-
-function playAllLiked() {
-  const tracks = STATE.liked.map(trackById).filter(Boolean);
-  if (tracks.length) setQueue(tracks.map(t => t.id), tracks[0].id);
-}
-function playPlaylist(plId) {
-  const p = playlistById(plId);
-  if (p) { const ids = p.trackIds.filter(id => trackById(id)); if (ids.length) setQueue(ids, ids[0]); }
-}
-function playArtist(name) {
-  const tracks = STATE.tracks.filter(t => t.artist === name);
-  if (tracks.length) setQueue(tracks.map(t => t.id), tracks[0].id);
-}
-
-document.addEventListener('keydown', e => {
-  const tag = (e.target.tagName || '').toLowerCase();
-  if (tag === 'input' || tag === 'textarea') return;
-  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  else if (e.code === 'ArrowRight' && e.shiftKey) nextTrack();
-  else if (e.code === 'ArrowLeft' && e.shiftKey) prevTrack();
-  else if (e.code === 'KeyL' && currentTrack()) toggleLike(currentTrack().id);
-  else if (e.code === 'Slash') { e.preventDefault(); $('#search-input').focus(); }
-});
-
-async function init() {
-  STATE.tracks = buildDemoTracks();
-  await loadState();
-  renderSidebar(); renderContent(); renderPlayerBar();
-  setVolume(STATE.player.volume);
-  audio.volume = STATE.player.volume;
+function init() {
+  STATE.tracks = DEMO;
+  renderSidebar(); renderContent();
 }
 
 init();
