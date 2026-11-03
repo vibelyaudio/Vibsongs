@@ -1,1580 +1,1690 @@
 <!DOCTYPE html>
-<html lang="ml">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOOP - Social App</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- PeerJS for Real-time Video Chat -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <style>
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .form-container {
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vibely — Music for everyone</title>
+<meta name="theme-color" content="#0a0a0f" />
+<meta name="description" content="Vibely — stream, discover and upload music. Your sound, your vibe." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%23ec4899'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='68' font-size='56' font-family='Arial' font-weight='900' fill='white' text-anchor='middle'>V</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f;
+    --bg-elev: #12121a;
+    --bg-elev2: #1c1c28;
+    --bg-hover: #26263a;
+    --text: #f5f5f7;
+    --text-dim: #9b9bb0;
+    --text-faint: #6b6b80;
+    --accent: #8b5cf6;
+    --accent-2: #ec4899;
+    --accent-hover: #a78bfa;
+    --border: #22222f;
+    --green: #1ed760;
+    --radius: 10px;
+    --sidebar-w: 248px;
+    --player-h: 88px;
+  }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent); color: white; }
 
-    /* Floating Navigation Bar Styles */
-    .floating-nav {
-      position: absolute;
-      bottom: 16px;
-      left: 16px;
-      right: 16px;
-      height: 68px;
-      background: rgba(18, 18, 18, 0.95);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 12px;
-      z-index: 40;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    }
-    .nav-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 48px;
-      padding: 0 12px;
-      border-radius: 24px;
-      background: transparent;
-      color: #9ca3af;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .nav-btn.active {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      padding: 0 16px;
-    }
-    .nav-btn .nav-icon {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-    .nav-btn.active .nav-icon {
-      transform: scale(1.1);
-    }
-    .nav-btn .nav-label {
-      max-width: 0;
-      opacity: 0;
-      white-space: nowrap;
-      font-size: 11px;
-      font-weight: 700;
-      margin-left: 0;
-      transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-left 0.3s ease;
-    }
-    .nav-btn.active .nav-label {
-      max-width: 80px;
-      opacity: 1;
-      margin-left: 8px;
-    }
+  #app {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-rows: 1fr var(--player-h);
+    height: 100vh;
+    gap: 8px;
+    padding: 8px 8px 0;
+  }
 
-    /* Filter & AR Effects */
-    .filter-none { filter: none; }
-    .filter-grayscale { filter: grayscale(100%); }
-    .filter-sepia { filter: sepia(100%); }
-    .filter-brightness { filter: brightness(140%) contrast(120%); }
-    .filter-cyber { filter: invert(90%) hue-rotate(180deg) contrast(150%); }
-    .filter-vintage { filter: sepia(60%) contrast(110%) brightness(90%); }
-  </style>
+  /* ---------- Sidebar ---------- */
+  #sidebar {
+    background: var(--bg-elev);
+    border-radius: 12px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #sidebar::-webkit-scrollbar { width: 8px; }
+  #sidebar::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 18px;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    cursor: pointer;
+  }
+  .logo-mark {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 16px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg-hover); }
+  .nav-item.active { color: var(--text); background: var(--bg-hover); }
+  .nav-item svg { flex-shrink: 0; }
+  .sidebar-divider {
+    height: 1px; background: var(--border); margin: 12px 0;
+  }
+  .sidebar-heading {
+    padding: 6px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-faint);
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-heading button {
+    color: var(--text-dim);
+    font-size: 20px;
+    line-height: 1;
+    padding: 0 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .sidebar-heading button:hover { color: var(--text); background: var(--bg-hover); }
+  .playlist-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+  .playlist-item:hover { background: var(--bg-hover); }
+  .playlist-item.active { background: var(--bg-hover); }
+  .playlist-thumb {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    color: white;
+    font-size: 14px;
+  }
+  .playlist-meta { min-width: 0; flex: 1; }
+  .playlist-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .playlist-count { font-size: 11px; color: var(--text-faint); }
+  .sidebar-upload {
+    margin-top: auto;
+    padding: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .sidebar-upload:hover { border-color: var(--accent); color: var(--text); background: var(--bg-hover); }
+
+  /* ---------- Main ---------- */
+  #main {
+    background: var(--bg-elev);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(18, 18, 26, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-elev2);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 9px 16px;
+    width: 100%;
+    max-width: 440px;
+    transition: border-color 0.15s;
+  }
+  .search-wrap:focus-within { border-color: var(--accent); background: var(--bg-elev2); }
+  .search-wrap svg { color: var(--text-faint); flex-shrink: 0; }
+  .search-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13.5px;
+  }
+  .search-wrap input::placeholder { color: var(--text-faint); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-icon {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { color: var(--text); background: var(--bg-hover); }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+  }
+
+  #content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 60px;
+  }
+  #content::-webkit-scrollbar { width: 12px; }
+  #content::-webkit-scrollbar-track { background: transparent; }
+  #content::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 6px; border: 3px solid var(--bg-elev); }
+  #content::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+
+  /* ---------- Content blocks ---------- */
+  .section-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+  .section-title.small { font-size: 16px; margin-bottom: 12px; }
+  .greeting { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 24px; }
+  .section { margin-bottom: 36px; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--bg-elev2);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover { background: #23233a; }
+  .card:hover .card-play { opacity: 1; transform: translateY(0); }
+  .card-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .card-play {
+    position: absolute;
+    right: 8px; bottom: 8px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid; place-items: center;
+    color: white;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all 0.2s;
+    box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
+  }
+  .card-play:hover { background: var(--accent-hover); transform: scale(1.06) translateY(0); }
+  .card-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-sub { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- Track list ---------- */
+  .track-list { display: flex; flex-direction: column; }
+  .track-row {
+    display: grid;
+    grid-template-columns: 28px 48px 1fr 140px 60px 40px 32px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 13.5px;
+  }
+  .track-row:hover { background: var(--bg-hover); }
+  .track-row.playing { color: var(--accent); }
+  .track-num { color: var(--text-faint); text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
+  .track-row:hover .track-num { display: none; }
+  .track-row .row-play { display: none; color: var(--text); }
+  .track-row:hover .row-play { display: block; }
+  .track-cover {
+    width: 40px; height: 40px;
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+  .track-info { min-width: 0; }
+  .track-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-artist { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-row.playing .track-artist { color: var(--accent-hover); }
+  .track-album { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-dur { color: var(--text-dim); text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .track-like, .track-more { color: var(--text-faint); display: grid; place-items: center; opacity: 0; transition: all 0.15s; width: 32px; height: 32px; border-radius: 50%; }
+  .track-row:hover .track-like, .track-row:hover .track-more { opacity: 1; }
+  .track-like:hover { color: var(--text); transform: scale(1.1); }
+  .track-like.liked { color: var(--accent-2); opacity: 1; }
+  .track-more:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; }
+  .eq span { width: 3px; background: var(--accent); border-radius: 2px; animation: eq 0.9s ease-in-out infinite; }
+  .eq span:nth-child(1) { animation-delay: -0.4s; }
+  .eq span:nth-child(2) { animation-delay: -0.7s; }
+  .eq span:nth-child(3) { animation-delay: -0.2s; }
+  .eq.paused span { animation-play-state: paused; }
+  @keyframes eq {
+    0%, 100% { height: 30%; }
+    50% { height: 100%; }
+  }
+
+  /* ---------- Hero / playlist header ---------- */
+  .playlist-hero {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .playlist-hero-cover {
+    width: 200px; height: 200px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    font-size: 60px;
+    color: white;
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.35);
+    background-size: cover;
+    background-position: center;
+  }
+  .playlist-hero-info { flex: 1; min-width: 0; }
+  .playlist-type { text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; }
+  .playlist-hero-title { font-size: 48px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 12px; word-break: break-word; }
+  .playlist-hero-meta { font-size: 13px; color: var(--text-dim); }
+  .playlist-hero-meta strong { color: var(--text); }
+  .playlist-actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+  .btn-play-big {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: grid; place-items: center;
+    transition: all 0.15s;
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+  }
+  .btn-play-big:hover { transform: scale(1.06); background: var(--accent-hover); }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--text-dim); }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* ---------- Empty state ---------- */
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-dim);
+  }
+  .empty-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--bg-elev2);
+    display: grid; place-items: center;
+    margin: 0 auto 20px;
+    color: var(--text-faint);
+  }
+  .empty h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; font-weight: 700; }
+  .empty p { font-size: 14px; }
+
+  /* ---------- Player ---------- */
+  #player {
+    grid-column: 1 / -1;
+    background: var(--bg-elev);
+    border-radius: 12px 12px 0 0;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .player-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .player-cover {
+    width: 56px; height: 56px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    color: white;
+    background-size: cover;
+    background-position: center;
+  }
+  .player-meta { min-width: 0; flex: 1; }
+  .player-title { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-artist { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .player-like { color: var(--text-faint); transition: all 0.15s; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; }
+  .player-like:hover { color: var(--text); }
+  .player-like.liked { color: var(--accent-2); }
+
+  .player-center { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 600px; margin: 0 auto; }
+  .player-controls { display: flex; align-items: center; gap: 16px; }
+  .ctl {
+    color: var(--text-dim);
+    transition: all 0.15s;
+    display: grid; place-items: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+  }
+  .ctl:hover { color: var(--text); }
+  .ctl.active { color: var(--accent); }
+  .ctl.active::after { content: ''; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-top: 30px; }
+  .play-btn {
+    width: 34px; height: 34px;
+    background: white;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: black;
+    transition: transform 0.1s;
+    flex-shrink: 0;
+  }
+  .play-btn:hover { transform: scale(1.06); }
+
+  .progress-wrap { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .seek { position: relative; flex: 1; height: 4px; background: #2a2a3a; border-radius: 2px; cursor: pointer; }
+  .seek-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 2px; width: 0; pointer-events: none; transition: background 0.1s; }
+  .seek-thumb { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; background: white; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .seek:hover .seek-fill { background: var(--accent); }
+  .seek:hover .seek-thumb { opacity: 1; }
+  .time-label { min-width: 34px; text-align: center; }
+  .time-label.right { text-align: right; }
+
+  .player-right { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .volume-wrap { display: flex; align-items: center; gap: 8px; width: 120px; }
+  .vol { position: relative; flex: 1; height: 4px; background: #2a2a3a; border-radius: 2px; cursor: pointer; }
+  .vol-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--text); border-radius: 2px; pointer-events: none; }
+  .vol:hover .vol-fill { background: var(--accent); }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg-elev2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .modal h2 { font-size: 22px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.4px; }
+  .modal input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 20px;
+    transition: border-color 0.15s;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .pl-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pl-choice:hover { background: var(--bg-hover); }
+
+  /* ---------- Toast ---------- */
+  #toast-container {
+    position: fixed;
+    bottom: calc(var(--player-h) + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-elev2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    animation: toastIn 0.25s ease;
+    white-space: nowrap;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Drop zone ---------- */
+  #main.dragover::after {
+    content: 'Drop your music here to upload';
+    position: absolute;
+    inset: 12px;
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.1);
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    #app { grid-template-columns: 72px 1fr; }
+    .logo span:not(.logo-mark), .nav-item span, .sidebar-heading span, .playlist-meta, .sidebar-upload span { display: none; }
+    .nav-item { justify-content: center; padding: 12px; }
+    .playlist-item { justify-content: center; }
+    .sidebar-heading { justify-content: center; padding: 6px; }
+    .playlist-hero { flex-direction: column; align-items: flex-start; }
+    .playlist-hero-title { font-size: 32px; }
+    .playlist-hero-cover { width: 140px; height: 140px; font-size: 40px; }
+    .track-row { grid-template-columns: 28px 40px 1fr 40px; }
+    .track-album, .track-dur, .track-more { display: none; }
+    #player { grid-template-columns: 1fr auto; }
+    .player-right { display: none; }
+  }
+  @media (max-width: 600px) {
+    .topbar { padding: 10px 14px; }
+    #content { padding: 16px 14px 40px; }
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .greeting { font-size: 22px; }
+    .player-center { max-width: none; }
+  }
+</style>
 </head>
-<body id="app-body" class="bg-gray-950 text-white flex justify-center items-center h-[100dvh] w-screen overflow-hidden m-0 p-0 transition-colors duration-300">
-
-  <!-- INTRO ANIMATION SCREEN -->
-  <div id="intro-screen" class="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-700">
-    <div class="flex flex-col items-center">
-      <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-500/50 mb-4">
-        <i class="fa-solid fa-infinity text-4xl text-black font-extrabold animate-spin" style="animation-duration: 6s;"></i>
+<body>
+<div id="app">
+  <aside id="sidebar"></aside>
+  <main id="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search-input" placeholder="Search songs, artists, playlists" autocomplete="off" />
       </div>
-      <h1 class="text-4xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">LOOP</h1>
-      <p class="text-xs text-gray-500 mt-2 tracking-wider">Stay Connected, Stay in the Loop</p>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="upload-btn" title="Upload music">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <div class="avatar">V</div>
+      </div>
+    </div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<footer id="player">
+  <div class="player-left">
+    <div class="player-cover" id="p-cover">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <div class="player-meta">
+      <div class="player-title" id="p-title">Nothing playing</div>
+      <div class="player-artist" id="p-artist">Pick a track to start</div>
+    </div>
+    <button class="player-like" id="p-like" title="Like">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+    </button>
+  </div>
+  <div class="player-center">
+    <div class="player-controls">
+      <button class="ctl" id="ctl-shuffle" title="Shuffle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      </button>
+      <button class="ctl" id="ctl-prev" title="Previous">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="play-btn" id="ctl-play" title="Play">
+        <svg id="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="ctl" id="ctl-next" title="Next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+      <button class="ctl" id="ctl-repeat" title="Repeat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+    </div>
+    <div class="progress-wrap">
+      <span class="time-label" id="time-now">0:00</span>
+      <div class="seek" id="seek">
+        <div class="seek-fill" id="seek-fill"></div>
+        <div class="seek-thumb" id="seek-thumb"></div>
+      </div>
+      <span class="time-label right" id="time-total">0:00</span>
     </div>
   </div>
-
-  <!-- Mobile Outer Frame Container -->
-  <div id="app-container" class="w-full max-w-md h-full bg-black flex flex-col justify-between relative shadow-2xl border-x border-gray-800 transition-colors duration-300">
-    
-    <!-- Top Header -->
-    <header id="app-header" class="h-14 bg-gray-900/90 backdrop-blur-md flex items-center justify-between px-4 border-b border-gray-800/80 shrink-0 z-10 transition-colors duration-300">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
-          <i class="fa-solid fa-infinity text-sm"></i>
-        </div>
-        <h1 id="app-title" class="text-xl font-extrabold tracking-wider text-emerald-400">LOOP</h1>
-      </div>
-      <div class="flex items-center gap-4 text-gray-300">
-        <button onclick="toggleTheme()" class="hover:text-emerald-400 transition">
-          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
-        </button>
-        <button><i class="fa-solid search text-lg"></i></button>
-        <button onclick="openNotificationsModal()" class="relative hover:text-emerald-400 transition">
-          <i class="fa-solid fa-bell text-lg"></i>
-          <span id="notif-badge" class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full hidden"></span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Dynamic Content Area -->
-    <main class="flex-1 relative overflow-hidden flex flex-col pb-20" id="main-content">
-      
-      <!-- ANIMATED LOGIN & SIGNUP SECTION -->
-      <div id="auth-view" class="section-view h-full w-full flex flex-col justify-center p-5 bg-gradient-to-br from-gray-950 via-zinc-900 to-neutral-950 absolute inset-0 z-20 overflow-hidden">
-        <div class="relative w-full max-w-sm mx-auto bg-gray-900/80 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-6 shadow-2xl shadow-rose-950/40 overflow-hidden min-h-[420px] flex flex-col justify-center">
-          
-          <!-- LOGIN FORM -->
-          <div id="login-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-0 opacity-100">
-            <div class="text-center mb-4">
-              <h2 class="text-2xl font-black text-white tracking-wide">Login</h2>
-              <p class="text-[11px] text-gray-400 mt-0.5">Welcome back! Please enter your details.</p>
-            </div>
-            <div class="flex flex-col gap-3">
-              <div>
-                <label class="block text-[10px] text-gray-400 mb-1">Username</label>
-                <input type="text" id="login-identifier" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Enter username">
-              </div>
-              <div>
-                <label class="block text-[10px] text-gray-400 mb-1">Password</label>
-                <input type="password" id="login-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="••••••••">
-              </div>
-              <p id="login-error" class="text-rose-500 text-[10px] hidden text-center"></p>
-              <button onclick="handleLogin()" class="w-full py-3 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Login</button>
-            </div>
-            <p class="text-[11px] text-gray-400 text-center mt-4">
-              Don't have an account? 
-              <button onclick="switchToSignup()" class="text-rose-400 font-semibold underline hover:text-rose-300">Sign Up</button>
-            </p>
-          </div>
-
-          <!-- SIGNUP FORM -->
-          <div id="signup-form-box" class="form-container absolute inset-0 p-6 flex flex-col justify-center transform translate-x-full opacity-0 pointer-events-none">
-            <div class="text-center mb-3">
-              <h2 class="text-2xl font-black text-white tracking-wide">Register</h2>
-              <p class="text-[11px] text-gray-400 mt-0.5">Create a new account to join LOOP.</p>
-            </div>
-            <div class="flex flex-col gap-2.5">
-              <div>
-                <label class="block text-[10px] text-gray-400 mb-0.5">Email</label>
-                <input type="email" id="signup-email" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="name@example.com">
-              </div>
-              <div>
-                <label class="block text-[10px] text-gray-400 mb-0.5">Username</label>
-                <input type="text" id="signup-username" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Choose username">
-              </div>
-              <div>
-                <label class="block text-[10px] text-gray-400 mb-0.5">Password</label>
-                <input type="password" id="signup-password" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500 transition" placeholder="Create password">
-              </div>
-              <p id="signup-error" class="text-rose-500 text-[10px] hidden text-center"></p>
-              <button onclick="handleSignup()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 via-rose-600 to-pink-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-600/30 transition mt-1">Register</button>
-            </div>
-            <p class="text-[11px] text-gray-400 text-center mt-3">
-              Already have an account? 
-              <button onclick="switchToLogin()" class="text-rose-400 font-semibold underline hover:text-rose-300">Login</button>
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- HOME VIEW (FEED) -->
-      <div id="home-view" class="section-view hidden h-full w-full flex flex-col p-3 gap-3 overflow-y-auto no-scrollbar">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex items-center gap-3 shrink-0">
-          <img id="home-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
-          <button onclick="openUploadModal()" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-400 text-left hover:border-emerald-500 transition">
-            Create post with Camera & Snapchat AR Effects...
-          </button>
-          <button onclick="openUploadModal()" class="bg-emerald-500 text-black px-3.5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-emerald-400">
-            <i class="fa-solid fa-plus"></i>
-          </button>
-        </div>
-
-        <div id="posts-feed" class="flex flex-col gap-3 pb-20">
-          <div class="text-center text-gray-500 text-xs my-8">
-            <i class="fa-regular fa-image text-2xl mb-1 text-gray-600"></i>
-            <p>No posts yet. Be the first to share something!</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOOP SECTION -->
-      <div id="loop-view" class="section-view hidden h-full w-full flex flex-col relative bg-black overflow-hidden p-3 gap-2 pb-20">
-        <div class="flex items-center justify-between bg-gray-900/80 px-3 py-1.5 rounded-xl border border-gray-800 shrink-0">
-          <span id="match-status" class="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting automatically...
-          </span>
-          <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">LOOP Live</span>
-        </div>
-
-        <div class="flex-1 relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 flex flex-col">
-          <div class="w-full h-full relative flex items-center justify-center bg-gray-950">
-            <video id="stranger-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
-            <div id="stranger-placeholder" class="flex flex-col items-center justify-center text-gray-500 gap-2">
-              <i class="fa-solid fa-user-secret text-4xl text-gray-700 animate-bounce"></i>
-              <p class="text-xs" id="status-text">Searching for someone in room123...</p>
-            </div>
-          </div>
-
-          <div class="absolute top-3 right-3 w-28 h-40 bg-black rounded-xl overflow-hidden border-2 border-emerald-500/60 shadow-lg flex items-center justify-center z-10">
-            <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
-            <span class="absolute bottom-1 left-1 bg-black/60 text-[8px] px-1.5 py-0.5 rounded text-white">You</span>
-          </div>
-        </div>
-
-        <div class="shrink-0 pb-2">
-          <button onclick="skipStranger()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-forward-step text-base"></i> SKIP / NEXT
-          </button>
-        </div>
-      </div>
-
-      <!-- CHAT SECTION -->
-      <div id="chat-view" class="section-view hidden h-full w-full flex flex-col bg-gray-950 pb-20">
-        <div class="bg-gray-900/90 border-b border-gray-800 p-3 flex items-center justify-between shrink-0">
-          <div class="flex items-center gap-2">
-            <button id="back-to-inbox" onclick="showInboxList()" class="hidden text-gray-300 hover:text-white mr-1"><i class="fa-solid fa-arrow-left text-xs"></i></button>
-            <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-xs">
-              <i class="fa-solid fa-comments"></i>
-            </div>
-            <h3 id="active-chat-title" class="text-xs font-bold text-white">Direct Messages</h3>
-          </div>
-          <button onclick="openUserSelectModal()" class="text-[10px] bg-emerald-500 text-black font-bold px-2.5 py-1 rounded-lg transition">+ New Chat</button>
-        </div>
-
-        <div id="conversations-list" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2 no-scrollbar">
-          <div class="text-center text-gray-500 text-xs my-auto">
-            <i class="fa-regular fa-comments text-2xl mb-1 text-gray-600"></i>
-            <p>No active chats. Click '+ New Chat' to message someone.</p>
-          </div>
-        </div>
-
-        <div id="active-chat-box" class="flex-1 flex flex-col hidden h-full">
-          <div id="chat-messages" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 no-scrollbar"></div>
-          
-          <div class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2 shrink-0">
-            <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
-            <button onclick="sendDirectMessage()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-bold px-4 py-2.5 rounded-xl transition text-xs flex items-center justify-center">
-              <i class="fa-solid fa-paper-plane"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOOP QUOTES SECTION -->
-      <div id="quotes-view" class="section-view hidden h-full w-full flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar pb-20">
-        <div class="flex items-center justify-between mb-1">
-          <div>
-            <h2 class="text-base font-extrabold text-emerald-400 tracking-wider">LOOP Quotes</h2>
-            <p class="text-[10px] text-gray-400">Inspiration for your journey</p>
-          </div>
-          <button onclick="generateRandomQuotes()" class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-rotate"></i> Refresh
-          </button>
-        </div>
-        
-        <div id="quotes-container" class="flex flex-col gap-4"></div>
-      </div>
-
-      <!-- PROFILE SECTION -->
-      <div id="profile-view" class="section-view hidden h-full w-full flex flex-col p-4 overflow-y-auto no-scrollbar pb-24">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col items-center text-center relative shadow-lg">
-          <div class="relative mb-3">
-            <img id="display-profile-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" alt="Profile" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md">
-            <button onclick="openEditProfileModal()" class="absolute bottom-0 right-0 bg-emerald-500 text-black p-2 rounded-full shadow border-2 border-gray-900 hover:bg-emerald-400 transition">
-              <i class="fa-solid fa-camera text-xs font-bold"></i>
-            </button>
-          </div>
-          <h2 id="display-name" class="text-lg font-bold text-white">Inshad Afsal</h2>
-          <p id="display-username" class="text-xs text-emerald-400 font-medium">@inshadafsal</p>
-          <div class="flex items-center gap-1.5 mt-2 text-xs text-gray-400">
-            <i class="fa-regular fa-envelope text-gray-500"></i>
-            <span id="display-email">inshad@example.com</span>
-          </div>
-
-          <button id="profile-follow-btn" onclick="toggleFollowUser()" class="mt-3 hidden bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition">
-            Follow
-          </button>
-
-          <button onclick="openEditProfileModal()" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs py-2 rounded-xl transition">
-            Edit Profile
-          </button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3 my-4">
-          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
-            <span id="profile-posts-count" class="block text-base font-bold text-white">0</span>
-            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Posts</span>
-          </div>
-          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
-            <span id="profile-followers-count" class="block text-base font-bold text-white">0</span>
-            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Followers</span>
-          </div>
-          <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-3 text-center">
-            <span id="profile-following-count" class="block text-base font-bold text-white">0</span>
-            <span class="text-[10px] text-gray-400 uppercase tracking-wider">Following</span>
-          </div>
-        </div>
-
-        <div id="profile-user-posts" class="grid grid-cols-3 gap-2 pb-16">
-          <div class="text-center text-gray-500 text-xs col-span-3 py-6">No posts uploaded yet.</div>
-        </div>
-
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl flex flex-col divide-y divide-gray-800 mt-4 mb-16">
-          <button onclick="handleLogout()" class="flex items-center justify-between p-3.5 text-xs text-red-400 hover:bg-gray-850 transition">
-            <div class="flex items-center gap-3">
-              <i class="fa-solid fa-right-from-bracket text-sm"></i>
-              <span>Logout</span>
-            </div>
-          </button>
-        </div>
-      </div>
-
-    </main>
-
-    <!-- NOTIFICATIONS MODAL -->
-    <div id="notifications-modal" class="hidden absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 w-full max-w-xs flex flex-col gap-3 shadow-2xl max-h-[80vh]">
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-          <h3 class="text-xs font-bold text-emerald-400">Notifications</h3>
-          <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="notifications-list" class="flex-1 overflow-y-auto flex flex-col gap-2 no-scrollbar min-h-[200px]">
-          <div class="text-center text-gray-500 text-xs my-auto">No notifications yet.</div>
-        </div>
+  <div class="player-right">
+    <div class="volume-wrap">
+      <button class="ctl" id="ctl-mute" title="Mute">
+        <svg id="vol-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      </button>
+      <div class="vol" id="vol">
+        <div class="vol-fill" id="vol-fill"></div>
       </div>
     </div>
-
-    <!-- FULL SCREEN SNAPCHAT STYLE AR CAMERA MODAL -->
-    <div id="upload-post-modal" class="hidden absolute inset-0 bg-black z-50 flex flex-col justify-between">
-      <!-- Camera Top Bar -->
-      <div class="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md z-10">
-        <button onclick="closeUploadModal()" class="text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-        <h3 class="text-xs font-bold text-emerald-400">LOOP Snapchat Camera</h3>
-        <button onclick="switchCameraFacing()" class="text-white text-base"><i class="fa-solid fa-rotate-camera"></i></button>
-      </div>
-
-      <!-- Full Screen Viewfinder & AR Face Stickers -->
-      <div class="absolute inset-0 bg-black flex items-center justify-center overflow-hidden">
-        <video id="camera-preview" autoplay playsinline class="w-full h-full object-cover"></video>
-        <canvas id="camera-canvas" class="hidden"></canvas>
-        <img id="captured-image-preview" class="w-full h-full object-cover hidden" alt="Captured">
-
-        <!-- Face-Tracking AR Overlays -->
-        <div id="ar-overlay-container" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-          <div id="ar-puppy" class="hidden absolute top-28 flex flex-col items-center">
-            <span class="text-7xl filter drop-shadow">🐶</span>
-          </div>
-          <div id="ar-glasses" class="hidden absolute top-40 text-7xl filter drop-shadow">
-            🕶️
-          </div>
-          <div id="ar-crown" class="hidden absolute top-20 text-7xl filter drop-shadow animate-bounce">
-            👑
-          </div>
-          <div id="ar-horns" class="hidden absolute top-20 text-7xl filter drop-shadow">
-            😈
-          </div>
-          <div id="ar-flowers" class="hidden absolute top-20 text-7xl filter drop-shadow">
-            🌸
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Camera Controls & Sliding AR Effects -->
-      <div class="relative z-10 p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-3 pb-8">
-        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 px-1">
-          <button onclick="applyAREffect('none', this)" class="px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition shadow">✨ Normal</button>
-          <button onclick="applyAREffect('puppy', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🐶 Puppy Dog</button>
-          <button onclick="applyAREffect('glasses', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🕶️ Cooling Glass</button>
-          <button onclick="applyAREffect('crown', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">👑 Crown</button>
-          <button onclick="applyAREffect('horns', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">😈 Devil Horns</button>
-          <button onclick="applyAREffect('flowers', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🌸 Flowers</button>
-          <button onclick="applyAREffect('grayscale', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">🖤 B&W</button>
-          <button onclick="applyAREffect('vintage', this)" class="px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow">📸 Vintage</button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input type="text" id="upload-caption" class="flex-1 bg-gray-900/80 border border-gray-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Add a caption...">
-          <label class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-center">
-            <i class="fa-solid fa-image"></i>
-            <input type="file" id="upload-file-input" accept="image/*,video/*" class="hidden" onchange="previewGalleryFile(this)">
-          </label>
-        </div>
-
-        <div class="flex items-center justify-between px-6 pt-2">
-          <button onclick="startCamera()" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-camera-rotate"></i></button>
-          <button onclick="capturePhoto()" class="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 transition">
-            <div class="w-12 h-12 rounded-full bg-white"></div>
-          </button>
-          <button onclick="submitNewPost()" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-black font-bold text-xs shadow-lg"><i class="fa-solid fa-check"></i></button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SELECT USER MODAL -->
-    <div id="user-select-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-          <h3 class="text-sm font-bold text-emerald-400">Start Direct Chat</h3>
-          <button onclick="closeUserSelectModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div>
-          <label class="block text-[10px] text-gray-400 mb-1">Enter Username to Chat</label>
-          <input type="text" id="target-username-input" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. username">
-        </div>
-        <button onclick="startChatWithUser()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2.5 rounded-xl transition">Open Chat</button>
-      </div>
-    </div>
-
-    <!-- EDIT PROFILE MODAL -->
-    <div id="edit-profile-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 w-full max-w-xs flex flex-col gap-4 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-          <h3 class="text-sm font-bold text-emerald-400">Edit Profile Details</h3>
-          <button onclick="closeEditProfileModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="flex flex-col gap-3">
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Full Name</label>
-            <input type="text" id="input-name" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Username</label>
-            <input type="text" id="input-username" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Email Address</label>
-            <input type="email" id="input-email" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block text-[10px] text-gray-400 mb-1">Profile Photo (Select from Gallery)</label>
-            <input type="file" id="input-profile-file" accept="image/*" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-black hover:file:bg-emerald-400">
-          </div>
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button onclick="closeEditProfileModal()" class="flex-1 bg-gray-800 text-gray-300 font-semibold text-xs py-2 rounded-xl">Cancel</button>
-          <button onclick="saveProfileDetails()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold text-xs py-2 rounded-xl transition">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- FLOATING EXPANDING LABEL NAVIGATION BAR -->
-    <nav id="bottom-nav" class="hidden floating-nav">
-      <button onclick="switchTab('home')" id="nav-home" class="nav-btn active">
-        <i class="fa-solid fa-house nav-icon"></i>
-        <span class="nav-label">Home</span>
-      </button>
-      <button onclick="switchTab('loop')" id="nav-loop" class="nav-btn">
-        <i class="fa-solid fa-video nav-icon"></i>
-        <span class="nav-label">LOOP</span>
-      </button>
-      <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn">
-        <i class="fa-solid fa-comments nav-icon"></i>
-        <span class="nav-label">Chat</span>
-      </button>
-      <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn">
-        <i class="fa-solid fa-quote-left nav-icon"></i>
-        <span class="nav-label">Quotes</span>
-      </button>
-      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn">
-        <i class="fa-regular fa-user nav-icon"></i>
-        <span class="nav-label">Profile</span>
-      </button>
-    </nav>
-
   </div>
+</footer>
 
-  <!-- FIREBASE & JAVASCRIPT LOGIC -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<input type="file" id="file-input" accept="audio/*" multiple hidden />
+<div id="toast-container"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEz5bpO8PB-b0hbWC9bnziIfOqcRbZ7QU",
-      authDomain: "loop-10fb2.firebaseapp.com",
-      projectId: "loop-10fb2",
-      storageBucket: "loop-10fb2.firebasestorage.app",
-      messagingSenderId: "957292168220",
-      appId: "1:957292168220:web:2329aa0fcf8eb6a6bdcbd9"
-    };
+<script>
+/* =========================================================
+   VIBELY — full client-side music app
+   ========================================================= */
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+/* ---------- Icons ---------- */
+const I = {
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>`,
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+  library: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M8 19V5M12 19V5M20 6l-4 14"/></svg>`,
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  heartFilled: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  music: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
+  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>`,
+  more: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  volume: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+  volumeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`
+};
+const svg = (name, size = 20) => `<span style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${I[name]}</span>`;
 
-    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || {
-      name: "Inshad Afsal",
-      username: "inshadafsal",
-      email: "inshad@example.com",
-      img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
-      followers: 0,
-      following: 0
-    };
-    localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
+/* ---------- State ---------- */
+const STATE = {
+  view: 'home',           // home | search | library | liked | playlist | artist | recently
+  param: null,            // id/name for current view
+  search: '',
+  tracks: [],
+  playlists: [],
+  liked: [],
+  history: [],            // array of track ids, most recent first
+  player: {
+    queue: [],
+    index: -1,
+    playing: false,
+    volume: 0.8,
+    shuffle: false,
+    repeat: 'off'         // off | all | one
+  }
+};
 
-    let unsubscribeMessages = null;
-    let unsubscribePosts = null;
+/* ---------- Demo tracks ---------- */
+const DEMO = [
+  ['d1',  'Neon Dreams',  'Aria Volt',  'Electronic', 1],
+  ['d2',  'Midnight Rain','Kova',       'Chill',      2],
+  ['d3',  'Golden Hour',  'Lyra Sky',   'Indie',      3],
+  ['d4',  'Static',       'Nova Flare', 'Rock',       4],
+  ['d5',  'Ocean Drive',  'Vega',       'Electronic', 5],
+  ['d6',  'Paper Planes', 'Indigo',     'Pop',        6],
+  ['d7',  'Lost in Tokyo','Sora',       'Lo-fi',      7],
+  ['d8',  'Fireflies',    'Aria Volt',  'Electronic', 8],
+  ['d9',  'Echoes',       'Kova',       'Ambient',    9],
+  ['d10', 'Wildfire',     'Nova Flare', 'Rock',       10],
+  ['d11', 'Serotonin',    'Lyra Sky',   'Indie',      11],
+  ['d12', 'Velvet Sky',   'Sora',       'Chill',      12]
+];
 
-    window.handleSignup = async function() {
-      const email = document.getElementById('signup-email').value.trim();
-      const username = document.getElementById('signup-username').value.trim();
-      const password = document.getElementById('signup-password').value.trim();
-      const errorEl = document.getElementById('signup-error');
+function buildDemoTracks() {
+  return DEMO.map(([id, title, artist, genre, n]) => ({
+    id, title, artist, genre,
+    album: 'Vibely Sessions',
+    src: `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`,
+    duration: [372, 425, 302, 344, 500, 290, 380, 340, 420, 360, 315, 385][n-1],
+    uploaded: false
+  }));
+}
 
-      if (!email || !username || !password) {
-        errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.remove('hidden');
-        return;
+/* ---------- Covers (self-contained SVG gradients) ---------- */
+const PALETTES = [
+  ['#8b5cf6', '#ec4899'], ['#06b6d4', '#3b82f6'], ['#f59e0b', '#ef4444'],
+  ['#10b981', '#059669'], ['#f43f5e', '#8b5cf6'], ['#3b82f6', '#8b5cf6'],
+  ['#eab308', '#f97316'], ['#14b8a6', '#06b6d4'], ['#a855f7', '#6366f1']
+];
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+function coverURL(seed) {
+  const p = PALETTES[hashStr(seed) % PALETTES.length];
+  const svgStr = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${p[0]}'/><stop offset='1' stop-color='${p[1]}'/></linearGradient></defs><rect width='300' height='300' fill='url(#g)'/><circle cx='250' cy='50' r='120' fill='white' opacity='0.08'/><circle cx='40' cy='260' r='90' fill='white' opacity='0.06'/></svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svgStr)}")`;
+}
+
+/* ---------- Helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const fmtTime = s => {
+  if (!s || !isFinite(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  $('#toast-container').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; }, 2200);
+  setTimeout(() => el.remove(), 2500);
+}
+
+/* ---------- Audio ---------- */
+const audio = new Audio();
+audio.preload = 'metadata';
+
+/* ---------- Persistence (localStorage + IndexedDB for uploaded blobs) ---------- */
+const DB_NAME = 'vibely', STORE = 'audio';
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function putBlob(key, blob) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(blob, key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function getBlob(key) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const r = tx.objectStore(STORE).get(key);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+
+function save() {
+  try {
+    localStorage.setItem('vibely_v1', JSON.stringify({
+      playlists: STATE.playlists,
+      liked: STATE.liked,
+      history: STATE.history.slice(0, 100),
+      volume: STATE.player.volume,
+      uploaded: STATE.tracks.filter(t => t.uploaded).map(t => ({
+        id: t.id, title: t.title, artist: t.artist,
+        duration: t.duration, uploaded: true, idbId: t.idbId
+      }))
+    }));
+  } catch (e) { console.warn('save failed', e); }
+}
+
+async function loadState() {
+  let raw = null;
+  try { raw = localStorage.getItem('vibely_v1'); } catch {}
+  if (!raw) return;
+  const s = JSON.parse(raw);
+  STATE.playlists = s.playlists || [];
+  STATE.liked = s.liked || [];
+  STATE.history = s.history || [];
+  STATE.player.volume = s.volume ?? 0.8;
+  audio.volume = STATE.player.volume;
+
+  // restore uploaded tracks
+  for (const t of (s.uploaded || [])) {
+    try {
+      const blob = await getBlob(t.idbId);
+      if (blob) {
+        t.src = URL.createObjectURL(blob);
+        STATE.tracks.push(t);
       }
+    } catch {}
+  }
+}
 
-      try {
-        const q = query(collection(db, "users"), where("username", "==", username));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          errorEl.innerText = "Username already exists.";
-          errorEl.classList.remove('hidden');
-          return;
-        }
+/* ---------- Lookup ---------- */
+const trackById = id => STATE.tracks.find(t => t.id === id);
+const currentTrack = () => STATE.player.index >= 0 ? trackById(STATE.player.queue[STATE.player.index]) : null;
+const isLiked = id => STATE.liked.includes(id);
+const playlistById = id => STATE.playlists.find(p => p.id === id);
 
-        const newUser = {
-          name: username,
-          username: username,
-          email: email,
-          password: password,
-          img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-          followers: 0,
-          following: 0
-        };
+/* ---------- Player logic ---------- */
+function setQueue(ids, startId, label = '') {
+  if (!ids.length) return;
+  STATE.player.queue = [...ids];
+  STATE.player.index = Math.max(0, ids.indexOf(startId));
+  playCurrent();
+}
 
-        await addDoc(collection(db, "users"), newUser);
-        localStorage.setItem('loop_current_user', JSON.stringify(newUser));
-        currentUser = newUser;
-        errorEl.classList.add('hidden');
-        window.checkAuthState();
-      } catch (e) {
-        console.error("Signup error:", e);
-        errorEl.innerText = "Signup failed. Try again.";
-        errorEl.classList.remove('hidden');
-      }
-    };
+function playCurrent() {
+  const t = currentTrack();
+  if (!t) return;
+  audio.src = t.src;
+  audio.volume = STATE.player.volume;
+  audio.play().catch(err => {
+    console.warn(err);
+    toast('Could not play track');
+  });
+  STATE.player.playing = true;
+  addToHistory(t.id);
+  renderPlayerBar();
+}
 
-    window.handleLogin = async function() {
-      const identifier = document.getElementById('login-identifier').value.trim();
-      const password = document.getElementById('login-password').value.trim();
-      const errorEl = document.getElementById('login-error');
+function togglePlay() {
+  if (!currentTrack()) {
+    if (STATE.tracks.length) setQueue(STATE.tracks.map(t => t.id), STATE.tracks[0].id);
+    return;
+  }
+  if (audio.paused) { audio.play(); STATE.player.playing = true; }
+  else { audio.pause(); STATE.player.playing = false; }
+  updatePlayIcon();
+  updateAllTrackRows();
+}
 
-      if (!identifier || !password) {
-        errorEl.innerText = "Please fill in all fields.";
-        errorEl.classList.remove('hidden');
-        return;
-      }
+function nextTrack(auto = false) {
+  const q = STATE.player.queue;
+  if (!q.length) return;
+  let i = STATE.player.index;
+  if (STATE.player.shuffle) {
+    if (q.length > 1) { do { i = Math.floor(Math.random() * q.length); } while (i === STATE.player.index); }
+    else i = 0;
+  } else {
+    i++;
+    if (i >= q.length) {
+      if (STATE.player.repeat === 'all' || (auto && STATE.player.repeat !== 'off')) i = 0;
+      else { i = q.length - 1; STATE.player.playing = false; updatePlayIcon(); return; }
+    }
+  }
+  STATE.player.index = i;
+  playCurrent();
+}
 
-      try {
-        let userFound = null;
-        const q = query(collection(db, "users"), where("username", "==", identifier), where("password", "==", password));
-        const querySnapshot = await getDocs(q);
+function prevTrack() {
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  const q = STATE.player.queue;
+  if (!q.length) return;
+  let i = STATE.player.index - 1;
+  if (i < 0) i = STATE.player.repeat === 'all' ? q.length - 1 : 0;
+  STATE.player.index = i;
+  playCurrent();
+}
 
-        if (!querySnapshot.empty) {
-          userFound = querySnapshot.docs[0].data();
-        } else if(identifier === "inshadafsal" && password === "123456") {
-          userFound = { name: "Inshad Afsal", username: "inshadafsal", email: "inshad@example.com", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80", followers: 0, following: 0 };
-        }
+function addToHistory(id) {
+  STATE.history = [id, ...STATE.history.filter(x => x !== id)].slice(0, 100);
+  save();
+}
 
-        if (userFound) {
-          localStorage.setItem('loop_current_user', JSON.stringify(userFound));
-          currentUser = userFound;
-          errorEl.classList.add('hidden');
-          window.checkAuthState();
-        } else {
-          errorEl.innerText = "Invalid Username or Password.";
-          errorEl.classList.remove('hidden');
-        }
-      } catch (e) {
-        console.error("Login error:", e);
-        errorEl.innerText = "Login failed. Try again.";
-        errorEl.classList.remove('hidden');
-      }
-    };
+/* ---------- Track row click (delegated) ---------- */
+document.addEventListener('click', e => {
+  const row = e.target.closest('.track-row');
+  if (row && !e.target.closest('.track-like') && !e.target.closest('.track-more')) {
+    const id = row.dataset.id;
+    const list = [...row.parentElement.querySelectorAll('.track-row')].map(r => r.dataset.id);
+    if (STATE.player.queue[STATE.player.index] === id && STATE.player.playing) {
+      togglePlay();
+    } else if (STATE.player.queue[STATE.player.index] === id && !STATE.player.playing) {
+      togglePlay();
+    } else {
+      setQueue(list, id);
+    }
+  }
 
-    window.sendFirebaseMessage = async function(recipient, text) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!text || !currentUser || !recipient) return;
+  // like buttons
+  const like = e.target.closest('.track-like');
+  if (like) {
+    e.stopPropagation();
+    toggleLike(like.dataset.id);
+  }
 
-      let chatKey = [currentUser.username, recipient].sort().join('_');
-      let time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // more buttons
+  const more = e.target.closest('.track-more');
+  if (more) {
+    e.stopPropagation();
+    openTrackMenu(more.dataset.id, more);
+  }
 
-      try {
-        await addDoc(collection(db, "messages"), {
-          chatKey: chatKey,
-          sender: currentUser.username,
-          recipient: recipient,
-          text: text,
-          timestamp: Date.now(),
-          time: time
-        });
-      } catch (e) {
-        console.error("Error sending message:", e);
-      }
-    };
+  // card play buttons
+  const cardPlay = e.target.closest('.card-play');
+  if (cardPlay) {
+    e.stopPropagation();
+    const id = cardPlay.dataset.id;
+    playSingle(id);
+  }
 
-    window.listenToInbox = function() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
+  // cards navigate to artist
+  const card = e.target.closest('.card[data-artist]');
+  if (card && !e.target.closest('.card-play')) {
+    navigate('artist', card.dataset.artist);
+  }
+});
 
-      getDocs(collection(db, "messages")).then((snapshot) => {
-        let partners = new Set();
-        snapshot.forEach((doc) => {
-          let data = doc.data();
-          if (data.sender === currentUser.username) partners.add(data.recipient);
-          if (data.recipient === currentUser.username) partners.add(data.sender);
-        });
-        window.renderConversationsList(Array.from(partners));
-      });
-    };
+/* ---------- Like ---------- */
+function toggleLike(id) {
+  if (isLiked(id)) {
+    STATE.liked = STATE.liked.filter(x => x !== id);
+  } else {
+    STATE.liked.unshift(id);
+    toast('Added to Liked Songs');
+  }
+  save();
+  refreshUI();
+}
 
-    window.listenToMessages = function(recipient) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser || !recipient) return;
+/* ---------- Playlist actions ---------- */
+function createPlaylist(name) {
+  if (!name || !name.trim()) return;
+  const p = { id: 'pl_' + Date.now(), name: name.trim(), trackIds: [], createdAt: Date.now() };
+  STATE.playlists.unshift(p);
+  save();
+  renderSidebar();
+  navigate('playlist', p.id);
+  toast(`Playlist "${p.name}" created`);
+}
 
-      if (unsubscribeMessages) unsubscribeMessages();
+function deletePlaylist(id) {
+  STATE.playlists = STATE.playlists.filter(p => p.id !== id);
+  save();
+  renderSidebar();
+  if (STATE.view === 'playlist' && STATE.param === id) navigate('library');
+}
 
-      let chatKey = [currentUser.username, recipient].sort().join('_');
-      const q = query(collection(db, "messages"), where("chatKey", "==", chatKey));
+function addToPlaylist(plId, trackId) {
+  const p = playlistById(plId);
+  if (!p) return;
+  if (!p.trackIds.includes(trackId)) {
+    p.trackIds.push(trackId);
+    save();
+    toast(`Added to "${p.name}"`);
+    if (STATE.view === 'playlist' && STATE.param === plId) renderContent();
+  } else {
+    toast('Already in playlist');
+  }
+}
 
-      unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        let messages = [];
-        snapshot.forEach((doc) => {
-          messages.push(doc.data());
-        });
-        messages.sort((a, b) => a.timestamp - b.timestamp);
-        window.renderFirebaseMessages(messages);
-      });
-    };
+function removeFromPlaylist(plId, trackId) {
+  const p = playlistById(plId);
+  if (!p) return;
+  p.trackIds = p.trackIds.filter(id => id !== trackId);
+  save();
+  if (STATE.view === 'playlist' && STATE.param === plId) renderContent();
+}
 
-    window.uploadPostToFirebase = async function(caption, mediaUrl, mediaType) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
+/* ---------- Navigation ---------- */
+function navigate(view, param = null) {
+  STATE.view = view;
+  STATE.param = param;
+  if (view !== 'search') STATE.search = '';
+  $('#search-input').value = STATE.search;
+  renderSidebar();
+  renderContent();
+  $('#content').scrollTop = 0;
+}
 
-      try {
-        await addDoc(collection(db, "posts"), {
-          username: currentUser.username,
-          userImg: currentUser.img || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
-          caption: caption,
-          mediaUrl: mediaUrl,
-          mediaType: mediaType,
-          likes: 0,
-          likedBy: [],
-          timestamp: Date.now()
-        });
-        window.loadPostsFeed();
-      } catch(e) {
-        console.error("Error uploading post:", e);
-      }
-    };
+function setSearch(q) {
+  STATE.search = q;
+  STATE.view = 'search';
+  STATE.param = null;
+  renderContent();
+  renderSidebar();
+}
 
-    window.loadPostsFeed = function() {
-      if (unsubscribePosts) unsubscribePosts();
-      const q = collection(db, "posts");
-      unsubscribePosts = onSnapshot(q, (snapshot) => {
-        let postsList = [];
-        snapshot.forEach((doc) => {
-          let pData = doc.data();
-          pData.id = doc.id;
-          postsList.push(pData);
-        });
-        postsList.sort((a, b) => b.timestamp - a.timestamp);
-        window.renderFeed(postsList);
-        window.renderProfilePosts(postsList);
-      });
-    };
+/* ---------- Render: Sidebar ---------- */
+function renderSidebar() {
+  const active = (v, p) => (STATE.view === v && (p === undefined || STATE.param === p)) ? 'active' : '';
+  const html = `
+    <div class="logo" onclick="navigate('home')">
+      <div class="logo-mark">♪</div>
+      <span>Vibely</span>
+    </div>
+    <div class="nav-item ${active('home')}" onclick="navigate('home')">${svg('home', 20)}<span>Home</span></div>
+    <div class="nav-item ${active('search')}" onclick="navigate('search')">${svg('search', 20)}<span>Search</span></div>
+    <div class="nav-item ${active('library')}" onclick="navigate('library')">${svg('library', 20)}<span>Your Library</span></div>
 
-    window.sendNotificationToFirebase = async function(recipientUsername, text) {
-      if (!recipientUsername || !currentUser || recipientUsername === currentUser.username) return;
-      try {
-        await addDoc(collection(db, "notifications"), {
-          recipient: recipientUsername,
-          text: text,
-          timestamp: Date.now(),
-          read: false
-        });
-      } catch (e) {
-        console.error("Error sending notification:", e);
-      }
-    };
+    <div class="sidebar-divider"></div>
 
-    window.fetchUserNotifications = async function() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
+    <div class="nav-item ${active('liked')}" onclick="navigate('liked')">${svg('heart', 20)}<span>Liked Songs</span></div>
+    <div class="nav-item ${active('recently')}" onclick="navigate('recently')">${svg('clock', 20)}<span>Recently Played</span></div>
 
-      try {
-        const q = query(collection(db, "notifications"), where("recipient", "==", currentUser.username));
-        const querySnapshot = await getDocs(q);
-        let notifs = [];
-        querySnapshot.forEach((doc) => {
-          notifs.push(doc.data());
-        });
-        notifs.sort((a, b) => b.timestamp - a.timestamp);
-        window.renderNotificationsList(notifs);
-      } catch(e) {
-        console.error("Error fetching notifications:", e);
-      }
-    };
-  </script>
+    <div class="sidebar-divider"></div>
 
-  <script>
-    let currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-    let isDarkMode = JSON.parse(localStorage.getItem('loop_dark_mode')) ?? true;
-    let activeChatUser = null;
-    
-    let peer = null;
-    let localStream = null;
-    let currentCall = null;
-    let isFollowing = false;
-    let visitedProfileUser = null;
-    let cameraStream = null;
-    let capturedMediaData = "";
-    let activeAREffect = "none";
-    let useFrontCamera = true;
+    <div class="sidebar-heading"><span>Playlists</span><button onclick="openCreatePlaylist()" title="New playlist">+</button></div>
+    ${STATE.playlists.length ? STATE.playlists.map(p => `
+      <div class="playlist-item ${active('playlist', p.id)}" onclick="navigate('playlist', '${p.id}')">
+        <div class="playlist-thumb">${svg('music', 16)}</div>
+        <div class="playlist-meta">
+          <div class="playlist-name">${esc(p.name)}</div>
+          <div class="playlist-count">${p.trackIds.length} track${p.trackIds.length === 1 ? '' : 's'}</div>
+        </div>
+      </div>
+    `).join('') : `<div style="padding: 8px 12px; font-size:12px; color: var(--text-faint);">No playlists yet</div>`}
 
-    const masterQuotesList = [
-      "കഠിനാധ്വാനവും ആത്മവിശ്വാസവുമാണ് നിങ്ങളെ വിജയത്തിലേക്ക് നയിക്കുന്ന ഏറ്റവും വലിയ ഊർജ്ജം.",
-      "ഓരോ ദിവസവും പുതിയ കാര്യങ്ങൾ പഠിക്കുക, നിങ്ങളുടെ സ്വപ്നങ്ങൾക്ക് വേണ്ടി നിരന്തരം പോരാടുക.",
-      "തോൽവികളിൽ നിന്ന് പഠിച്ച് മുന്നോട്ട് കുതിക്കുന്നവരാണ് യഥാർത്ഥ വിജയികൾ.",
-      "നിങ്ങൾ നിങ്ങളിൽ വിശ്വസിക്കുന്നിടത്തോളം കാലം ലോകത്തിന് നിങ്ങളെ തോൽപ്പിക്കാൻ കഴിയില്ല.",
-      "ഇന്നത്തെ ചെറിയ ശ്രമങ്ങളാണ് നാളത്തെ വലിയ വിജയത്തിന്റെ അടിത്തറ.",
-      "സ്വപ്നം കാണാൻ ഭയപ്പെടരുത്, അത് യാഥാർത്ഥ്യമാക്കാൻ കഠിനാധ്വാനം ചെയ്യുക.",
-      "വിജയം എന്നത് ഒറ്റരാത്രികൊണ്ട് ഉണ്ടാവുന്നതല്ല, ദിവസേനയുള്ള കഠിനാധ്വാനത്തിന്റെ ഫലമാണ്.",
-      "നിങ്ങളുടെ ലക്ഷ്യത്തിലേക്ക് കണ്ണുനട്ട് മുന്നോട്ട് നടക്കുക, തടസ്സങ്ങൾ വഴിമാറും.",
-      "പ്രതിസന്ധികൾ നമ്മെ തകർക്കാനല്ല, കൂടുതൽ ശക്തരാക്കാൻ വരുന്നവയാണ്.",
-      "മറ്റുള്ളവരുമായി ഒരിക്കലും നിങ്ങളെ താരതമ്യം ചെയ്യരുത്; നിങ്ങളുടെ വഴി വേറെയാണ്."
-    ];
+    <div class="sidebar-upload" onclick="openUpload()">${svg('upload', 20)}<span>Upload music</span></div>
+  `;
+  $('#sidebar').innerHTML = html;
+}
 
-    function generateRandomQuotes() {
-      let container = document.getElementById('quotes-container');
-      container.innerHTML = '';
-      let shuffled = [...masterQuotesList].sort(() => 0.5 - Math.random());
-      
-      for (let i = 0; i < 10; i++) {
-        let quoteText = shuffled[i];
-        let cardId = `quote-rand-${i}`;
-        
-        container.innerHTML += `
-          <div class="bg-gradient-to-br from-emerald-950/80 to-gray-900 border border-emerald-800/50 rounded-2xl p-5 flex flex-col justify-between shadow-lg relative overflow-hidden">
-            <i class="fa-solid fa-quote-right absolute right-4 bottom-2 text-6xl text-white/5 pointer-events-none"></i>
-            <div>
-              <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">LOOP Inspiration</span>
-              <p id="${cardId}" class="text-sm font-medium mt-3 leading-relaxed text-gray-100">"${quoteText}"</p>
-            </div>
-            <div class="flex items-center justify-between mt-4 pt-3 border-t border-emerald-800/40 text-xs text-gray-400">
-              <span>- LOOP Community</span>
-              <button onclick="copyQuote('${cardId}', this)" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold transition">
-                <i class="fa-solid fa-copy"></i> <span class="copy-text">Copy</span>
-              </button>
-            </div>
+/* ---------- Render: Content ---------- */
+function renderContent() {
+  const el = $('#content');
+  if (STATE.view === 'home') el.innerHTML = viewHome();
+  else if (STATE.view === 'search') el.innerHTML = viewSearch();
+  else if (STATE.view === 'library') el.innerHTML = viewLibrary();
+  else if (STATE.view === 'liked') el.innerHTML = viewLiked();
+  else if (STATE.view === 'recently') el.innerHTML = viewRecently();
+  else if (STATE.view === 'playlist') el.innerHTML = viewPlaylist();
+  else if (STATE.view === 'artist') el.innerHTML = viewArtist();
+  bindContentEvents();
+}
+
+function viewHome() {
+  const recents = STATE.history.slice(0, 6).map(trackById).filter(Boolean);
+  const featured = STATE.tracks.slice(0, 10);
+  const byGenre = {};
+  STATE.tracks.forEach(t => { if (t.genre) (byGenre[t.genre] = byGenre[t.genre] || []).push(t); });
+
+  return `
+    <div class="greeting">Good ${greeting()} 👋</div>
+
+    ${recents.length ? `
+      <div class="section">
+        <div class="section-title small">Jump back in</div>
+        <div class="card-grid">
+          ${recents.map(t => cardHTML(t)).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="section">
+      <div class="section-title">Made for you</div>
+      <div class="card-grid">
+        ${featured.map(t => cardHTML(t)).join('')}
+      </div>
+    </div>
+
+    ${Object.entries(byGenre).slice(0, 4).map(([genre, tracks]) => `
+      <div class="section">
+        <div class="section-title small">${esc(genre)}</div>
+        <div class="card-grid">
+          ${tracks.slice(0, 6).map(t => cardHTML(t)).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
+}
+
+function cardHTML(t) {
+  return `
+    <div class="card" data-artist="${esc(t.artist)}">
+      <div class="card-cover" style="background-image:${coverURL(t.id)}">
+        <button class="card-play" data-id="${t.id}" title="Play">${svg('play', 18)}</button>
+      </div>
+      <div class="card-title">${esc(t.title)}</div>
+      <div class="card-sub">${esc(t.artist)}</div>
+    </div>
+  `;
+}
+
+function viewSearch() {
+  const q = STATE.search.trim().toLowerCase();
+  if (!q) {
+    const categories = ['Electronic', 'Chill', 'Indie', 'Rock', 'Pop', 'Lo-fi', 'Ambient'];
+    return `
+      <div class="section-title">Browse all</div>
+      <div class="card-grid">
+        ${categories.map(c => `
+          <div class="card" style="background: linear-gradient(135deg, ${PALETTES[hashStr(c) % PALETTES.length][0]}, ${PALETTES[hashStr(c) % PALETTES.length][1]}); padding: 18px; aspect-ratio: 1.4;">
+            <div class="card-title" style="font-size:18px;">${esc(c)}</div>
           </div>
-        `;
-      }
-    }
+        `).join('')}
+      </div>
+    `;
+  }
+  const results = STATE.tracks.filter(t =>
+    t.title.toLowerCase().includes(q) ||
+    t.artist.toLowerCase().includes(q) ||
+    (t.genre || '').toLowerCase().includes(q)
+  );
+  if (!results.length) return emptyHTML('search', `No results for "${esc(STATE.search)}"`, 'Try a different search term');
+  return `
+    <div class="section-title">Results for "${esc(STATE.search)}"</div>
+    ${trackListHTML(results)}
+  `;
+}
 
-    function applyTheme() {
-      const container = document.getElementById('app-container');
-      const header = document.getElementById('app-header');
-      const themeIcon = document.getElementById('theme-icon');
-
-      if (isDarkMode) {
-        container.classList.remove('bg-gray-100', 'text-gray-900', 'border-gray-300');
-        container.classList.add('bg-black', 'text-white', 'border-gray-800');
-        header.classList.remove('bg-white/90', 'border-gray-200');
-        header.classList.add('bg-gray-900/90', 'border-gray-800/80');
-        themeIcon.className = "fa-solid fa-moon text-lg text-emerald-400";
-      } else {
-        container.classList.remove('bg-black', 'text-white', 'border-gray-800');
-        container.classList.add('bg-gray-100', 'text-gray-900', 'border-gray-300');
-        header.classList.remove('bg-gray-900/90', 'border-gray-800/80');
-        header.classList.add('bg-white/90', 'border-gray-200');
-        themeIcon.className = "fa-solid fa-sun text-lg text-amber-500";
-      }
-    }
-
-    function toggleTheme() {
-      isDarkMode = !isDarkMode;
-      localStorage.setItem('loop_dark_mode', JSON.stringify(isDarkMode));
-      applyTheme();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => { 
-      applyTheme(); 
-      generateRandomQuotes();
-    });
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const intro = document.getElementById('intro-screen');
-        intro.style.opacity = '0';
-        setTimeout(() => {
-          intro.style.display = 'none';
-          window.checkAuthState();
-        }, 700);
-      }, 1800);
-    });
-
-    window.checkAuthState = function() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (currentUser) {
-        document.getElementById('auth-view').classList.add('hidden');
-        document.getElementById('bottom-nav').classList.remove('hidden');
-        visitedProfileUser = currentUser.username;
-        updateProfileDisplay();
-        switchTab('home');
-        window.loadPostsFeed();
-        window.fetchUserNotifications();
-      } else {
-        document.getElementById('auth-view').classList.remove('hidden');
-        document.getElementById('home-view').classList.add('hidden');
-        document.getElementById('bottom-nav').classList.add('hidden');
-        document.getElementById('app-title').innerText = "LOOP";
-      }
-    }
-
-    function copyQuote(elementId, btn) {
-      let quoteText = document.getElementById(elementId).innerText;
-      navigator.clipboard.writeText(quoteText).then(() => {
-        let textSpan = btn.querySelector('.copy-text');
-        let originalText = textSpan.innerText;
-        textSpan.innerText = "Copied!";
-        btn.classList.add('text-emerald-300');
-        setTimeout(() => {
-          textSpan.innerText = originalText;
-          btn.classList.remove('text-emerald-300');
-        }, 1500);
-      }).catch(err => {
-        alert("Failed to copy quote.");
-      });
-    }
-
-    function switchToSignup() {
-      const loginBox = document.getElementById('login-form-box');
-      const signupBox = document.getElementById('signup-form-box');
-      
-      loginBox.style.transform = 'translateX(-120%)';
-      loginBox.style.opacity = '0';
-      loginBox.classList.add('pointer-events-none');
-
-      signupBox.style.transform = 'translateX(0)';
-      signupBox.style.opacity = '1';
-      signupBox.classList.remove('pointer-events-none');
-    }
-
-    function switchToLogin() {
-      const loginBox = document.getElementById('login-form-box');
-      const signupBox = document.getElementById('signup-form-box');
-      
-      signupBox.style.transform = 'translateX(120%)';
-      signupBox.style.opacity = '0';
-      signupBox.classList.add('pointer-events-none');
-
-      loginBox.style.transform = 'translateX(0)';
-      loginBox.style.opacity = '1';
-      loginBox.classList.remove('pointer-events-none');
-    }
-
-    function handleLogout() {
-      currentUser = null;
-      localStorage.removeItem('loop_current_user');
-      stopPeerConnection();
-      stopCamera();
-      window.checkAuthState();
-    }
-
-    function updateProfileDisplay() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (currentUser) {
-        let targetUser = visitedProfileUser || currentUser.username;
-        let isOwnProfile = (targetUser === currentUser.username);
-
-        let displayName = isOwnProfile ? (currentUser.name || "Inshad Afsal") : targetUser.charAt(0).toUpperCase() + targetUser.slice(1);
-        let displayUname = targetUser.startsWith('@') ? targetUser : '@' + targetUser;
-
-        document.getElementById('display-name').innerText = displayName;
-        document.getElementById('display-username').innerText = displayUname;
-        document.getElementById('display-email').innerText = isOwnProfile ? (currentUser.email || "inshad@example.com") : targetUser + "@example.com";
-        
-        let storedFollowers = JSON.parse(localStorage.getItem('loop_followers_' + targetUser)) || 0;
-        document.getElementById('profile-followers-count').innerText = storedFollowers;
-        document.getElementById('profile-following-count').innerText = 0;
-
-        if (isOwnProfile && currentUser.img) {
-          document.getElementById('display-profile-img').src = currentUser.img;
-          document.getElementById('home-user-avatar').src = currentUser.img;
-        } else if (!isOwnProfile) {
-          document.getElementById('display-profile-img').src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80";
-        }
-
-        let followBtn = document.getElementById('profile-follow-btn');
-        if (isOwnProfile) {
-          followBtn.classList.add('hidden');
-        } else {
-          let isAlreadyFollowing = localStorage.getItem('loop_is_following_' + currentUser.username + '_' + targetUser) === 'true';
-          isFollowing = isAlreadyFollowing;
-          if (isFollowing) {
-            followBtn.innerText = "Following";
-            followBtn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
-          } else {
-            followBtn.innerText = "Follow";
-            followBtn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
-          }
-          followBtn.classList.remove('hidden');
-        }
-      }
-    }
-
-    function switchTab(tab) {
-      document.getElementById('home-view').classList.add('hidden');
-      document.getElementById('loop-view').classList.add('hidden');
-      document.getElementById('chat-view').classList.add('hidden');
-      document.getElementById('quotes-view').classList.add('hidden');
-      document.getElementById('profile-view').classList.add('hidden');
-
-      const navButtons = document.querySelectorAll('.nav-btn');
-      navButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.id === 'nav-' + tab) {
-          btn.classList.add('active');
-        }
-      });
-
-      stopCamera();
-
-      if(tab === 'home') {
-        document.getElementById('home-view').classList.remove('hidden');
-        document.getElementById('app-title').innerText = "LOOP";
-        stopPeerConnection();
-        window.loadPostsFeed();
-      } else if(tab === 'loop') {
-        document.getElementById('loop-view').classList.remove('hidden');
-        document.getElementById('app-title').innerText = "LOOP Live";
-        autoJoinRoom123();
-      } else if(tab === 'chat') {
-        document.getElementById('chat-view').classList.remove('hidden');
-        document.getElementById('app-title').innerText = "Direct Messages";
-        stopPeerConnection();
-        showInboxList();
-        window.listenToInbox();
-      } else if(tab === 'quotes') {
-        document.getElementById('quotes-view').classList.remove('hidden');
-        document.getElementById('app-title').innerText = "LOOP Quotes";
-        stopPeerConnection();
-        generateRandomQuotes();
-      } else if(tab === 'profile') {
-        currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-        if (!visitedProfileUser) visitedProfileUser = currentUser.username;
-        updateProfileDisplay();
-        document.getElementById('profile-view').classList.remove('hidden');
-        document.getElementById('app-title').innerText = "My Profile";
-        stopPeerConnection();
-        window.loadPostsFeed();
-      }
-    }
-
-    // Camera & AR Effects Logic (Snapchat style)
-    async function startCamera() {
-      stopCamera();
-      try {
-        let constraints = { video: { facingMode: useFrontCamera ? 'user' : 'environment' }, audio: false };
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        let videoEl = document.getElementById('camera-preview');
-        videoEl.srcObject = cameraStream;
-        videoEl.classList.remove('hidden');
-        document.getElementById('captured-image-preview').classList.add('hidden');
-      } catch (err) {
-        alert("Camera access failed or denied.");
-      }
-    }
-
-    function switchCameraFacing() {
-      useFrontCamera = !useFrontCamera;
-      startCamera();
-    }
-
-    function stopCamera() {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-    }
-
-    function applyAREffect(effectName, btn) {
-      activeAREffect = effectName;
-      let videoEl = document.getElementById('camera-preview');
-      let imgEl = document.getElementById('captured-image-preview');
-
-      document.getElementById('ar-puppy').classList.add('hidden');
-      document.getElementById('ar-glasses').classList.add('hidden');
-      document.getElementById('ar-crown').classList.add('hidden');
-      document.getElementById('ar-horns').classList.add('hidden');
-      document.getElementById('ar-flowers').classList.add('hidden');
-
-      videoEl.className = "w-full h-full object-cover filter-none";
-      imgEl.className = "w-full h-full object-cover filter-none";
-
-      if (effectName === 'puppy') {
-        document.getElementById('ar-puppy').classList.remove('hidden');
-      } else if (effectName === 'glasses') {
-        document.getElementById('ar-glasses').classList.remove('hidden');
-      } else if (effectName === 'crown') {
-        document.getElementById('ar-crown').classList.remove('hidden');
-      } else if (effectName === 'horns') {
-        document.getElementById('ar-horns').classList.remove('hidden');
-      } else if (effectName === 'flowers') {
-        document.getElementById('ar-flowers').classList.remove('hidden');
-      } else if (effectName === 'grayscale') {
-        videoEl.className = "w-full h-full object-cover filter-grayscale";
-        imgEl.className = "w-full h-full object-cover filter-grayscale";
-      } else if (effectName === 'vintage') {
-        videoEl.className = "w-full h-full object-cover filter-vintage";
-        imgEl.className = "w-full h-full object-cover filter-vintage";
-      }
-
-      let filterButtons = btn.parentElement.querySelectorAll('button');
-      filterButtons.forEach(b => {
-        b.className = "px-3.5 py-1.5 bg-gray-800 text-white text-[10px] rounded-full shrink-0 transition shadow";
-      });
-      btn.className = "px-3.5 py-1.5 bg-emerald-500 text-black font-bold text-[10px] rounded-full shrink-0 transition shadow";
-    }
-
-    function capturePhoto() {
-      let videoEl = document.getElementById('camera-preview');
-      let canvas = document.getElementById('camera-canvas');
-      let imgPrev = document.getElementById('captured-image-preview');
-
-      if (!cameraStream) {
-        alert("Camera is not active!");
-        return;
-      }
-
-      canvas.width = videoEl.videoWidth || 720;
-      canvas.height = videoEl.videoHeight || 1280;
-      let ctx = canvas.getContext('2d');
-
-      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-
-      ctx.font = "80px sans-serif";
-      ctx.textAlign = "center";
-      if (activeAREffect === 'puppy') {
-        ctx.fillText("🐶", canvas.width / 2, 280);
-      } else if (activeAREffect === 'glasses') {
-        ctx.fillText("🕶️", canvas.width / 2, canvas.height / 2.3);
-      } else if (activeAREffect === 'crown') {
-        ctx.fillText("👑", canvas.width / 2, 180);
-      } else if (activeAREffect === 'horns') {
-        ctx.fillText("😈", canvas.width / 2, 180);
-      } else if (activeAREffect === 'flowers') {
-        ctx.fillText("🌸", canvas.width / 2, 180);
-      }
-
-      capturedMediaData = canvas.toDataURL('image/png');
-      imgPrev.src = capturedMediaData;
-      imgPrev.classList.remove('hidden');
-      videoEl.classList.add('hidden');
-      
-      document.getElementById('ar-puppy').classList.add('hidden');
-      document.getElementById('ar-glasses').classList.add('hidden');
-      document.getElementById('ar-crown').classList.add('hidden');
-      document.getElementById('ar-horns').classList.add('hidden');
-      document.getElementById('ar-flowers').classList.add('hidden');
-
-      stopCamera();
-    }
-
-    function previewGalleryFile(input) {
-      if (input.files && input.files[0]) {
-        let file = input.files[0];
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          capturedMediaData = e.target.result;
-          let imgPrev = document.getElementById('captured-image-preview');
-          imgPrev.src = capturedMediaData;
-          imgPrev.classList.remove('hidden');
-          document.getElementById('camera-preview').classList.add('hidden');
-          stopCamera();
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function openUploadModal() {
-      document.getElementById('upload-post-modal').classList.remove('hidden');
-      document.getElementById('upload-caption').value = '';
-      document.getElementById('upload-file-input').value = '';
-      document.getElementById('captured-image-preview').classList.add('hidden');
-      capturedMediaData = "";
-      startCamera();
-    }
-
-    function closeUploadModal() {
-      stopCamera();
-      document.getElementById('upload-post-modal').classList.add('hidden');
-    }
-
-    function submitNewPost() {
-      let caption = document.getElementById('upload-caption').value.trim();
-      if (!caption && !capturedMediaData) {
-        alert("Please add a caption or capture a photo/reel.");
-        return;
-      }
-
-      let mediaType = capturedMediaData.includes('data:video') ? 'video' : 'image';
-      window.uploadPostToFirebase(caption, capturedMediaData || "", mediaType);
-      closeUploadModal();
-    }
-
-    window.renderFeed = function(posts) {
-      let feedContainer = document.getElementById('posts-feed');
-      feedContainer.innerHTML = '';
-      if (posts.length === 0) {
-        feedContainer.innerHTML = `<div class="text-center text-gray-500 text-xs my-8"><i class="fa-regular fa-image text-2xl mb-1 text-gray-600"></i><p>No posts yet.</p></div>`;
-        return;
-      }
-
-      posts.forEach((post) => {
-        let mediaHtml = "";
-        if (post.mediaUrl) {
-          if (post.mediaType === 'video') {
-            mediaHtml = `<video controls playsinline src="${post.mediaUrl}" class="w-full max-h-80 object-cover rounded-xl mt-2 bg-black"></video>`;
-          } else {
-            mediaHtml = `<img src="${post.mediaUrl}" class="w-full max-h-80 object-cover rounded-xl mt-2" alt="Post media">`;
-          }
-        }
-
-        let likedByArr = post.likedBy || [];
-        let isLiked = likedByArr.includes(currentUser.username);
-        let heartClass = isLiked ? "fa-solid fa-heart text-rose-500" : "fa-regular fa-heart";
-        let currentLikes = post.likes || 0;
-
-        feedContainer.innerHTML += `
-          <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 flex flex-col gap-2.5 shadow-md">
-            <div class="flex items-center justify-between">
-              <div onclick="visitUserProfile('${post.username}')" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
-                <img src="${post.userImg}" class="w-8 h-8 rounded-full object-cover border border-emerald-500">
-                <span class="text-xs font-bold text-white">@${post.username}</span>
-              </div>
-              <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-ellipsis text-xs"></i></button>
-            </div>
-            ${post.caption ? `<p class="text-xs text-gray-200 leading-relaxed">${post.caption}</p>` : ''}
-            ${mediaHtml}
-
-            <!-- Action Bar -->
-            <div class="flex items-center justify-between pt-2 border-t border-gray-800 text-gray-300 text-sm px-1">
-              <div class="flex items-center gap-4">
-                <button onclick="handleLikePost('${post.id}', '${post.username}', this)" class="flex items-center gap-1.5 hover:text-rose-500 transition">
-                  <i class="${heartClass} text-base"></i>
-                  <span class="text-xs font-semibold">${currentLikes}</span>
-                </button>
-                <button onclick="openCommentBox('${post.id}')" class="flex items-center gap-1.5 hover:text-emerald-400 transition">
-                  <i class="fa-regular fa-comment text-base"></i>
-                  <span class="text-xs font-semibold">0</span>
-                </button>
-              </div>
-              <button onclick="sharePost()" class="hover:text-emerald-400 transition">
-                <i class="fa-regular fa-paper-plane text-base"></i>
-              </button>
-            </div>
+function viewLibrary() {
+  if (!STATE.playlists.length) return emptyHTML('library', 'Your library is empty', 'Create a playlist to get started');
+  return `
+    <div class="section-title">Your Library</div>
+    <div class="card-grid">
+      ${STATE.playlists.map(p => `
+        <div class="card" onclick="navigate('playlist', '${p.id}')">
+          <div class="card-cover" style="background-image:${coverURL(p.id)}; display:grid; place-items:center;">
+            ${svg('music', 40)}
           </div>
-        `;
+          <div class="card-title">${esc(p.name)}</div>
+          <div class="card-sub">${p.trackIds.length} track${p.trackIds.length === 1 ? '' : 's'}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function viewLiked() {
+  const tracks = STATE.liked.map(trackById).filter(Boolean);
+  if (!tracks.length) return emptyHTML('heart', 'Songs you like will appear here', 'Tap the heart on any track');
+  return `
+    <div class="playlist-hero">
+      <div class="playlist-hero-cover" style="background: linear-gradient(135deg, #ec4899, #8b5cf6);">
+        ${svg('heartFilled', 80)}
+      </div>
+      <div class="playlist-hero-info">
+        <div class="playlist-type">Playlist</div>
+        <div class="playlist-hero-title">Liked Songs</div>
+        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> song${tracks.length === 1 ? '' : 's'}</div>
+        <div class="playlist-actions">
+          <button class="btn-play-big" onclick="playAllLiked()" title="Play all">${svg('play', 22)}</button>
+        </div>
+      </div>
+    </div>
+    ${trackListHTML(tracks)}
+  `;
+}
+
+function viewRecently() {
+  const tracks = STATE.history.map(trackById).filter(Boolean);
+  if (!tracks.length) return emptyHTML('clock', 'No recent plays', 'Start listening and your history will appear here');
+  return `
+    <div class="section-title">Recently Played</div>
+    ${trackListHTML(tracks)}
+  `;
+}
+
+function viewPlaylist() {
+  const p = playlistById(STATE.param);
+  if (!p) return emptyHTML('music', 'Playlist not found', '');
+  const tracks = p.trackIds.map(trackById).filter(Boolean);
+  return `
+    <div class="playlist-hero">
+      <div class="playlist-hero-cover" style="background-image:${coverURL(p.id)}">${tracks.length ? '' : svg('music', 60)}</div>
+      <div class="playlist-hero-info">
+        <div class="playlist-type">Playlist</div>
+        <div class="playlist-hero-title">${esc(p.name)}</div>
+        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> track${tracks.length === 1 ? '' : 's'}</div>
+        <div class="playlist-actions">
+          <button class="btn-play-big" onclick="playPlaylist('${p.id}')" title="Play">${svg('play', 22)}</button>
+          <button class="btn-secondary" onclick="deletePlaylistConfirm('${p.id}')">${svg('trash', 16)} Delete</button>
+        </div>
+      </div>
+    </div>
+    ${tracks.length ? trackListHTML(tracks, { context: 'playlist', playlistId: p.id }) : `<div class="empty"><h3>This playlist is empty</h3><p>Search for music and add it to this playlist</p></div>`}
+  `;
+}
+
+function viewArtist() {
+  const name = STATE.param;
+  const tracks = STATE.tracks.filter(t => t.artist === name);
+  if (!tracks.length) return emptyHTML('music', 'Artist not found', '');
+  return `
+    <div class="playlist-hero">
+      <div class="playlist-hero-cover" style="background-image:${coverURL('artist_' + name)}; border-radius: 50%;">${svg('music', 60)}</div>
+      <div class="playlist-hero-info">
+        <div class="playlist-type">Artist</div>
+        <div class="playlist-hero-title">${esc(name)}</div>
+        <div class="playlist-hero-meta"><strong>${tracks.length}</strong> track${tracks.length === 1 ? '' : 's'} on Vibely</div>
+        <div class="playlist-actions">
+          <button class="btn-play-big" onclick="playArtist('${esc(name)}')" title="Play">${svg('play', 22)}</button>
+        </div>
+      </div>
+    </div>
+    ${trackListHTML(tracks)}
+  `;
+}
+
+function emptyHTML(icon, title, sub) {
+  return `<div class="empty">
+    <div class="empty-icon">${svg(icon, 36)}</div>
+    <h3>${title}</h3>
+    <p>${sub}</p>
+  </div>`;
+}
+
+/* ---------- Track list ---------- */
+function trackListHTML(tracks, opts = {}) {
+  return `
+    <div class="track-list">
+      ${tracks.map((t, i) => trackRowHTML(t, i, opts)).join('')}
+    </div>
+  `;
+}
+
+function trackRowHTML(t, i, opts = {}) {
+  const cur = currentTrack();
+  const playing = cur && cur.id === t.id;
+  const isPlayingNow = playing && STATE.player.playing;
+  return `
+    <div class="track-row ${playing ? 'playing' : ''}" data-id="${t.id}">
+      <div class="track-num">
+        ${playing && isPlayingNow
+          ? `<div class="eq"><span></span><span></span><span></span></div>`
+          : `<span>${i + 1}</span>`}
+      </div>
+      <div class="row-play">
+        ${playing && isPlayingNow ? svg('pause', 16) : svg('play', 16)}
+      </div>
+      <div style="display:flex; gap:12px; align-items:center; min-width:0;">
+        <div class="track-cover" style="background-image:${coverURL(t.id)}"></div>
+        <div class="track-info">
+          <div class="track-title">${esc(t.title)}</div>
+          <div class="track-artist">${esc(t.artist)}</div>
+        </div>
+      </div>
+      <div class="track-album">${esc(t.album || '')}</div>
+      <div class="track-dur">${fmtTime(t.duration)}</div>
+      <button class="track-like ${isLiked(t.id) ? 'liked' : ''}" data-id="${t.id}" title="Like">
+        ${isLiked(t.id) ? svg('heartFilled', 15) : svg('heart', 15)}
+      </button>
+      <button class="track-more" data-id="${t.id}" title="More">${svg('more', 16)}</button>
+    </div>
+  `;
+}
+
+/* ---------- Refresh dynamic bits (like states, playing states) ---------- */
+function refreshUI() {
+  // re-render just the like button states on current page to avoid scroll jump
+  $$('.track-like').forEach(btn => {
+    const id = btn.dataset.id;
+    if (isLiked(id)) {
+      btn.classList.add('liked');
+      btn.innerHTML = svg('heartFilled', 15);
+    } else {
+      btn.classList.remove('liked');
+      btn.innerHTML = svg('heart', 15);
+    }
+  });
+  // update player like
+  const t = currentTrack();
+  const pl = $('#p-like');
+  if (t && isLiked(t.id)) { pl.classList.add('liked'); pl.innerHTML = svg('heartFilled', 18); }
+  else { pl.classList.remove('liked'); pl.innerHTML = svg('heart', 18); }
+}
+
+function updateAllTrackRows() {
+  const cur = currentTrack();
+  $$('.track-row').forEach(row => {
+    const id = row.dataset.id;
+    const playing = cur && cur.id === id;
+    row.classList.toggle('playing', playing);
+    const num = row.querySelector('.track-num');
+    const rowPlay = row.querySelector('.row-play');
+    if (playing && STATE.player.playing) {
+      num.innerHTML = `<div class="eq"><span></span><span></span><span></span></div>`;
+      rowPlay.innerHTML = svg('pause', 16);
+    } else {
+      // restore number
+      const idx = [...row.parentElement.children].indexOf(row);
+      num.innerHTML = `<span>${idx + 1}</span>`;
+      rowPlay.innerHTML = svg('play', 16);
+    }
+  });
+}
+
+/* ---------- Player bar render ---------- */
+function renderPlayerBar() {
+  const t = currentTrack();
+  if (!t) {
+    $('#p-title').textContent = 'Nothing playing';
+    $('#p-artist').textContent = 'Pick a track to start';
+    $('#p-cover').style.backgroundImage = '';
+    $('#p-cover').innerHTML = svg('music', 20);
+    $('#p-like').style.visibility = 'hidden';
+    updatePlayIcon();
+    return;
+  }
+  $('#p-title').textContent = t.title;
+  $('#p-artist').textContent = t.artist;
+  $('#p-cover').style.backgroundImage = coverURL(t.id);
+  $('#p-cover').innerHTML = '';
+  $('#p-like').style.visibility = 'visible';
+  refreshUI();
+  updatePlayIcon();
+  updateShuffleRepeat();
+  updateProgress();
+  updateAllTrackRows();
+}
+
+function updatePlayIcon() {
+  const t = currentTrack();
+  const iconEl = $('#play-icon');
+  if (STATE.player.playing) {
+    iconEl.outerHTML = `<svg id="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>`;
+  } else {
+    iconEl.outerHTML = `<svg id="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+  }
+  updateAllTrackRows();
+}
+
+function updateShuffleRepeat() {
+  $('#ctl-shuffle').classList.toggle('active', STATE.player.shuffle);
+  $('#ctl-repeat').classList.toggle('active', STATE.player.repeat !== 'off');
+}
+
+function updateProgress() {
+  if (!audio.duration || !isFinite(audio.duration)) {
+    $('#seek-fill').style.width = '0%';
+    $('#seek-thumb').style.left = '0%';
+    $('#time-now').textContent = '0:00';
+    $('#time-total').textContent = fmtTime(currentTrack()?.duration);
+    return;
+  }
+  const pct = (audio.currentTime / audio.duration) * 100;
+  $('#seek-fill').style.width = pct + '%';
+  $('#seek-thumb').style.left = pct + '%';
+  $('#time-now').textContent = fmtTime(audio.currentTime);
+  $('#time-total').textContent = fmtTime(audio.duration);
+}
+
+/* ---------- Audio events ---------- */
+audio.addEventListener('timeupdate', updateProgress);
+audio.addEventListener('loadedmetadata', () => {
+  const t = currentTrack();
+  if (t && isFinite(audio.duration)) t.duration = Math.floor(audio.duration);
+  updateProgress();
+});
+audio.addEventListener('play', () => { STATE.player.playing = true; updatePlayIcon(); });
+audio.addEventListener('pause', () => { STATE.player.playing = false; updatePlayIcon(); });
+audio.addEventListener('ended', () => {
+  if (STATE.player.repeat === 'one') {
+    audio.currentTime = 0; audio.play();
+  } else {
+    nextTrack(true);
+  }
+});
+audio.addEventListener('error', () => {
+  console.warn('audio error');
+});
+
+// Smooth progress updates at 60fps while playing
+(function raf() {
+  if (!audio.paused) updateProgress();
+  requestAnimationFrame(raf);
+})();
+
+/* ---------- Seek bar ---------- */
+let seeking = false;
+function seekFromEvent(e) {
+  const rect = $('#seek').getBoundingClientRect();
+  const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  if (audio.duration && isFinite(audio.duration)) {
+    audio.currentTime = pct * audio.duration;
+    updateProgress();
+  }
+}
+$('#seek').addEventListener('mousedown', e => { seeking = true; seekFromEvent(e); });
+document.addEventListener('mousemove', e => { if (seeking) seekFromEvent(e); });
+document.addEventListener('mouseup', () => { seeking = false; });
+
+/* ---------- Volume ---------- */
+function setVolume(v) {
+  STATE.player.volume = Math.min(1, Math.max(0, v));
+  audio.volume = STATE.player.volume;
+  $('#vol-fill').style.width = (STATE.player.volume * 100) + '%';
+  $('#vol-icon').outerHTML = STATE.player.volume === 0
+    ? `<span id="vol-icon" style="display:inline-flex">${I.volumeOff}</span>`
+    : `<span id="vol-icon" style="display:inline-flex">${I.volume}</span>`;
+  save();
+}
+$('#vol').addEventListener('click', e => {
+  const rect = $('#vol').getBoundingClientRect();
+  setVolume((e.clientX - rect.left) / rect.width);
+});
+
+/* ---------- Player control handlers ---------- */
+$('#ctl-play').addEventListener('click', togglePlay);
+$('#ctl-next').addEventListener('click', () => nextTrack());
+$('#ctl-prev').addEventListener('click', prevTrack);
+$('#ctl-shuffle').addEventListener('click', () => {
+  STATE.player.shuffle = !STATE.player.shuffle;
+  updateShuffleRepeat();
+  toast(STATE.player.shuffle ? 'Shuffle on' : 'Shuffle off');
+});
+$('#ctl-repeat').addEventListener('click', () => {
+  const order = ['off', 'all', 'one'];
+  const idx = order.indexOf(STATE.player.repeat);
+  STATE.player.repeat = order[(idx + 1) % 3];
+  updateShuffleRepeat();
+  toast(STATE.player.repeat === 'off' ? 'Repeat off' : STATE.player.repeat === 'all' ? 'Repeat all' : 'Repeat one');
+});
+$('#ctl-mute').addEventListener('click', () => {
+  if (STATE.player.volume > 0) {
+    STATE.player._lastVolume = STATE.player.volume;
+    setVolume(0);
+  } else {
+    setVolume(STATE.player._lastVolume || 0.8);
+  }
+});
+$('#p-like').addEventListener('click', () => {
+  const t = currentTrack();
+  if (t) toggleLike(t.id);
+});
+
+/* ---------- Search input ---------- */
+$('#search-input').addEventListener('input', e => {
+  setSearch(e.target.value);
+});
+$('#search-input').addEventListener('focus', () => {
+  if (STATE.view !== 'search') setSearch($('#search-input').value);
+});
+
+/* ---------- Upload ---------- */
+$('#upload-btn').addEventListener('click', openUpload);
+
+function openUpload() {
+  $('#file-input').value = '';
+  $('#file-input').click();
+}
+
+$('#file-input').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  if (files.length) await handleUploads(files);
+});
+
+async function handleUploads(files) {
+  const audios = files.filter(f => f.type.startsWith('audio/'));
+  if (!audios.length) { toast('Please select audio files'); return; }
+  toast(`Uploading ${audios.length} track${audios.length > 1 ? 's' : ''}…`);
+  for (const file of audios) {
+    try {
+      const id = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const idbId = id;
+      await putBlob(idbId, file);
+      const src = URL.createObjectURL(file);
+      const duration = await getAudioDuration(file);
+      const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'Untitled';
+      STATE.tracks.push({
+        id, idbId, title, artist: 'You',
+        album: 'My uploads', genre: 'Uploaded',
+        duration, src, uploaded: true
       });
-    };
-
-    window.renderProfilePosts = function(posts) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
-      let targetUser = visitedProfileUser || currentUser.username;
-      let userPosts = posts.filter(p => p.username === targetUser);
-      let gridContainer = document.getElementById('profile-user-posts');
-      document.getElementById('profile-posts-count').innerText = userPosts.length;
-      gridContainer.innerHTML = '';
-
-      if (userPosts.length === 0) {
-        gridContainer.innerHTML = `<div class="text-center text-gray-500 text-xs col-span-3 py-6">No posts uploaded yet.</div>`;
-        return;
-      }
-
-      userPosts.forEach(post => {
-        if (post.mediaUrl) {
-          if (post.mediaType === 'video') {
-            gridContainer.innerHTML += `<video src="${post.mediaUrl}" class="w-full h-28 object-cover rounded-xl border border-gray-800 bg-black"></video>`;
-          } else {
-            gridContainer.innerHTML += `<img src="${post.mediaUrl}" class="w-full h-28 object-cover rounded-xl border border-gray-800" alt="Grid post">`;
-          }
-        } else {
-          gridContainer.innerHTML += `
-            <div class="w-full h-28 bg-gray-900 border border-gray-800 rounded-xl p-2 flex items-center justify-center text-[10px] text-gray-400 text-center">
-              ${post.caption.substring(0, 30)}...
-            </div>
-          `;
-        }
-      });
-    };
-
-    window.handleLikePost = async function(postId, postOwner, btn) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
-
-      let icon = btn.querySelector('i');
-      let countSpan = btn.querySelector('span');
-      let count = parseInt(countSpan.innerText);
-
-      let isLiked = icon.classList.contains('fa-solid');
-
-      if (!isLiked) {
-        icon.classList.remove('fa-regular', 'fa-heart');
-        icon.classList.add('fa-solid', 'fa-heart', 'text-rose-500');
-        count += 1;
-        countSpan.innerText = count;
-        if (postOwner !== currentUser.username) {
-          window.sendNotificationToFirebase(postOwner, `@${currentUser.username} liked your post`);
-        }
-      } else {
-        icon.classList.remove('fa-solid', 'fa-heart', 'text-rose-500');
-        icon.classList.add('fa-regular', 'fa-heart');
-        count = Math.max(0, count - 1);
-        countSpan.innerText = count;
-      }
-    };
-
-    function openCommentBox(postId) {
-      alert("Comments for post ID: " + postId);
+    } catch (err) {
+      console.error(err);
     }
+  }
+  save();
+  toast('Upload complete');
+  renderContent();
+}
 
-    function sharePost() {
-      if (navigator.share) {
-        navigator.share({ title: 'LOOP Post', text: 'Check out this post on LOOP!', url: window.location.href });
-      } else {
-        alert("Post link copied to clipboard!");
-      }
-    }
+function getAudioDuration(file) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(file);
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.src = url;
+    a.addEventListener('loadedmetadata', () => { URL.revokeObjectURL(url); res(Math.floor(a.duration) || 0); });
+    a.addEventListener('error', () => { URL.revokeObjectURL(url); res(0); });
+    setTimeout(() => res(0), 3000);
+  });
+}
 
-    function visitUserProfile(username) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      visitedProfileUser = username;
+/* ---------- Drag & drop ---------- */
+const mainEl = $('#main');
+['dragenter', 'dragover'].forEach(ev => {
+  mainEl.addEventListener(ev, e => { e.preventDefault(); mainEl.classList.add('dragover'); });
+});
+['dragleave', 'drop'].forEach(ev => {
+  mainEl.addEventListener(ev, e => {
+    e.preventDefault();
+    if (ev === 'dragleave' && e.relatedTarget && mainEl.contains(e.relatedTarget)) return;
+    mainEl.classList.remove('dragover');
+  });
+});
+mainEl.addEventListener('drop', async e => {
+  e.preventDefault();
+  mainEl.classList.remove('dragover');
+  const files = [...e.dataTransfer.files];
+  if (files.length) await handleUploads(files);
+});
 
-      updateProfileDisplay();
-      switchTab('profile');
-      window.loadPostsFeed();
-    }
+/* ---------- Playlists: create/modal ---------- */
+function showModal(html) {
+  let m = $('#modal-root');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'modal-root';
+    m.className = 'modal-overlay';
+    m.innerHTML = '<div class="modal"></div>';
+    m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+    document.body.appendChild(m);
+  }
+  m.querySelector('.modal').innerHTML = html;
+  m.classList.add('active');
+}
 
-    function toggleFollowUser() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!visitedProfileUser || visitedProfileUser === currentUser.username) return;
-      
-      isFollowing = !isFollowing;
-      let btn = document.getElementById('profile-follow-btn');
-      let countEl = document.getElementById('profile-followers-count');
-      let currentCount = parseInt(countEl.innerText);
+function closeModal() {
+  const m = $('#modal-root');
+  if (m) m.classList.remove('active');
+}
 
-      if (isFollowing) {
-        btn.innerText = "Following";
-        btn.className = "mt-3 bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs px-6 py-2 rounded-xl transition";
-        currentCount += 1;
-        countEl.innerText = currentCount;
-        window.sendNotificationToFirebase(visitedProfileUser, `@${currentUser.username} followed you`);
-      } else {
-        btn.innerText = "Follow";
-        btn.className = "mt-3 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs px-6 py-2 rounded-xl transition";
-        currentCount = Math.max(0, currentCount - 1);
-        countEl.innerText = currentCount;
-      }
+function openCreatePlaylist() {
+  showModal(`
+    <h2>Create playlist</h2>
+    <input id="pl-name" placeholder="Playlist name" autocomplete="off" maxlength="60" />
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmCreatePlaylist()">Create</button>
+    </div>
+  `);
+  setTimeout(() => {
+    const inp = $('#pl-name');
+    if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if (e.key === 'Enter') confirmCreatePlaylist(); }); }
+  }, 50);
+}
 
-      localStorage.setItem('loop_followers_' + visitedProfileUser, currentCount);
-      localStorage.setItem('loop_is_following_' + currentUser.username + '_' + visitedProfileUser, isFollowing);
-    }
+function confirmCreatePlaylist() {
+  const name = $('#pl-name')?.value;
+  closeModal();
+  if (name) createPlaylist(name);
+}
 
-    function openNotificationsModal() {
-      document.getElementById('notifications-modal').classList.remove('hidden');
-      window.fetchUserNotifications();
-    }
+function openTrackMenu(trackId, anchor) {
+  const t = trackById(trackId);
+  if (!t) return;
+  const playlists = STATE.playlists;
+  showModal(`
+    <h2>${esc(t.title)}</h2>
+    <div style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">${esc(t.artist)} · ${fmtTime(t.duration)}</div>
+    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:16px; max-height:260px; overflow-y:auto;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-faint); font-weight:700; padding: 4px 8px;">Add to playlist</div>
+      ${playlists.length ? playlists.map(p => `
+        <div class="pl-choice" onclick="addToPlaylist('${p.id}', '${trackId}'); closeModal();">
+          <div class="playlist-thumb">${svg('music', 14)}</div>
+          <div style="flex:1; font-weight:600; font-size:13px;">${esc(p.name)}</div>
+          ${p.trackIds.includes(trackId) ? svg('check', 16) : svg('plus', 16)}
+        </div>
+      `).join('') : `<div style="padding: 8px; font-size: 12px; color: var(--text-faint);">No playlists. Create one first.</div>`}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick="openCreatePlaylist();">New playlist</button>
+    </div>
+  `);
+}
 
-    function closeNotificationsModal() {
-      document.getElementById('notifications-modal').classList.add('hidden');
-    }
+function deletePlaylistConfirm(id) {
+  const p = playlistById(id);
+  if (!p) return;
+  showModal(`
+    <h2>Delete "${esc(p.name)}"?</h2>
+    <div style="color: var(--text-dim); margin-bottom: 20px; font-size:13px;">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="background:#ef4444;" onclick="closeModal(); deletePlaylist('${id}'); toast('Playlist deleted');">Delete</button>
+    </div>
+  `);
+}
 
-    window.renderNotificationsList = function(notifs) {
-      let listContainer = document.getElementById('notifications-list');
-      listContainer.innerHTML = '';
+/* ---------- Play actions ---------- */
+function playSingle(id) {
+  setQueue([id], id);
+}
 
-      if (notifs.length === 0) {
-        listContainer.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">No notifications yet.</div>`;
-        return;
-      }
+function playAllLiked() {
+  const tracks = STATE.liked.map(trackById).filter(Boolean);
+  if (!tracks.length) return;
+  setQueue(tracks.map(t => t.id), tracks[0].id);
+}
 
-      notifs.forEach(n => {
-        listContainer.innerHTML += `
-          <div class="bg-gray-950 border border-gray-800 p-2.5 rounded-xl flex items-center justify-between text-xs">
-            <span class="text-gray-200">${n.text}</span>
-            <span class="text-[9px] text-gray-500">New</span>
-          </div>
-        `;
-      });
-    };
+function playPlaylist(plId) {
+  const p = playlistById(plId);
+  if (!p || !p.trackIds.length) return;
+  const ids = p.trackIds.filter(id => trackById(id));
+  if (ids.length) setQueue(ids, ids[0]);
+}
 
-    function openUserSelectModal() {
-      document.getElementById('user-select-modal').classList.remove('hidden');
-      document.getElementById('target-username-input').value = '';
-    }
+function playArtist(name) {
+  const tracks = STATE.tracks.filter(t => t.artist === name);
+  if (!tracks.length) return;
+  setQueue(tracks.map(t => t.id), tracks[0].id);
+}
 
-    function closeUserSelectModal() {
-      document.getElementById('user-select-modal').classList.add('hidden');
-    }
+/* ---------- Keyboard shortcuts ---------- */
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (e.code === 'ArrowRight' && e.shiftKey) nextTrack();
+  else if (e.code === 'ArrowLeft' && e.shiftKey) prevTrack();
+  else if (e.code === 'KeyL' && currentTrack()) toggleLike(currentTrack().id);
+  else if (e.code === 'Slash') { e.preventDefault(); $('#search-input').focus(); }
+});
 
-    function startChatWithUser() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      let target = document.getElementById('target-username-input').value.trim();
-      if (!target || !currentUser || target === currentUser.username) {
-        alert("Please enter a valid different username.");
-        return;
-      }
-      activeChatUser = target;
-      closeUserSelectModal();
-      openChatBox(activeChatUser);
-    }
+/* ---------- Init ---------- */
+async function init() {
+  STATE.tracks = buildDemoTracks();
+  await loadState();
+  renderSidebar();
+  renderContent();
+  renderPlayerBar();
+  setVolume(STATE.player.volume);
+  audio.volume = STATE.player.volume;
+}
 
-    function openChatBox(username) {
-      activeChatUser = username;
-      document.getElementById('active-chat-title').innerText = "@" + activeChatUser;
-      document.getElementById('back-to-inbox').classList.remove('hidden');
-      document.getElementById('conversations-list').classList.add('hidden');
-      document.getElementById('active-chat-box').classList.remove('hidden');
-      window.listenToMessages(activeChatUser);
-    }
-
-    function showInboxList() {
-      activeChatUser = null;
-      document.getElementById('active-chat-title').innerText = "Direct Messages";
-      document.getElementById('back-to-inbox').classList.add('hidden');
-      document.getElementById('active-chat-box').classList.add('hidden');
-      document.getElementById('conversations-list').classList.remove('hidden');
-      window.listenToInbox();
-    }
-
-    window.renderConversationsList = function(partners) {
-      let inboxContainer = document.getElementById('conversations-list');
-      if (!activeChatUser) {
-        inboxContainer.innerHTML = '';
-        if (partners.length === 0) {
-          inboxContainer.innerHTML = `
-            <div class="text-center text-gray-500 text-xs my-auto">
-              <i class="fa-regular fa-comments text-2xl mb-1 text-gray-600"></i>
-              <p>No active chats. Click '+ New Chat' to message someone.</p>
-            </div>`;
-          return;
-        }
-
-        partners.forEach(partner => {
-          inboxContainer.innerHTML += `
-            <div onclick="openChatBox('${partner}')" class="bg-gray-900 border border-gray-800 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500 transition">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xs">
-                  ${partner.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h4 class="text-xs font-bold text-white">@${partner}</h4>
-                  <p class="text-[10px] text-gray-400">Tap to open conversation</p>
-                </div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-xs text-gray-600"></i>
-            </div>
-          `;
-        });
-      }
-    };
-
-    window.renderFirebaseMessages = function(messages) {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      let chatContainer = document.getElementById('chat-messages');
-      chatContainer.innerHTML = '';
-
-      if (messages.length === 0) {
-        chatContainer.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">No messages yet with @${activeChatUser}. Say hello!</div>`;
-        return;
-      }
-
-      messages.forEach(msg => {
-        let isMe = msg.sender === currentUser.username;
-        let align = isMe ? 'ml-auto bg-emerald-600/30 border-emerald-500/40 text-right' : 'mr-auto bg-gray-900 border-gray-800 text-left';
-        
-        chatContainer.innerHTML += `
-          <div class="max-w-[80%] p-3 rounded-2xl border ${align} flex flex-col gap-1">
-            <p class="text-xs text-white leading-relaxed">${msg.text}</p>
-            <span class="text-[8px] text-gray-400 self-end">${msg.time}</span>
-          </div>
-        `;
-      });
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function sendDirectMessage() {
-      let input = document.getElementById('chat-input');
-      let text = input.value.trim();
-      if (!text || !activeChatUser) return;
-
-      window.sendFirebaseMessage(activeChatUser, text);
-      input.value = '';
-    }
-
-    async function autoJoinRoom123() {
-      const statusEl = document.getElementById('match-status');
-      const statusText = document.getElementById('status-text');
-      const placeholder = document.getElementById('stranger-placeholder');
-      const strangerVideo = document.getElementById('stranger-video');
-
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Accessing camera...`;
-
-      try {
-        if (!localStream) {
-          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          document.getElementById('local-video').srcObject = localStream;
-        }
-      } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Camera permission denied`;
-        return;
-      }
-
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Connecting to room123...`;
-
-      if(peer) { peer.destroy(); }
-
-      let roomName = "room123";
-      let myPeerId = roomName + "_user1";
-      let targetPeerId = roomName + "_user2";
-
-      peer = new Peer(myPeerId);
-
-      peer.on('open', (id) => {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Waiting in room123...`;
-        statusText.innerText = `Connected to pool. Waiting for partner...`;
-
-        let call = peer.call(targetPeerId, localStream);
-        if(call) {
-          setupCallHandlers(call);
-        }
-      });
-
-      peer.on('error', (err) => {
-        if(err.type === 'unavailable-id') {
-          peer = new Peer(targetPeerId);
-          peer.on('open', (id) => {
-            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecting with partner...`;
-            let call = peer.call(myPeerId, localStream);
-            if(call) {
-              setupCallHandlers(call);
-            }
-          });
-        }
-      });
-
-      peer.on('call', (call) => {
-        currentCall = call;
-        call.answer(localStream);
-        setupCallHandlers(call);
-      });
-    }
-
-    function setupCallHandlers(call) {
-      currentCall = call;
-      const statusEl = document.getElementById('match-status');
-      const placeholder = document.getElementById('stranger-placeholder');
-      const strangerVideo = document.getElementById('stranger-video');
-
-      call.on('stream', (remoteStream) => {
-        strangerVideo.srcObject = remoteStream;
-        strangerVideo.play();
-        placeholder.classList.add('hidden');
-        strangerVideo.classList.remove('hidden');
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected successfully!`;
-      });
-
-      call.on('close', () => {
-        strangerVideo.srcObject = null;
-        strangerVideo.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Partner disconnected`;
-      });
-    }
-
-    function skipStranger() {
-      if (currentCall) {
-        currentCall.close();
-        currentCall = null;
-      }
-      const strangerVideo = document.getElementById('stranger-video');
-      const placeholder = document.getElementById('stranger-placeholder');
-      strangerVideo.srcObject = null;
-      strangerVideo.classList.add('hidden');
-      placeholder.classList.remove('hidden');
-      document.getElementById('match-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Reconnecting...`;
-      
-      setTimeout(() => {
-        autoJoinRoom123();
-      }, 1000);
-    }
-
-    function stopPeerConnection() {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-      }
-      if (peer) {
-        peer.destroy();
-        peer = null;
-      }
-    }
-
-    function openEditProfileModal() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
-      document.getElementById('input-name').value = currentUser.name || "Inshad Afsal";
-      document.getElementById('input-username').value = currentUser.username || "inshadafsal";
-      document.getElementById('input-email').value = currentUser.email || "inshad@example.com";
-      document.getElementById('input-profile-file').value = "";
-      document.getElementById('edit-profile-modal').classList.remove('hidden');
-    }
-
-    function closeEditProfileModal() {
-      document.getElementById('edit-profile-modal').classList.add('hidden');
-    }
-
-    function saveProfileDetails() {
-      currentUser = JSON.parse(localStorage.getItem('loop_current_user')) || null;
-      if (!currentUser) return;
-      const name = document.getElementById('input-name').value;
-      const username = document.getElementById('input-username').value;
-      const email = document.getElementById('input-email').value;
-      let fileInput = document.getElementById('input-profile-file');
-
-      if(name) currentUser.name = name;
-      if(username) currentUser.username = username;
-      if(email) currentUser.email = email;
-
-      if (fileInput.files.length > 0) {
-        let file = fileInput.files[0];
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          currentUser.img = e.target.result;
-          localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-          visitedProfileUser = currentUser.username;
-          updateProfileDisplay();
-          closeEditProfileModal();
-        };
-        reader.readAsDataURL(file);
-      } else {
-        localStorage.setItem('loop_current_user', JSON.stringify(currentUser));
-        visitedProfileUser = currentUser.username;
-        updateProfileDisplay();
-        closeEditProfileModal();
-      }
-    }
-  </script>
+init();
+</script>
 </body>
 </html>
