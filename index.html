@@ -51,6 +51,11 @@
         
         .hidden-view { display: none !important; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+        /* Modal Animations */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+        .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col select-none">
@@ -97,6 +102,7 @@
 
     <!-- MAIN APP CONTENT -->
     <div class="flex flex-1 gap-2 p-2 pb-0 overflow-hidden">
+        <!-- DESKTOP SIDEBAR -->
         <aside class="w-64 bg-spotify-elevated rounded-lg flex-col hidden md:flex">
             <div class="p-6 flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
                 <div class="w-8 h-8 bg-black border-2 border-spotify-green rounded-full flex items-center justify-center">
@@ -110,6 +116,9 @@
                 </button>
                 <button onclick="navigate('search')" id="nav-search" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
                     <i class="fa-solid fa-magnifying-glass text-xl"></i> Search
+                </button>
+                <button onclick="navigate('playlists')" id="nav-playlists" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
+                    <i class="fa-solid fa-list-music text-xl"></i> Playlists
                 </button>
             </nav>
             <div class="h-[1px] bg-gray-800 mx-5 my-4"></div>
@@ -126,7 +135,9 @@
             </div>
         </aside>
 
+        <!-- MAIN AREA -->
         <main class="flex-1 bg-spotify-elevated rounded-lg flex flex-col relative overflow-hidden mb-2 md:mb-0">
+            <!-- Desktop Search -->
             <div class="hidden md:flex sticky top-0 bg-spotify-elevated/95 backdrop-blur-md px-6 py-4 justify-between items-center z-20">
                 <div class="relative w-72">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -139,15 +150,19 @@
                 </div>
             </div>
 
+            <!-- Views Container -->
             <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
+                
+                <!-- HOME VIEW -->
                 <div id="view-home" class="space-y-4">
                     <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
                 </div>
 
+                <!-- SEARCH VIEW -->
                 <div id="view-search" class="hidden-view space-y-4 pt-2 md:pt-0">
                     <div class="md:hidden mb-4">
-                        <input type="text" id="searchInputMobile" placeholder="Search songs, artists, movies..." 
+                        <input type="text" id="searchInputMobile" placeholder="Search songs, artists..." 
                             class="w-full bg-[#242424] text-white text-sm rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-white/20"
                             onkeypress="if(event.key === 'Enter') handleSearch(this.value)">
                     </div>
@@ -155,6 +170,32 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="searchGrid"></div>
                 </div>
 
+                <!-- PLAYLISTS VIEW -->
+                <div id="view-playlists" class="hidden-view space-y-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Public Playlists</h2>
+                        <button onclick="showCreatePlaylistModal()" class="bg-spotify-green text-black font-bold px-4 py-2 rounded-full text-sm hover:scale-105 transition">
+                            <i class="fa-solid fa-plus mr-1"></i> Create
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="playlistsGrid"></div>
+                </div>
+
+                <!-- SINGLE PLAYLIST VIEW -->
+                <div id="view-single-playlist" class="hidden-view space-y-4">
+                    <div class="flex items-center gap-4 mb-6 border-b border-gray-800 pb-4">
+                        <button onclick="navigate('playlists')" class="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black transition">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white" id="playlistTitle">Playlist Name</h2>
+                            <p class="text-sm text-spotify-textSub" id="playlistOwner">By User</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="singlePlaylistGrid"></div>
+                </div>
+
+                <!-- LIKED VIEW -->
                 <div id="view-liked" class="hidden-view space-y-4">
                     <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Liked Songs</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="likedGrid"></div>
@@ -178,9 +219,15 @@
                     <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
                     <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
                 </div>
-                <button onclick="toggleLikeCurrent()" id="like-btn" class="ml-auto md:ml-2 text-gray-400 hover:text-white transition hidden">
-                    <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
-                </button>
+                <!-- LIKE & ADD TO PLAYLIST BUTTONS -->
+                <div class="ml-auto md:ml-2 flex gap-3 pr-2">
+                    <button onclick="toggleLikeCurrent()" id="like-btn" class="text-gray-400 hover:text-white transition hidden">
+                        <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
+                    </button>
+                    <button onclick="showAddToPlaylistModal()" id="add-btn" class="text-gray-400 hover:text-white transition hidden" title="Add to Playlist">
+                        <i class="fa-solid fa-circle-plus text-lg"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="flex flex-col items-center justify-center w-[40%] md:w-2/4 max-w-xl">
@@ -215,18 +262,47 @@
             <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
             <span class="text-[10px] font-semibold">Search</span>
         </button>
+        <button onclick="navigate('playlists')" id="mnav-playlists" class="flex flex-col items-center text-spotify-textSub w-16 transition">
+            <i class="fa-solid fa-list-music text-lg mb-1"></i>
+            <span class="text-[10px] font-semibold">Playlists</span>
+        </button>
         <button onclick="navigate('liked')" id="mnav-liked" class="flex flex-col items-center text-spotify-textSub w-16 transition">
             <i class="fa-regular fa-heart text-lg mb-1"></i>
             <span class="text-[10px] font-semibold">Liked</span>
         </button>
     </nav>
 
+    <!-- MODALS -->
+    <!-- Create Playlist Modal -->
+    <div id="createPlaylistModal" class="modal">
+        <div class="bg-[#282828] p-6 rounded-xl w-full max-w-sm shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4">Create Playlist</h3>
+            <input type="text" id="newPlaylistName" placeholder="Playlist Name" class="w-full bg-[#121212] text-white rounded p-3 mb-4 focus:outline-none focus:ring-1 focus:ring-spotify-green">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('createPlaylistModal')" class="text-gray-400 font-bold hover:text-white">Cancel</button>
+                <button onclick="createPlaylist()" class="bg-spotify-green text-black font-bold px-6 py-2 rounded-full hover:scale-105 transition">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Playlist Modal -->
+    <div id="addToPlaylistModal" class="modal">
+        <div class="bg-[#282828] p-6 rounded-xl w-full max-w-sm shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4">Add to Playlist</h3>
+            <div id="playlistOptions" class="max-h-60 overflow-y-auto custom-scroll mb-4 space-y-2"></div>
+            <div class="flex justify-end">
+                <button onclick="closeModal('addToPlaylistModal')" class="text-gray-400 font-bold hover:text-white">Close</button>
+            </div>
+        </div>
+    </div>
+
     <audio id="audio-player"></audio>
 
+    <!-- FIREBASE SETUP -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCM_1-W2fc1fu8vAT-bJmJuVkl0KGRsvWg",
@@ -246,6 +322,7 @@
         window.signInWithEmailAndPassword = signInWithEmailAndPassword;
         window.signOut = signOut;
         window.doc = doc; window.setDoc = setDoc; window.getDoc = getDoc; window.updateDoc = updateDoc;
+        window.collection = collection; window.addDoc = addDoc; window.getDocs = getDocs; window.query = query; window.orderBy = orderBy;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -258,11 +335,11 @@
                     name = data.name || "User";
                     likedSongs = data.favorites || []; 
                 } else {
-                    // Create document if it doesn't exist (fixes older accounts)
                     await setDoc(doc(db, "users", user.uid), { name: "User", email: user.email, favorites: [] });
                     likedSongs = [];
                 }
                 
+                window.currentUserName = name;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('userNameDisplay').innerText = name;
                 document.getElementById('userNameDisplayMobile').innerText = name;
@@ -275,18 +352,21 @@
         });
     </script>
 
+    <!-- APP LOGIC -->
     <script>
-        // ACTIVE QUEUE (Independent of which view you are looking at)
         let playQueue = [];
         let currentIndex = -1;
         let isPlaying = false;
         let likedSongs = []; 
         
-        // View Data
         let homeSongs = [];
         let searchSongs = [];
+        let allPlaylists = []; // Holds public playlists from DB
+        let currentViewPlaylistSongs = [];
+        
         let activeView = 'home';
         let errorCount = 0;
+        let currentPlaylistId = null;
 
         const audio = document.getElementById('audio-player');
         
@@ -297,6 +377,7 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
+        // API & UTILS
         async function fetchWithFallback(query) {
             for (let server of API_SERVERS) {
                 try {
@@ -331,33 +412,11 @@
             const seenTitles = new Set();
             return tracks.filter(track => {
                 let rawTitle = (track.song || track.name || track.title || '').toLowerCase();
-                rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '')
-                                   .replace(/remix/gi, '')
-                                   .replace(/from\s+.*/g, '')
-                                   .replace(/[^a-z0-9]/g, '')
-                                   .trim();
+                rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '').replace(/remix/gi, '').replace(/from\s+.*/g, '').replace(/[^a-z0-9]/g, '').trim();
                 if (!rawTitle || seenTitles.has(rawTitle)) return false;
                 seenTitles.add(rawTitle);
                 return true;
             });
-        }
-
-        async function fetchTrending() {
-            const queries = [
-                'malayalam hits 2024', 'tamil hits 2024', 'hindi hits 2024', 'english pop hits', 
-                'punjabi hits', 'telugu hits', 'lofi chill', 'trending songs'
-            ];
-            const promises = queries.map(q => fetchWithFallback(q));
-            const results = await Promise.all(promises);
-            let allTracks = results.flat();
-            const uniqueTracks = removeDuplicates(allTracks);
-            return uniqueTracks.slice(0, 100);
-        }
-
-        async function initApp() {
-            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i><p class="text-gray-400 mt-2 text-sm">Loading songs...</p></div>`;
-            homeSongs = await fetchTrending();
-            renderGrid(homeSongs, 'homeGrid');
         }
 
         function getImage(track) {
@@ -382,6 +441,153 @@
             return track.song || track.name || track.title || "Unknown Song";
         }
 
+        // INIT
+        async function initApp() {
+            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
+            homeSongs = await fetchTrending();
+            renderGrid(homeSongs, 'homeGrid');
+            loadPublicPlaylists(); // Load playlists on startup
+        }
+
+        async function fetchTrending() {
+            const queries = ['malayalam hits 2024', 'tamil hits 2024', 'hindi hits 2024', 'english pop hits', 'punjabi hits', 'telugu hits'];
+            const promises = queries.map(q => fetchWithFallback(q));
+            const results = await Promise.all(promises);
+            let allTracks = results.flat();
+            const uniqueTracks = removeDuplicates(allTracks);
+            return uniqueTracks.slice(0, 100);
+        }
+
+        // PLAYLIST DATABASE LOGIC
+        async function loadPublicPlaylists() {
+            try {
+                // Fetch all public playlists
+                const q = query(window.collection(window.db, "public_playlists"), window.orderBy("createdAt", "desc"));
+                const snap = await window.getDocs(q);
+                allPlaylists = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderPlaylistsUI();
+            } catch (e) {
+                console.error("Error loading playlists. Check Firestore rules.", e);
+            }
+        }
+
+        function renderPlaylistsUI() {
+            const grid = document.getElementById('playlistsGrid');
+            if (allPlaylists.length === 0) {
+                grid.innerHTML = `<p class="text-gray-400 col-span-full">No playlists created yet. Be the first!</p>`;
+                return;
+            }
+
+            grid.innerHTML = allPlaylists.map(pl => `
+                <div class="bg-[#181818] hover:bg-[#282828] p-4 rounded-md transition cursor-pointer group" onclick="viewPlaylist('${pl.id}')">
+                    <div class="w-full aspect-square bg-gradient-to-br from-indigo-500 to-purple-600 rounded-md shadow-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-music text-4xl text-white/50"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm truncate">${pl.name}</h3>
+                    <p class="text-xs text-spotify-textSub mt-1 truncate">By ${pl.ownerName} • ${pl.songs ? pl.songs.length : 0} songs</p>
+                </div>
+            `).join('');
+        }
+
+        function showCreatePlaylistModal() {
+            document.getElementById('createPlaylistModal').classList.add('active');
+            document.getElementById('newPlaylistName').value = '';
+        }
+
+        async function createPlaylist() {
+            const name = document.getElementById('newPlaylistName').value.trim();
+            if (!name) return alert("Enter a name!");
+
+            try {
+                await window.addDoc(window.collection(window.db, "public_playlists"), {
+                    name: name,
+                    ownerId: window.currentUid,
+                    ownerName: window.currentUserName,
+                    songs: [],
+                    createdAt: new Date()
+                });
+                closeModal('createPlaylistModal');
+                loadPublicPlaylists(); // Reload
+            } catch (e) {
+                alert("Error creating playlist. Ensure Firebase rules allow write access.");
+            }
+        }
+
+        async function viewPlaylist(playlistId) {
+            const pl = allPlaylists.find(p => p.id === playlistId);
+            if (!pl) return;
+
+            currentPlaylistId = playlistId;
+            currentViewPlaylistSongs = pl.songs || [];
+            
+            document.getElementById('playlistTitle').innerText = pl.name;
+            document.getElementById('playlistOwner').innerText = `By ${pl.ownerName} • ${currentViewPlaylistSongs.length} songs`;
+            
+            navigate('single-playlist');
+            renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
+        }
+
+        function showAddToPlaylistModal() {
+            if (currentIndex === -1 || !playQueue[currentIndex]) return;
+            
+            // Show only playlists created by this user (usually, people only add to their own lists)
+            const myPlaylists = allPlaylists.filter(p => p.ownerId === window.currentUid);
+            
+            const container = document.getElementById('playlistOptions');
+            if (myPlaylists.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-400">You haven't created any playlists yet.</p>`;
+            } else {
+                container.innerHTML = myPlaylists.map(pl => `
+                    <div class="flex items-center gap-3 p-2 hover:bg-[#3E3E3E] rounded cursor-pointer transition" onclick="addSongToPlaylist('${pl.id}')">
+                        <i class="fa-solid fa-music text-gray-400"></i>
+                        <span class="font-semibold text-white">${pl.name}</span>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('addToPlaylistModal').classList.add('active');
+        }
+
+        async function addSongToPlaylist(playlistId) {
+            const track = playQueue[currentIndex];
+            const pl = allPlaylists.find(p => p.id === playlistId);
+            if (!pl) return;
+
+            // Check if song already exists
+            if (pl.songs.some(s => String(s.id) === String(track.id))) {
+                alert("Song is already in this playlist!");
+                closeModal('addToPlaylistModal');
+                return;
+            }
+
+            // Prepare track object for DB
+            const trackToSave = {
+                id: String(track.id),
+                song: getSongName(track),
+                primary_artists: getArtistName(track),
+                image: getImage(track),
+                media_url: getAudioUrl(track),
+                downloadUrl: track.downloadUrl || []
+            };
+
+            const updatedSongs = [...(pl.songs || []), trackToSave];
+
+            try {
+                await window.updateDoc(window.doc(window.db, "public_playlists", playlistId), {
+                    songs: updatedSongs
+                });
+                alert("Added to playlist!");
+                closeModal('addToPlaylistModal');
+                loadPublicPlaylists(); // Refresh local data
+            } catch (e) {
+                alert("Error adding song. Check Firebase rules.");
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // RENDER GRID
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
@@ -393,8 +599,6 @@
                 const cover = getImage(track);
                 const songName = getSongName(track);
                 const artist = getArtistName(track);
-                
-                // Check if this specific track is the currently playing one
                 const isCurrent = playQueue[currentIndex] && String(playQueue[currentIndex].id) === String(track.id);
                 
                 const playIconHTML = (isCurrent && isPlaying) 
@@ -417,11 +621,12 @@
             }).join('');
         }
 
-        // FIX: Set up the playQueue correctly based on where the user clicked
+        // PLAY LOGIC
         function playTrack(containerId, index) {
             if (containerId === 'homeGrid') playQueue = [...homeSongs];
             else if (containerId === 'searchGrid') playQueue = [...searchSongs];
             else if (containerId === 'likedGrid') playQueue = [...likedSongs];
+            else if (containerId === 'singlePlaylistGrid') playQueue = [...currentViewPlaylistSongs];
             
             currentIndex = index;
             loadAndPlay(playQueue[currentIndex]);
@@ -430,41 +635,29 @@
         function loadAndPlay(track) {
             if (!track) return;
             const streamUrl = getAudioUrl(track);
-            
-            if(!streamUrl) {
-                playNext();
-                return;
-            }
+            if(!streamUrl) { playNext(); return; }
 
             audio.src = streamUrl;
-            
             document.getElementById('player-title').innerText = getSongName(track);
             document.getElementById('player-artist').innerText = getArtistName(track);
             document.getElementById('player-thumb').src = getImage(track);
             
             document.getElementById('like-btn').classList.remove('hidden');
+            document.getElementById('add-btn').classList.remove('hidden');
             updateLikeIcon(track.id);
 
             audio.play().then(() => {
                 isPlaying = true;
                 errorCount = 0;
-                updateAllViews(); // Update UI on all tabs
+                updateAllViews();
             }).catch((e) => {
-                if(errorCount < 3) {
-                    errorCount++;
-                    playNext();
-                }
+                if(errorCount < 3) { errorCount++; playNext(); }
             });
         }
 
-        audio.addEventListener('error', (e) => {
-            if (errorCount < 3 && playQueue.length > 1) {
-                errorCount++;
-                setTimeout(playNext, 1000); 
-            } else {
-                isPlaying = false;
-                updateAllViews();
-            }
+        audio.addEventListener('error', () => {
+            if (errorCount < 3 && playQueue.length > 1) { errorCount++; setTimeout(playNext, 1000); } 
+            else { isPlaying = false; updateAllViews(); }
         });
 
         function togglePlayPause() {
@@ -486,46 +679,34 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
-        // Update UI for whatever tab is visible
         function updateAllViews() {
             const icon = document.getElementById('play-pause-icon');
             icon.className = isPlaying ? "fa-solid fa-pause text-xs md:text-sm" : "fa-solid fa-play text-xs md:text-sm ml-0.5";
-            
             renderGrid(homeSongs, 'homeGrid');
             renderGrid(searchSongs, 'searchGrid');
             renderGrid(likedSongs, 'likedGrid');
+            if (activeView === 'single-playlist') renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
         }
 
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             const progress = (audio.currentTime / audio.duration) * 100;
-            
             document.getElementById('progress-bar').value = progress;
-            document.getElementById('current-time').innerText = formatTime(audio.currentTime);
-            
             document.getElementById('progress-bar-mob').value = progress;
+            document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
         });
 
         audio.addEventListener('loadedmetadata', () => {
-            const timeStr = formatTime(audio.duration);
-            document.getElementById('duration').innerText = timeStr;
-            document.getElementById('duration-mob').innerText = timeStr;
+            document.getElementById('duration').innerText = formatTime(audio.duration);
+            document.getElementById('duration-mob').innerText = formatTime(audio.duration);
         });
         
         audio.addEventListener('ended', playNext);
 
-        document.getElementById('progress-bar').addEventListener('input', (e) => {
-            if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
-        });
-        
-        document.getElementById('progress-bar-mob').addEventListener('input', (e) => {
-            if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
-        });
-
-        document.getElementById('volume-bar')?.addEventListener('input', (e) => {
-            audio.volume = e.target.value;
-        });
+        document.getElementById('progress-bar').addEventListener('input', (e) => { if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration; });
+        document.getElementById('progress-bar-mob').addEventListener('input', (e) => { if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration; });
+        document.getElementById('volume-bar')?.addEventListener('input', (e) => { audio.volume = e.target.value; });
 
         function formatTime(seconds) {
             if (isNaN(seconds)) return "0:00";
@@ -534,12 +715,12 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
+        // SEARCH & NAVIGATION
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
-            
             let results = await fetchWithFallback(query);
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
@@ -547,7 +728,7 @@
 
         function navigate(view) {
             activeView = view;
-            ['home', 'search', 'liked'].forEach(v => {
+            ['home', 'search', 'playlists', 'single-playlist', 'liked'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden-view');
                 const dNav = document.getElementById(`nav-${v}`);
                 if(dNav) { dNav.classList.remove('text-white'); dNav.classList.add('text-spotify-textSub'); }
@@ -573,8 +754,10 @@
             }
             
             if (view === 'liked') renderGrid(likedSongs, 'likedGrid');
+            if (view === 'playlists') loadPublicPlaylists();
         }
 
+        // AUTH
         function switchAuthMode(mode) {
             document.getElementById('loginForm').classList.toggle('hidden', mode === 'signup');
             document.getElementById('signupForm').classList.toggle('hidden', mode === 'login');
@@ -589,20 +772,15 @@
 
             try {
                 const userCred = await window.createUserWithEmailAndPassword(window.auth, email, password);
-                await window.setDoc(window.doc(window.db, "users", userCred.user.uid), { 
-                    name: name, 
-                    email: email, 
-                    favorites: [] 
-                });
+                await window.setDoc(window.doc(window.db, "users", userCred.user.uid), { name: name, email: email, favorites: [] });
             } catch (e) { alert("Signup failed: " + e.message); }
         }
 
         async function handleLoginSubmit() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
-            try {
-                await window.signInWithEmailAndPassword(window.auth, email, password);
-            } catch (e) { alert("Login failed: Invalid credentials"); }
+            try { await window.signInWithEmailAndPassword(window.auth, email, password); } 
+            catch (e) { alert("Login failed: Invalid credentials"); }
         }
 
         async function handleLogout() {
@@ -610,44 +788,28 @@
             location.reload();
         }
 
-        // === FIXED SAVING LOGIC ===
+        // LIKES
         async function toggleLikeCurrent() {
             if (currentIndex === -1 || !playQueue[currentIndex]) return;
-            
             const track = playQueue[currentIndex];
             const trackId = String(track.id);
             const isLiked = likedSongs.some(t => String(t.id) === trackId);
             
-            if (isLiked) {
-                likedSongs = likedSongs.filter(t => String(t.id) !== trackId);
-            } else {
-                // Remove undefined properties which cause Firebase errors
-                const trackToSave = {
-                    id: trackId,
-                    song: getSongName(track),
-                    name: getSongName(track),
-                    primary_artists: getArtistName(track),
-                    image: getImage(track),
-                    media_url: getAudioUrl(track),
-                    downloadUrl: track.downloadUrl || []
-                };
-                likedSongs.push(trackToSave);
+            if (isLiked) likedSongs = likedSongs.filter(t => String(t.id) !== trackId);
+            else {
+                likedSongs.push({
+                    id: trackId, song: getSongName(track), primary_artists: getArtistName(track),
+                    image: getImage(track), media_url: getAudioUrl(track), downloadUrl: track.downloadUrl || []
+                });
             }
             
             updateLikeIcon(trackId);
-            updateAllViews(); // Update the grids so hearts change color instantly
+            updateAllViews();
 
-            // Save to Firebase Firestore securely
             if (window.currentUid) {
                 try {
-                    await window.setDoc(window.doc(window.db, "users", window.currentUid), { 
-                        favorites: likedSongs 
-                    }, { merge: true }); // Merge is safer than updateDoc
-                    console.log("Successfully saved to database!");
-                } catch (e) {
-                    console.error("Database Error:", e);
-                    alert("Failed to save to database: " + e.message);
-                }
+                    await window.setDoc(window.doc(window.db, "users", window.currentUid), { favorites: likedSongs }, { merge: true });
+                } catch (e) { console.error("Database Error:", e); }
             }
         }
 
