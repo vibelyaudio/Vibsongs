@@ -55,6 +55,10 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
         .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        /* Floating Boost Button Animation */
+        .boost-fab { animation: floatIn 0.3s ease-out; }
+        @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col select-none">
@@ -198,6 +202,11 @@
         </main>
     </div>
 
+    <!-- FLOATING VOLUME BOOST BUTTON -->
+    <button id="boost-fab" onclick="toggleBoostModal()" class="hidden fixed bottom-[150px] right-4 md:bottom-28 md:right-8 w-12 h-12 bg-spotify-green text-black rounded-full flex items-center justify-center shadow-2xl z-40 hover:scale-110 transition boost-fab" title="Volume Boost">
+        <i class="fa-solid fa-bolt text-xl"></i>
+    </button>
+
     <!-- PLAYER BAR -->
     <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
         <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
@@ -287,7 +296,34 @@
         </div>
     </div>
 
-    <audio id="audio-player"></audio>
+    <!-- VOLUME BOOST MODAL -->
+    <div id="boostModal" class="modal">
+        <div class="bg-[#282828] p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
+            <div class="w-16 h-16 bg-spotify-green text-black rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fa-solid fa-bolt text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Extra Sound Boost</h3>
+            <p class="text-xs text-gray-400 mb-6">Increase volume up to 300%</p>
+            
+            <div class="flex items-center gap-4 mb-6">
+                <i class="fa-solid fa-volume-low text-gray-400"></i>
+                <input type="range" id="boost-slider" value="1" min="1" max="3" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-spotify-green">
+                <i class="fa-solid fa-volume-high text-spotify-green"></i>
+            </div>
+            
+            <div class="flex justify-between items-center px-2 mb-6">
+                <span class="text-sm font-bold text-white" id="boost-percent">100%</span>
+                <button onclick="resetBoost()" class="text-xs text-spotify-green hover:underline">Reset</button>
+            </div>
+            
+            <div class="flex justify-end">
+                <button onclick="closeModal('boostModal')" class="bg-spotify-green text-black font-bold px-6 py-2 rounded-full hover:scale-105 transition">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORTANT: crossorigin="anonymous" is required for Web Audio API -->
+    <audio id="audio-player" crossorigin="anonymous"></audio>
 
     <!-- FIREBASE SETUP -->
     <script type="module">
@@ -359,12 +395,58 @@
         let errorCount = 0;
         let currentPlaylistId = null;
         
-        // Variables for Notification Tracking
-        let currentPlayingTrackMeta = null;
-        let mediaSessionInterval = null;
+        // Web Audio API variables for Sound Boost
+        let audioCtx = null;
+        let sourceNode = null;
+        let gainNode = null;
+        let currentGain = 1.0;
 
         const audio = document.getElementById('audio-player');
         
+        // Initialize Audio Context on first click (required by browser policies)
+        function initAudioContext() {
+            if (!audioCtx) {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                    sourceNode = audioCtx.createMediaElementSource(audio);
+                    gainNode = audioCtx.createGain();
+                    
+                    sourceNode.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                } catch (e) {
+                    console.error("Web Audio API not supported or CORS blocked", e);
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleBoostModal() {
+            initAudioContext(); // Ensure context is ready
+            document.getElementById('boostModal').classList.add('active');
+        }
+
+        function resetBoost() {
+            document.getElementById('boost-slider').value = 1;
+            updateBoost(1);
+        }
+
+        function updateBoost(val) {
+            currentGain = parseFloat(val);
+            if (gainNode) {
+                gainNode.gain.value = currentGain;
+            }
+            document.getElementById('boost-percent').innerText = Math.round(currentGain * 100) + '%';
+        }
+        
+        document.getElementById('boost-slider').addEventListener('input', (e) => {
+            updateBoost(e.target.value);
+        });
+        
+        // === END SOUND BOOST LOGIC ===
+
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
@@ -638,7 +720,6 @@
 
         // === NOTIFICATION UPDATE LOGIC ===
         function updateMediaSession(track) {
-            currentPlayingTrackMeta = track; // Save metadata for the interval
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: getSongName(track),
@@ -656,12 +737,12 @@
 
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); stopMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     if (details.seekTime !== undefined && isFinite(details.seekTime)) {
                         audio.currentTime = details.seekTime;
-                        updateNotificationProgress(); // Force UI update on seek
+                        updateNotificationProgress(); 
                     }
                 });
             }
@@ -669,43 +750,29 @@
 
         function updateNotificationProgress() {
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                // If duration is Infinity, try using the API duration or skip
                 let duration = audio.duration;
-                // If the browser cannot read the stream's duration, use the one from API metadata
-                if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
-                    duration = currentPlayingTrackMeta?.duration || 0;
-                }
-                
-                let position = audio.currentTime;
+                if (!isFinite(duration) || isNaN(duration)) return;
 
-                if (duration > 0 && isFinite(duration) && position >= 0 && isFinite(position)) {
+                if (duration > 0 && isFinite(duration) && audio.currentTime >= 0 && isFinite(audio.currentTime)) {
                     try {
                         navigator.mediaSession.setPositionState({
-                            duration: Math.max(duration, position), 
+                            duration: duration,
                             playbackRate: audio.playbackRate,
-                            position: Math.min(position, duration)
+                            position: Math.min(audio.currentTime, duration)
                         });
-                    } catch (e) {
-                        console.warn("MediaSession Error:", e);
-                    }
+                    } catch (e) { }
                 }
             }
-        }
-
-        function startMediaSessionTracker() {
-            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
-            // Update every 1 second to prevent UI glitches
-            mediaSessionInterval = setInterval(() => {
-                if (isPlaying) updateNotificationProgress();
-            }, 1000);
-        }
-
-        function stopMediaSessionTracker() {
-            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
         }
         // ==================================
 
         function loadAndPlay(track) {
             if (!track) return;
+            
+            // Show Floating Boost Button
+            document.getElementById('boost-fab').classList.remove('hidden');
+
             const streamUrl = getAudioUrl(track);
             if(!streamUrl) { playNext(); return; }
 
@@ -725,11 +792,27 @@
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
                 errorCount = 0;
                 updateAllViews();
-                startMediaSessionTracker(); // Start the 1-sec interval
             }).catch((e) => {
                 if(errorCount < 3) { errorCount++; playNext(); }
             });
         }
+
+        // HACK TO FIX DURATION BUG (Infinity)
+        let hackApplied = false;
+        audio.addEventListener('durationchange', () => {
+            if (audio.duration === Infinity && !hackApplied) {
+                hackApplied = true;
+                audio.currentTime = Number.MAX_SAFE_INTEGER;
+                audio.addEventListener('timeupdate', function fixDuration() {
+                    audio.currentTime = 0;
+                    audio.removeEventListener('timeupdate', fixDuration);
+                    updateNotificationProgress(); // Now duration should be valid
+                });
+            } else if (isFinite(audio.duration)) {
+                hackApplied = false;
+                updateNotificationProgress();
+            }
+        });
 
         audio.addEventListener('error', () => {
             if (errorCount < 3 && playQueue.length > 1) { errorCount++; setTimeout(playNext, 1000); } 
@@ -738,8 +821,10 @@
 
         function togglePlayPause() {
             if (!audio.src) return;
-            if (isPlaying) { audio.pause(); isPlaying = false; stopMediaSessionTracker(); } 
-            else { audio.play(); isPlaying = true; startMediaSessionTracker(); }
+            initAudioContext(); // Initialize Web Audio on user gesture
+            
+            if (isPlaying) { audio.pause(); isPlaying = false; } 
+            else { audio.play(); isPlaying = true; }
             
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
@@ -769,7 +854,6 @@
         }
 
         audio.addEventListener('timeupdate', () => {
-            // Update only the UI Seek bars
             if (!audio.duration || !isFinite(audio.duration)) return;
             const progress = (audio.currentTime / audio.duration) * 100;
             document.getElementById('progress-bar').value = progress;
@@ -781,11 +865,8 @@
         audio.addEventListener('loadedmetadata', () => {
             document.getElementById('duration').innerText = formatTime(audio.duration);
             document.getElementById('duration-mob').innerText = formatTime(audio.duration);
-            // Force Notification sync once metadata loads
-            updateNotificationProgress();
         });
         
-        audio.addEventListener('durationchange', updateNotificationProgress); // Crucial for stream URLs
         audio.addEventListener('ended', playNext);
 
         document.getElementById('progress-bar').addEventListener('input', (e) => { 
