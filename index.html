@@ -59,7 +59,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Splash Screen Animations */
         @keyframes splash-logo {
             0% { transform: scale(0.5); opacity: 0; box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7); }
             50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 40px rgba(29, 185, 84, 0); }
@@ -420,27 +419,31 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
-        // Updated Search function
+        // ** UPDATED SEARCH: Fetch from all APIs concurrently **
         async function fetchWithFallback(query, limit = 50) {
-            for (let server of API_SERVERS) {
+            const fetchPromises = API_SERVERS.map(async (server) => {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
+                    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 sec timeout
+                    const url = `${server}${encodeURIComponent(query)}&limit=${limit}`;
+                    const res = await fetch(url, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
-                    if (!res.ok) continue;
+                    if (!res.ok) return [];
                     const data = await res.json();
                     
-                    let songs = [];
-                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
-                    else if (Array.isArray(data)) songs = data;
-                    else if (data.results) songs = data.results;
+                    if (data.data && Array.isArray(data.data.results)) return data.data.results;
+                    if (Array.isArray(data)) return data;
+                    if (data.results) return data.results;
+                    return [];
+                } catch (e) {
+                    return [];
+                }
+            });
 
-                    if (songs.length > 0) return songs;
-                } catch (e) { }
-            }
-            return [];
+            // Wait for all servers to respond and combine results
+            const resultsArray = await Promise.all(fetchPromises);
+            return resultsArray.flat();
         }
 
         function getPlaceholderImage(title) {
@@ -821,8 +824,8 @@
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            // Limit increased to 100 to get all songs of the artist
-            let results = await fetchWithFallback(query, 100); 
+            // Fetch 50 songs from all servers and combine them
+            let results = await fetchWithFallback(query, 50); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
