@@ -419,122 +419,101 @@
         const audio = document.getElementById('audio-player');
 
         // ==========================================
-        // NEW API LOGIC (Piped + Invidious + Bhariya)
+        // MULTI-SOURCE API LOGIC (Audius + Saavn)
         // ==========================================
 
-        const PIPED_INSTANCES = [
-            'https://pipedapi.kavin.rocks',
-            'https://pipedapi.adminforge.de',
-            'https://pipedapi.leptons.xyz'
-        ];
-        
-        const INVIDIOUS_INSTANCES = [
-            'https://invidious.nerdvpn.de',
-            'https://inv.nadeko.net'
+        const SAAVN_SERVERS = [
+            'https://saavnapi-nine.vercel.app/result/?query=',
+            'https://saavn.dev/api/search/songs?query=',
+            'https://jiosaavn-api-v3.vercel.app/result/?query='
         ];
 
-        async function searchInvidious(query, limit = 50) {
-            for (let instance of INVIDIOUS_INSTANCES) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000);
-                    const res = await fetch(`${instance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    
-                    if (Array.isArray(data)) {
-                        const songs = data.filter(item => item.type === 'video').map(item => ({
-                            id: item.videoId,
-                            song: item.title,
-                            primary_artists: item.author,
-                            image: item.videoThumbnails?.[0]?.url || `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
-                            media_url: `${instance}/latest_version?id=${item.videoId}&itag=140`, // Audio only stream
-                            duration: item.lengthSeconds
-                        }));
-                        if (songs.length > 0) return songs;
-                    }
-                } catch (e) { }
-            }
-            return [];
-        }
-
-        async function searchPiped(query, limit = 50) {
-            for (let instance of PIPED_INSTANCES) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000);
-                    const res = await fetch(`${instance}/search?q=${encodeURIComponent(query)}&filter=music_songs`, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    
-                    if (data.items) {
-                        const songs = data.items.filter(item => item.type === 'stream').map(item => {
-                            const videoId = item.url.split('v=')[1];
-                            return {
-                                id: videoId,
-                                song: item.title,
-                                primary_artists: item.uploaderName,
-                                image: item.thumbnail,
-                                // Piped requires a separate call for stream URL, we'll use a proxy endpoint
-                                media_url: `${instance}/streams/${videoId}`,
-                                duration: item.duration
-                            };
-                        });
-                        if (songs.length > 0) return songs;
-                    }
-                } catch (e) { }
-            }
-            return [];
-        }
-
-        async function searchBhariya(query, limit = 50) {
+        async function fetchAudius(query, limit = 50) {
             try {
-                // Step 1: Prepare (Search)
-                const prepRes = await fetch(`https://bhindi1.ddns.net/music/api/prepare/${encodeURIComponent(query)}`);
-                if (!prepRes.ok) return [];
-                const prepData = await prepRes.json();
+                let url = `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&app_name=Vibely&limit=${limit}`;
+                const res = await fetch(url);
+                if (!res.ok) return [];
+                const data = await res.json();
                 
-                // Check if response has ID
-                const songId = prepData.id || prepData.song_id;
-                if (!songId) return [];
-
-                // Step 2: Fetch details
-                const fetchRes = await fetch(`https://bhindi1.ddns.net/music/api/fetch/${songId}`);
-                if (!fetchRes.ok) return [];
-                const data = await fetchRes.json();
-
-                if (data) {
-                    return [{
-                        id: `bhariya_${songId}`,
-                        song: data.title || query,
-                        primary_artists: data.artist || 'Unknown',
-                        image: data.thumbnail || getPlaceholderImage(query),
-                        media_url: `https://bhindi1.ddns.net/music/api/audio/${songId}`, // Direct audio stream
-                        duration: data.duration || 0
-                    }];
+                if (data.data && Array.isArray(data.data)) {
+                    return data.data.map(t => ({
+                        id: 'aud_' + t.id,
+                        song: t.title,
+                        primary_artists: t.user.name,
+                        image: t.artwork ? t.artwork['480x480'] : null,
+                        media_url: `https://discoveryprovider.audius.co/v1/tracks/${t.id}/stream?app_name=Vibely`,
+                        duration: t.duration
+                    }));
                 }
             } catch (e) { }
             return [];
         }
 
+        async function fetchTrendingAudius() {
+            try {
+                let url = `https://api.audius.co/v1/tracks/trending?app_name=Vibely&limit=50`;
+                const res = await fetch(url);
+                if (!res.ok) return [];
+                const data = await res.json();
+                
+                if (data.data && Array.isArray(data.data)) {
+                    return data.data.map(t => ({
+                        id: 'aud_' + t.id,
+                        song: t.title,
+                        primary_artists: t.user.name,
+                        image: t.artwork ? t.artwork['480x480'] : null,
+                        media_url: `https://discoveryprovider.audius.co/v1/tracks/${t.id}/stream?app_name=Vibely`,
+                        duration: t.duration
+                    }));
+                }
+            } catch (e) { }
+            return [];
+        }
+
+        async function fetchSaavn(query, limit = 50) {
+            for (let server of SAAVN_SERVERS) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 6000);
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    
+                    let songs = [];
+                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    else if (Array.isArray(data)) songs = data;
+                    else if (data.results) songs = data.results;
+
+                    if (songs.length > 0) return songs;
+                } catch (e) { }
+            }
+            return [];
+        }
+
         async function fetchWithFallback(query, limit = 50) {
-            // Try Invidious first (most reliable for full songs)
-            let songs = await searchInvidious(query, limit);
+            // 1. Try Audius (Most reliable for full tracks)
+            let songs = await fetchAudius(query, limit);
             if (songs.length > 0) return songs;
 
-            // Fallback to Piped
-            songs = await searchPiped(query, limit);
-            if (songs.length > 0) return songs;
-
-            // Fallback to Bhariya
-            songs = await searchBhariya(query, limit);
+            // 2. Try Saavn APIs (For Indian/Malayalam songs)
+            songs = await fetchSaavn(query, limit);
             if (songs.length > 0) return songs;
 
             return [];
+        }
+
+        async function fetchTrending() {
+            let songs = await fetchTrendingAudius();
+            if (songs.length > 0) return songs;
+
+            // Fallback to Saavn trending queries
+            const queries = ['malayalam hits', 'tamil hits', 'hindi hits'];
+            const promises = queries.map(q => fetchSaavn(q, 20)); 
+            const results = await Promise.all(promises);
+            let allTracks = results.flat();
+            return removeDuplicates(allTracks).slice(0, 100);
         }
 
         // ==========================================
@@ -587,7 +566,7 @@
                 homeSongs = await fetchTrending();
                 
                 if(homeSongs.length === 0) {
-                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><p class="text-red-400">API servers are busy. Please refresh later.</p></div>`;
+                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><p class="text-red-400">No songs found. Please refresh.</p></div>`;
                 } else {
                     renderGrid(homeSongs, 'homeGrid');
                 }
@@ -595,15 +574,6 @@
                 console.error(e);
                 document.getElementById('homeGrid').innerHTML = `<p class="text-red-500 text-center col-span-full">Error loading songs. Please refresh.</p>`;
             }
-        }
-
-        async function fetchTrending() {
-            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop', 'punjabi hits', 'telugu hits'];
-            const promises = queries.map(q => fetchWithFallback(q, 20)); 
-            const results = await Promise.all(promises);
-            let allTracks = results.flat();
-            const uniqueTracks = removeDuplicates(allTracks);
-            return uniqueTracks.slice(0, 100);
         }
 
         async function loadPublicPlaylists() {
