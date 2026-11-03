@@ -186,12 +186,7 @@
 
                         <div>
                             <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight mb-4">Trending Now</h2>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid">
-                                <!-- Grid Placeholder -->
-                                <div class="col-span-full text-center py-10">
-                                    <i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i>
-                                </div>
-                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
                         </div>
                     </div>
 
@@ -419,13 +414,15 @@
         const audio = document.getElementById('audio-player');
 
         // ==========================================
-        // MULTI-SOURCE API LOGIC (Audius + Saavn)
+        // MULTI-SOURCE API LOGIC (Audius + Saavn + iTunes)
         // ==========================================
 
         const SAAVN_SERVERS = [
             'https://saavnapi-nine.vercel.app/result/?query=',
             'https://saavn.dev/api/search/songs?query=',
-            'https://jiosaavn-api-v3.vercel.app/result/?query='
+            'https://jiosaavn-api-v3.vercel.app/result/?query=',
+            'https://jiosaavn-api-private.vercel.app/result/?query=',
+            'https://saavn-api-cyan.vercel.app/result/?query='
         ];
 
         async function fetchAudius(query, limit = 50) {
@@ -492,13 +489,35 @@
             return [];
         }
 
+        async function fetchITunes(query, limit = 50) {
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`);
+                const data = await res.json();
+                if (data.results) {
+                    return data.results.map(item => ({
+                        id: 'itunes_' + item.trackId,
+                        song: item.trackName,
+                        primary_artists: item.artistName,
+                        image: item.artworkUrl100.replace('100x100bb', '500x500bb'),
+                        media_url: item.previewUrl,
+                        duration: 30 // Previews are 30s
+                    })).filter(song => song.media_url); // Filter out items without a preview URL
+                }
+            } catch (e) { }
+            return [];
+        }
+
         async function fetchWithFallback(query, limit = 50) {
-            // 1. Try Audius (Most reliable for full tracks)
+            // 1. Audius (Full songs, reliable)
             let songs = await fetchAudius(query, limit);
             if (songs.length > 0) return songs;
 
-            // 2. Try Saavn APIs (For Indian/Malayalam songs)
+            // 2. Saavn (Full songs, Indian catalog)
             songs = await fetchSaavn(query, limit);
+            if (songs.length > 0) return songs;
+
+            // 3. iTunes (30s previews, ultimate fallback)
+            songs = await fetchITunes(query, limit);
             if (songs.length > 0) return songs;
 
             return [];
@@ -508,7 +527,6 @@
             let songs = await fetchTrendingAudius();
             if (songs.length > 0) return songs;
 
-            // Fallback to Saavn trending queries
             const queries = ['malayalam hits', 'tamil hits', 'hindi hits'];
             const promises = queries.map(q => fetchSaavn(q, 20)); 
             const results = await Promise.all(promises);
