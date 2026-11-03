@@ -165,7 +165,6 @@
 
     <!-- PLAYER BAR -->
     <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
-        <!-- Mobile Progress Bar -->
         <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
             <span id="current-time-mob">0:00</span>
             <input type="range" id="progress-bar-mob" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
@@ -192,7 +191,6 @@
                     </button>
                     <button onclick="playNext()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-forward-step text-xl"></i></button>
                 </div>
-                <!-- Desktop Progress Bar -->
                 <div class="w-full hidden md:flex items-center gap-2 text-xs text-gray-400 font-medium">
                     <span id="current-time">0:00</span>
                     <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
@@ -253,7 +251,16 @@
             if (user) {
                 window.currentUid = user.uid;
                 const userSnap = await getDoc(doc(db, "users", user.uid));
-                const name = userSnap.exists() ? (userSnap.data().name || "User") : "User";
+                
+                let name = "User";
+                // FIX 1: Load Favorites from Firestore into memory on login/refresh
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    name = data.name || "User";
+                    likedSongs = data.favorites || []; 
+                } else {
+                    likedSongs = [];
+                }
                 
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('userNameDisplay').innerText = name;
@@ -271,7 +278,7 @@
         let currentPlaylist = [];
         let currentIndex = -1;
         let isPlaying = false;
-        let likedSongs = [];
+        let likedSongs = []; // This will now hold the songs loaded from DB
         let activeView = 'home';
         let errorCount = 0;
 
@@ -289,7 +296,6 @@
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 6000);
-                    // Request up to 30 songs per query
                     const res = await fetch(`${server}${encodeURIComponent(query)}&limit=30`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -315,49 +321,30 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // === EXTREME DUPLICATE FILTER ===
         function removeDuplicates(tracks) {
             const seenTitles = new Set();
-
             return tracks.filter(track => {
                 let rawTitle = (track.song || track.name || track.title || '').toLowerCase();
-                
-                // Remove everything in brackets/parentheses, special characters, and "from" text
                 rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '')
                                    .replace(/remix/gi, '')
                                    .replace(/from\s+.*/g, '')
                                    .replace(/[^a-z0-9]/g, '')
                                    .trim();
-                
-                // If the clean title is empty or already seen, filter it out
                 if (!rawTitle || seenTitles.has(rawTitle)) return false;
                 seenTitles.add(rawTitle);
-
                 return true;
             });
         }
 
         async function fetchTrending() {
-            // Use 8 categories to get 100+ raw songs
             const queries = [
-                'malayalam hits 2024', 
-                'tamil hits 2024', 
-                'hindi hits 2024', 
-                'english pop hits', 
-                'punjabi hits', 
-                'telugu hits',
-                'lofi chill',
-                'trending songs'
+                'malayalam hits 2024', 'tamil hits 2024', 'hindi hits 2024', 'english pop hits', 
+                'punjabi hits', 'telugu hits', 'lofi chill', 'trending songs'
             ];
-            
             const promises = queries.map(q => fetchWithFallback(q));
             const results = await Promise.all(promises);
-            
             let allTracks = results.flat();
-            // Remove duplicates
             const uniqueTracks = removeDuplicates(allTracks);
-            
-            // Return top 100 songs (or however many we got)
             return uniqueTracks.slice(0, 100);
         }
 
@@ -392,7 +379,7 @@
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. Try a different keyword or check internet.</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found.</p></div>`;
                 return;
             }
 
@@ -400,6 +387,7 @@
                 const cover = getImage(track);
                 const songName = getSongName(track);
                 const artist = getArtistName(track);
+                // Use string comparison for IDs to be safe
                 const isCurrent = currentPlaylist[currentIndex]?.id === track.id;
                 
                 const playIconHTML = (isCurrent && isPlaying) 
@@ -592,7 +580,11 @@
 
             try {
                 const userCred = await window.createUserWithEmailAndPassword(window.auth, email, password);
-                await window.setDoc(window.doc(window.db, "users", userCred.user.uid), { name, email, favorites: [] });
+                await window.setDoc(window.doc(window.db, "users", userCred.user.uid), { 
+                    name: name, 
+                    email: email, 
+                    favorites: [] 
+                });
             } catch (e) { alert("Signup failed: " + e.message); }
         }
 
@@ -609,23 +601,51 @@
             location.reload();
         }
 
+        // === FIX 2: PROPER SAVING LOGIC ===
         async function toggleLikeCurrent() {
-            if (currentIndex === -1) return;
+            if (currentIndex === -1 || !currentPlaylist[currentIndex]) return;
+            
             const track = currentPlaylist[currentIndex];
-            const isLiked = likedSongs.some(t => t.id === track.id);
+            const trackId = String(track.id); // Ensure string comparison
             
-            if (isLiked) likedSongs = likedSongs.filter(t => t.id !== track.id);
-            else likedSongs.push(track);
+            const isLiked = likedSongs.some(t => String(t.id) === trackId);
             
-            if (window.currentUid) {
-                await window.updateDoc(window.doc(window.db, "users", window.currentUid), { favorites: likedSongs });
+            if (isLiked) {
+                likedSongs = likedSongs.filter(t => String(t.id) !== trackId);
+            } else {
+                // Save only necessary fields to save database space
+                const trackToSave = {
+                    id: trackId,
+                    song: getSongName(track),
+                    name: getSongName(track), // Compatibility
+                    primary_artists: getArtistName(track),
+                    artists: track.artists,
+                    image: getImage(track),
+                    media_url: getAudioUrl(track),
+                    downloadUrl: track.downloadUrl
+                };
+                likedSongs.push(trackToSave);
             }
-            updateLikeIcon(track.id);
+            
+            updateLikeIcon(trackId);
             if(activeView === 'liked') renderGrid(likedSongs, 'likedGrid');
+
+            // Save to Firebase Firestore
+            if (window.currentUid) {
+                try {
+                    await window.updateDoc(window.doc(window.db, "users", window.currentUid), { 
+                        favorites: likedSongs 
+                    });
+                    console.log("Successfully saved to database!");
+                } catch (e) {
+                    console.error("Database Error:", e);
+                    alert("Error saving to database. Please check console.");
+                }
+            }
         }
 
         function updateLikeIcon(trackId) {
-            const isLiked = likedSongs.some(t => t.id === trackId);
+            const isLiked = likedSongs.some(t => String(t.id) === String(trackId));
             document.getElementById('like-icon').className = isLiked ? "fa-solid fa-heart text-lg text-spotify-green" : "fa-regular fa-heart text-lg";
         }
     </script>
