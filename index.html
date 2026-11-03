@@ -157,13 +157,14 @@
                 <!-- HOME VIEW -->
                 <div id="view-home" class="space-y-6">
                     
-                    <!-- YOUR PLAYLISTS SECTION (At the Top like Spotify) -->
+                    <!-- YOUR PLAYLISTS SECTION (Linear/Scrollable View) -->
                     <div id="home-playlists-section" class="hidden">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Your Playlists</h2>
                             <button onclick="navigate('playlists')" class="text-xs font-bold text-spotify-textSub hover:text-white uppercase tracking-wider">Show all</button>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4" id="homePlaylistsGrid">
+                        <!-- Horizontal Scroll Container -->
+                        <div class="flex overflow-x-auto gap-4 pb-4 no-scrollbar snap-x" id="homePlaylistsGrid">
                             <!-- Populated by JS -->
                         </div>
                     </div>
@@ -411,11 +412,13 @@
         let activeView = 'home';
         let errorCount = 0;
         let currentPlaylistId = null;
+        let currentPlayingTrackMeta = null; // Store metadata for duration fallback
         
         let audioCtx = null;
         let sourceNode = null;
         let gainNode = null;
         let currentGain = 1.0;
+        let mediaSessionInterval = null;
 
         const audio = document.getElementById('audio-player');
         
@@ -526,7 +529,7 @@
 
         async function initApp() {
             document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
-            await loadPublicPlaylists(); // Load playlists first
+            await loadPublicPlaylists(); 
             homeSongs = await fetchTrending();
             renderGrid(homeSongs, 'homeGrid');
         }
@@ -546,29 +549,28 @@
                 const snap = await window.getDocs(q);
                 allPlaylists = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPlaylistsUI();
-                renderHomePlaylists(); // Render playlists on Home page
+                renderHomePlaylists(); 
             } catch (e) {
                 console.error("Error loading playlists", e);
             }
         }
 
-        // Function to render playlists on Home Page
+        // === FIXED: Linear Spotify-Style Horizontal Scroll ===
         function renderHomePlaylists() {
             const section = document.getElementById('home-playlists-section');
             const grid = document.getElementById('homePlaylistsGrid');
             
-            // Filter only current user's playlists
             const myPlaylists = allPlaylists.filter(p => p.ownerId === window.currentUid);
             
             if (myPlaylists.length === 0) {
-                section.classList.add('hidden'); // Hide if no playlists
+                section.classList.add('hidden'); 
                 return;
             }
             
             section.classList.remove('hidden');
             
-            // Show only first 5 playlists on home to save space
-            grid.innerHTML = myPlaylists.slice(0, 5).map(pl => {
+            // Output as horizontally scrollable cards
+            grid.innerHTML = myPlaylists.slice(0, 10).map(pl => {
                 let coverHTML = `
                     <div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3">
                         <i class="fa-solid fa-music text-3xl text-white/80"></i>
@@ -585,8 +587,14 @@
                 }
 
                 return `
-                    <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="viewPlaylist('${pl.id}')">
-                        ${coverHTML}
+                    <div class="flex-shrink-0 w-32 md:w-40 snap-start cursor-pointer group" onclick="viewPlaylist('${pl.id}')">
+                        <div class="relative">
+                            ${coverHTML}
+                            <!-- Play button overlay on hover (Spotify style) -->
+                            <div class="absolute bottom-5 right-2 w-10 h-10 bg-spotify-green rounded-full flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+                                <i class="fa-solid fa-play text-black ml-1"></i>
+                            </div>
+                        </div>
                         <h3 class="font-bold text-white text-sm truncate">${pl.name}</h3>
                         <p class="text-xs text-spotify-textSub mt-1 truncate">${pl.songs ? pl.songs.length : 0} songs</p>
                     </div>
@@ -768,7 +776,10 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
+        // === MEDIA SESSION (Notification) LOGIC ===
         function updateMediaSession(track) {
+            currentPlayingTrackMeta = track; // Save for duration fallback
+            
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: getSongName(track),
@@ -786,33 +797,53 @@
 
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); stopMediaSessionTracker(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     if (details.seekTime !== undefined && isFinite(details.seekTime)) {
                         audio.currentTime = details.seekTime;
-                        updateNotificationProgress(); 
+                        updateNotificationProgress(true); // Force immediate update
                     }
                 });
             }
         }
 
-        function updateNotificationProgress() {
+        function updateNotificationProgress(force = false) {
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                // Use API duration as fallback if browser fails to read stream duration
                 let duration = audio.duration;
-                if (!isFinite(duration) || isNaN(duration)) return;
+                if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
+                    duration = currentPlayingTrackMeta?.duration || 0;
+                }
+                
+                let position = audio.currentTime;
 
-                if (duration > 0 && isFinite(duration) && audio.currentTime >= 0 && isFinite(audio.currentTime)) {
+                if (duration > 0 && isFinite(duration) && isFinite(position) && position >= 0) {
                     try {
                         navigator.mediaSession.setPositionState({
                             duration: duration,
                             playbackRate: audio.playbackRate,
-                            position: Math.min(audio.currentTime, duration)
+                            position: Math.min(position, duration)
                         });
-                    } catch (e) { }
+                    } catch (e) {
+                        // Ignore temporary errors
+                    }
                 }
             }
         }
+
+        function startMediaSessionTracker() {
+            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
+            // Update every second to prevent UI glitches
+            mediaSessionInterval = setInterval(() => {
+                if (isPlaying) updateNotificationProgress();
+            }, 1000);
+        }
+
+        function stopMediaSessionTracker() {
+            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
+        }
+        // ==================================
 
         function loadAndPlay(track) {
             if (!track) return;
@@ -838,6 +869,7 @@
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
                 errorCount = 0;
                 updateAllViews();
+                startMediaSessionTracker();
             }).catch((e) => {
                 if(errorCount < 3) { errorCount++; playNext(); }
             });
@@ -868,8 +900,8 @@
             if (!audio.src) return;
             initAudioContext(); 
             
-            if (isPlaying) { audio.pause(); isPlaying = false; } 
-            else { audio.play(); isPlaying = true; }
+            if (isPlaying) { audio.pause(); isPlaying = false; stopMediaSessionTracker(); } 
+            else { audio.play(); isPlaying = true; startMediaSessionTracker(); }
             
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
@@ -910,6 +942,7 @@
         audio.addEventListener('loadedmetadata', () => {
             document.getElementById('duration').innerText = formatTime(audio.duration);
             document.getElementById('duration-mob').innerText = formatTime(audio.duration);
+            updateNotificationProgress();
         });
         
         audio.addEventListener('ended', playNext);
@@ -917,13 +950,13 @@
         document.getElementById('progress-bar').addEventListener('input', (e) => { 
             if (isFinite(audio.duration)) {
                 audio.currentTime = (e.target.value / 100) * audio.duration; 
-                updateNotificationProgress();
+                updateNotificationProgress(true);
             }
         });
         document.getElementById('progress-bar-mob').addEventListener('input', (e) => { 
             if (isFinite(audio.duration)) {
                 audio.currentTime = (e.target.value / 100) * audio.duration; 
-                updateNotificationProgress();
+                updateNotificationProgress(true);
             }
         });
         
@@ -975,7 +1008,7 @@
             
             if (view === 'liked') renderGrid(likedSongs, 'likedGrid');
             if (view === 'playlists') loadPublicPlaylists();
-            if (view === 'home') renderHomePlaylists(); // Update playlists when going back to home
+            if (view === 'home') renderHomePlaylists();
         }
 
         function switchAuthMode(mode) {
