@@ -623,7 +623,6 @@
                     `;
                 }
 
-                // REMOVED OWNER NAME HERE
                 return `
                     <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="viewPlaylist('${pl.id}')">
                         ${coverHTML}
@@ -774,7 +773,7 @@
 
         // === MEDIA SESSION (Notification) LOGIC ===
         function updateMediaSession(track) {
-            currentPlayingTrackMeta = track; // Save for duration fallback
+            currentPlayingTrackMeta = track; 
             
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -793,7 +792,7 @@
 
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); updateNotificationProgress(); });
                 navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); stopMediaSessionTracker(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     if (details.seekTime !== undefined && isFinite(details.seekTime)) {
@@ -808,13 +807,16 @@
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
                 let duration = audio.duration;
                 
-                // Fallback to API duration if browser fails to read stream duration
+                // If audio.duration is invalid (Infinity/NaN), use the API duration
                 if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
                     duration = currentPlayingTrackMeta?.duration || 0;
-                    // If it's in string format like "04:31"
-                    if (typeof duration === 'string' && duration.includes(':')) {
-                        const parts = duration.split(':');
-                        duration = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+                    if (typeof duration === 'string') {
+                        if (duration.includes(':')) {
+                            const parts = duration.split(':');
+                            duration = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+                        } else {
+                            duration = parseInt(duration);
+                        }
                     }
                 }
                 
@@ -835,7 +837,6 @@
 
         function startMediaSessionTracker() {
             if (mediaSessionInterval) clearInterval(mediaSessionInterval);
-            // Update every 1 second to keep notification progress smooth
             mediaSessionInterval = setInterval(() => {
                 if (isPlaying) updateNotificationProgress();
             }, 1000);
@@ -872,26 +873,23 @@
                 updateAllViews();
                 startMediaSessionTracker();
                 updateNotificationProgress(); // Force sync immediately
+                
+                // Hack to force Android to read duration correctly on initial play
+                setTimeout(updateNotificationProgress, 500);
             }).catch((e) => {
                 if(errorCount < 3) { errorCount++; playNext(); }
             });
         }
 
-        // Duration Hack for Infinity streams
-        let hackApplied = false;
+        // Directly handle duration parsing when metadata loads
+        audio.addEventListener('loadedmetadata', () => {
+            document.getElementById('duration').innerText = formatTime(audio.duration);
+            document.getElementById('duration-mob').innerText = formatTime(audio.duration);
+            updateNotificationProgress(); // Force update here
+        });
+        
         audio.addEventListener('durationchange', () => {
-            if (audio.duration === Infinity && !hackApplied) {
-                hackApplied = true;
-                audio.currentTime = Number.MAX_SAFE_INTEGER;
-                audio.addEventListener('timeupdate', function fixDuration() {
-                    audio.currentTime = 0;
-                    audio.removeEventListener('timeupdate', fixDuration);
-                    updateNotificationProgress(); 
-                });
-            } else if (isFinite(audio.duration)) {
-                hackApplied = false;
-                updateNotificationProgress();
-            }
+            updateNotificationProgress();
         });
 
         audio.addEventListener('error', () => {
@@ -940,17 +938,9 @@
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
-            
-            // Also update notification here to ensure accuracy
             updateNotificationProgress();
         });
 
-        audio.addEventListener('loadedmetadata', () => {
-            document.getElementById('duration').innerText = formatTime(audio.duration);
-            document.getElementById('duration-mob').innerText = formatTime(audio.duration);
-            updateNotificationProgress();
-        });
-        
         audio.addEventListener('ended', playNext);
 
         document.getElementById('progress-bar').addEventListener('input', (e) => { 
