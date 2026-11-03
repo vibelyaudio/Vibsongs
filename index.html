@@ -33,7 +33,7 @@
         
         /* Equalizer Animation */
         .eq-container { display: flex; align-items: flex-end; gap: 2px; height: 14px; width: 16px; margin: 0 auto; }
-        .eq-bar { width: 3px; background-color: #1DB954; border-radius: 1px; animation: eq 0.8s ease-in-out infinite; }
+        .eq-bar { width: 3px; background-color: #000; border-radius: 1px; animation: eq 0.8s ease-in-out infinite; }
         .eq-bar:nth-child(1) { animation-delay: 0s; }
         .eq-bar:nth-child(2) { animation-delay: -0.4s; }
         .eq-bar:nth-child(3) { animation-delay: -0.2s; }
@@ -86,7 +86,7 @@
         </div>
     </div>
 
-    <!-- TOP HEADER (Mobile Optimized) -->
+    <!-- TOP HEADER -->
     <header class="bg-spotify-elevated px-4 py-3 flex items-center justify-between z-20 md:hidden flex-shrink-0">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-black border-2 border-spotify-green rounded-full flex items-center justify-center">
@@ -134,7 +134,6 @@
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 bg-spotify-elevated rounded-lg flex flex-col relative overflow-hidden mb-2 md:mb-0">
-            <!-- Search Bar (Desktop) -->
             <div class="hidden md:flex sticky top-0 bg-spotify-elevated/95 backdrop-blur-md px-6 py-4 justify-between items-center z-20">
                 <div class="relative w-72">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -157,10 +156,9 @@
                 </div>
 
                 <!-- SEARCH VIEW -->
-                <div id="view-search" class="hidden-view space-y-4">
-                    <!-- Mobile Search Input -->
+                <div id="view-search" class="hidden-view space-y-4 pt-2 md:pt-0">
                     <div class="md:hidden mb-4">
-                        <input type="text" id="searchInputMobile" placeholder="Search songs..." 
+                        <input type="text" id="searchInputMobile" placeholder="Search independent artists, genres..." 
                             class="w-full bg-[#242424] text-white text-sm rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-white/20"
                             onkeypress="if(event.key === 'Enter') handleSearch(this.value)">
                     </div>
@@ -177,9 +175,8 @@
         </main>
     </div>
 
-    <!-- PLAYER BAR (Fixed bottom, above nav on mobile) -->
+    <!-- PLAYER BAR -->
     <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex items-center justify-between z-40 h-16 md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
-        <!-- Now Playing -->
         <div class="flex items-center gap-3 w-[60%] md:w-1/4 overflow-hidden">
             <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
             <div class="overflow-hidden">
@@ -191,7 +188,6 @@
             </button>
         </div>
 
-        <!-- Controls -->
         <div class="flex flex-col items-center justify-center w-[40%] md:w-2/4 max-w-xl">
             <div class="flex items-center gap-4 md:gap-6 mb-0 md:mb-2">
                 <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-backward-step text-xl"></i></button>
@@ -207,14 +203,13 @@
             </div>
         </div>
 
-        <!-- Volume (Desktop) -->
         <div class="hidden md:flex items-center justify-end gap-3 w-1/4 pr-4">
             <i class="fa-solid fa-volume-high text-gray-400"></i>
             <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
         </div>
     </footer>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR (Spotify Style) -->
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-gray-800 flex justify-around items-center h-[60px] z-50 pb-safe">
         <button onclick="navigate('home')" id="mnav-home" class="flex flex-col items-center text-white w-16 transition">
             <i class="fa-solid fa-house text-lg mb-1"></i>
@@ -283,30 +278,34 @@
         let isPlaying = false;
         let likedSongs = [];
         let activeView = 'home';
+        let errorCount = 0;
 
         const audio = document.getElementById('audio-player');
 
+        // Get reliable Audius host
         async function getAudiusHost() {
             try {
                 const res = await fetch('https://api.audius.co');
                 const data = await res.json();
-                audiusHost = data.data[Math.floor(Math.random() * data.data.length)];
-            } catch (e) {}
+                if (data && data.data && data.data.length > 0) {
+                    audiusHost = data.data[0]; // Use the first one, usually most reliable
+                }
+            } catch (e) { console.log("Using fallback host"); }
         }
 
         async function fetchTrending() {
             try {
                 const res = await fetch(`${audiusHost}/v1/tracks/trending?app_name=Vibely&limit=20`);
                 const data = await res.json();
-                return data.data;
+                return data.data || [];
             } catch (e) { return []; }
         }
 
         async function searchTracks(query) {
             try {
-                const res = await fetch(`${audiusHost}/v1/tracks/search?query=${encodeURIComponent(query)}&app_name=Vibely&limit=20`);
+                const res = await fetch(`${audiusHost}/v1/tracks/search?query=${encodeURIComponent(query)}&app_name=Vibely&limit=30`);
                 const data = await res.json();
-                return data.data;
+                return data.data || [];
             } catch (e) { return []; }
         }
 
@@ -316,11 +315,17 @@
             renderGrid(currentPlaylist, 'homeGrid');
         }
 
-        // === CORE RENDER FUNCTION (Handles Playing State) ===
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<p class="text-gray-400 col-span-full text-sm">No songs found.</p>`;
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i>
+                        <p class="text-white font-semibold text-lg mb-1">No results found</p>
+                        <p class="text-gray-400 text-sm">Vibely uses Audius, which features independent music.</p>
+                        <p class="text-gray-500 text-xs mt-2">Try searching for genres like "Electronic", "Lo-Fi", or specific indie artists.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -328,7 +333,6 @@
                 const cover = track.artwork ? track.artwork['480x480'] : 'https://via.placeholder.com/150';
                 const isCurrent = currentPlaylist[currentIndex]?.id === track.id;
                 
-                // If this track is playing, show the equalizer animation
                 const playIconHTML = (isCurrent && isPlaying) 
                     ? `<div class="eq-container"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`
                     : `<i class="fa-solid fa-play text-sm ml-0.5"></i>`;
@@ -337,7 +341,6 @@
                     <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="playFromQueue('${containerId}', ${index})">
                         <div class="relative mb-3">
                             <img src="${cover}" class="w-full aspect-square object-cover rounded-md shadow-lg">
-                            <!-- Play Button Overlay -->
                             <div class="absolute bottom-2 right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-200 
                                 ${isCurrent ? 'bg-spotify-green text-black opacity-100 translate-y-0' : 'bg-spotify-green text-black opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'}">
                                 ${playIconHTML}
@@ -354,7 +357,7 @@
         function playFromQueue(containerId, index) {
             if (containerId === 'homeGrid') currentPlaylist = currentPlaylist;
             else if (containerId === 'likedGrid') currentPlaylist = likedSongs;
-            // For search, currentPlaylist is already set when searching
+            // For search, currentPlaylist is set in handleSearch
 
             currentIndex = index;
             loadAndPlay(currentPlaylist[index]);
@@ -363,6 +366,7 @@
         function loadAndPlay(track) {
             if (!track) return;
             const streamUrl = `${audiusHost}/v1/tracks/${track.id}/stream?app_name=Vibely`;
+            
             audio.src = streamUrl;
             
             document.getElementById('player-title').innerText = track.title;
@@ -374,9 +378,28 @@
 
             audio.play().then(() => {
                 isPlaying = true;
+                errorCount = 0;
                 updateUI();
-            }).catch(() => alert("Track unavailable or region locked."));
+            }).catch((e) => {
+                console.error("Play error:", e);
+                if(errorCount < 3) {
+                    errorCount++;
+                    playNext(); // Auto skip if failed to play
+                }
+            });
         }
+
+        // Handle audio errors (e.g. track deleted or region locked)
+        audio.addEventListener('error', (e) => {
+            console.log("Audio error occurred, skipping track...");
+            if (errorCount < 3 && currentPlaylist.length > 1) {
+                errorCount++;
+                setTimeout(playNext, 1000); 
+            } else {
+                isPlaying = false;
+                updateUI();
+            }
+        });
 
         function togglePlayPause() {
             if (!audio.src) return;
@@ -397,18 +420,15 @@
             loadAndPlay(currentPlaylist[currentIndex]);
         }
 
-        // Updates icons on player and refreshes the grid to show equalizer
         function updateUI() {
             const icon = document.getElementById('play-pause-icon');
             icon.className = isPlaying ? "fa-solid fa-pause text-xs md:text-sm" : "fa-solid fa-play text-xs md:text-sm ml-0.5";
             
-            // Re-render active view to update the equalizer animation
             if (activeView === 'home') renderGrid(currentPlaylist, 'homeGrid');
             else if (activeView === 'liked') renderGrid(likedSongs, 'likedGrid');
             else if (activeView === 'search') renderGrid(currentPlaylist, 'searchGrid');
         }
 
-        // Audio Progress
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             const progress = (audio.currentTime / audio.duration) * 100;
@@ -446,39 +466,27 @@
             renderGrid(results, 'searchGrid');
         }
 
-        // === NAVIGATION (Updates both Desktop & Mobile) ===
+        // === NAVIGATION ===
         function navigate(view) {
             activeView = view;
             ['home', 'search', 'liked'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden-view');
-                
-                // Desktop nav styles
                 const dNav = document.getElementById(`nav-${v}`);
-                if(dNav) {
-                    dNav.classList.remove('text-white');
-                    dNav.classList.add('text-spotify-textSub');
-                }
+                if(dNav) { dNav.classList.remove('text-white'); dNav.classList.add('text-spotify-textSub'); }
                 
-                // Mobile nav styles
                 const mNav = document.getElementById(`mnav-${v}`);
                 if(mNav) {
                     mNav.classList.remove('text-white');
                     mNav.classList.add('text-spotify-textSub');
-                    // Update icon for Liked (solid vs outline)
                     if(v === 'liked') mNav.querySelector('i').className = "fa-regular fa-heart text-lg mb-1";
                 }
             });
 
             document.getElementById(`view-${view}`).classList.remove('hidden-view');
             
-            // Activate Desktop Nav
             const activeDNav = document.getElementById(`nav-${view}`);
-            if(activeDNav) {
-                activeDNav.classList.remove('text-spotify-textSub');
-                activeDNav.classList.add('text-white');
-            }
+            if(activeDNav) { activeDNav.classList.remove('text-spotify-textSub'); activeDNav.classList.add('text-white'); }
 
-            // Activate Mobile Nav
             const activeMNav = document.getElementById(`mnav-${view}`);
             if(activeMNav) {
                 activeMNav.classList.remove('text-spotify-textSub');
