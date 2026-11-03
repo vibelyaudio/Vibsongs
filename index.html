@@ -255,7 +255,6 @@
         });
     </script>
 
-    <!-- APP LOGIC -->
     <script>
         let currentPlaylist = [];
         let currentIndex = -1;
@@ -266,42 +265,35 @@
 
         const audio = document.getElementById('audio-player');
         
-        // Multiple reliable Saavn API endpoints (Failover System)
         const API_SERVERS = [
             'https://jiosavan-api.vercel.app/result/?query=',
             'https://saavnapi-nine.vercel.app/result/?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
-            'https://api.saavn.dev/search/songs?query=' // Another reliable one
+            'https://api.saavn.dev/search/songs?query='
         ];
 
-        // Fetch function that tries multiple servers if one fails
         async function fetchWithFallback(query) {
             for (let server of API_SERVERS) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 sec timeout per server
-                    
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
                     const res = await fetch(`${server}${encodeURIComponent(query)}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
                     if (!res.ok) continue;
                     const data = await res.json();
                     
-                    // Handle different API response structures
                     let songs = [];
                     if (Array.isArray(data)) songs = data;
                     else if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
                     else if (data.results) songs = data.results;
 
                     if (songs.length > 0) return songs;
-                } catch (e) {
-                    console.log(`Server failed: ${server}`);
-                }
+                } catch (e) { }
             }
             return [];
         }
 
-        // Generate dynamic placeholder image based on song title
         function getPlaceholderImage(title) {
             const colors = ['#1DB954', '#1ed760', '#1aa34a', '#282828', '#121212'];
             const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -310,19 +302,33 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // Fetch trending using Promise.all for MAX SPEED
+        // === SMART DUPLICATE FILTER ===
+        function removeDuplicates(tracks) {
+            const seen = new Set();
+            return tracks.filter(track => {
+                const title = (track.song || track.title || track.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+                const artist = (track.primary_artists || track.artist || '').toLowerCase().replace(/\s+/g, ' ').trim();
+                
+                // Key based on Title + Artist
+                const uniqueKey = `${title}___${artist}`;
+                
+                if (seen.has(uniqueKey)) return false;
+                seen.add(uniqueKey);
+                return true;
+            });
+        }
+
         async function fetchTrending() {
             const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop'];
             
-            // Fire all requests at the same time
             const promises = queries.map(q => fetchWithFallback(q));
             const results = await Promise.all(promises);
             
-            // Flatten and remove duplicates
             let allTracks = results.flat();
-            const uniqueTracks = Array.from(new Map(allTracks.map(t => [t.id, t])).values());
+            // Apply Smart Duplicate Filter
+            const uniqueTracks = removeDuplicates(allTracks);
             
-            return uniqueTracks.slice(0, 30); // Show top 30 songs
+            return uniqueTracks.slice(0, 30);
         }
 
         async function initApp() {
@@ -331,7 +337,6 @@
             renderGrid(currentPlaylist, 'homeGrid');
         }
 
-        // Safe Data Extractors (Handles different API structures)
         function getImage(track) {
             if (track.image) {
                 if (typeof track.image === 'string') return track.image;
@@ -496,7 +501,10 @@
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            const results = await fetchWithFallback(query);
+            let results = await fetchWithFallback(query);
+            // Apply Smart Duplicate Filter for search as well
+            results = removeDuplicates(results);
+            
             currentPlaylist = results;
             renderGrid(results, 'searchGrid');
         }
