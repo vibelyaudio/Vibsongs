@@ -632,7 +632,7 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
-        // Update Media Session Metadata
+        // Update Media Session (Notification)
         function updateMediaSession(track) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -649,13 +649,14 @@
                     ]
                 });
 
-                // Add Next/Prev Buttons to Notification
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
-                navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
-                    if (details.seekTime) audio.currentTime = details.seekTime;
+                    if (details.seekTime !== undefined && isFinite(details.seekTime)) {
+                        audio.currentTime = details.seekTime;
+                    }
                 });
             }
         }
@@ -674,7 +675,6 @@
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
 
-            // Update Notification Panel
             updateMediaSession(track);
 
             audio.play().then(() => {
@@ -724,42 +724,66 @@
             if (activeView === 'single-playlist') renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
         }
 
-        // Sync Progress bar & Notification Time
+        // SAFE UPDATE FOR NOTIFICATION PROGRESS BAR
+        function updateNotificationProgress() {
+            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                // Check if duration is a valid, finite number and not Infinity
+                if (isFinite(audio.duration) && audio.duration > 0 && isFinite(audio.currentTime)) {
+                    try {
+                        navigator.mediaSession.setPositionState({
+                            duration: audio.duration,
+                            playbackRate: audio.playbackRate,
+                            position: Math.min(audio.currentTime, audio.duration) // Ensure it doesn't go over
+                        });
+                    } catch (e) {
+                        // Ignore any temporary errors
+                    }
+                }
+            }
+        }
+
         audio.addEventListener('timeupdate', () => {
-            if (!audio.duration) return;
+            if (!audio.duration || !isFinite(audio.duration)) return;
+            
             const progress = (audio.currentTime / audio.duration) * 100;
             
-            // UI Progress
+            // App UI Progress
             document.getElementById('progress-bar').value = progress;
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
 
-            // Update Notification Progress
-            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-                if (!isNaN(audio.duration) && isFinite(audio.duration)) {
-                    navigator.mediaSession.setPositionState({
-                        duration: audio.duration,
-                        playbackRate: audio.playbackRate,
-                        position: audio.currentTime
-                    });
-                }
-            }
+            // Notification Progress
+            updateNotificationProgress();
         });
 
         audio.addEventListener('loadedmetadata', () => {
             document.getElementById('duration').innerText = formatTime(audio.duration);
             document.getElementById('duration-mob').innerText = formatTime(audio.duration);
+            // Force update once loaded to sync notification
+            updateNotificationProgress();
         });
         
         audio.addEventListener('ended', playNext);
 
-        document.getElementById('progress-bar').addEventListener('input', (e) => { if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration; });
-        document.getElementById('progress-bar-mob').addEventListener('input', (e) => { if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration; });
+        // When user drags the app's seek bar, update the audio
+        document.getElementById('progress-bar').addEventListener('input', (e) => { 
+            if (isFinite(audio.duration)) {
+                audio.currentTime = (e.target.value / 100) * audio.duration; 
+                updateNotificationProgress();
+            }
+        });
+        document.getElementById('progress-bar-mob').addEventListener('input', (e) => { 
+            if (isFinite(audio.duration)) {
+                audio.currentTime = (e.target.value / 100) * audio.duration; 
+                updateNotificationProgress();
+            }
+        });
+        
         document.getElementById('volume-bar')?.addEventListener('input', (e) => { audio.volume = e.target.value; });
 
         function formatTime(seconds) {
-            if (isNaN(seconds)) return "0:00";
+            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
             const m = Math.floor(seconds / 60);
             const s = Math.floor(seconds % 60);
             return `${m}:${s < 10 ? '0' : ''}${s}`;
