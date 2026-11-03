@@ -139,7 +139,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-32 md:pb-24">
+            <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
                 <div id="view-home" class="space-y-4">
                     <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
@@ -163,39 +163,55 @@
         </main>
     </div>
 
-    <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex items-center justify-between z-40 h-16 md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
-        <div class="flex items-center gap-3 w-[60%] md:w-1/4 overflow-hidden">
-            <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
-            <div class="overflow-hidden">
-                <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
-                <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
-            </div>
-            <button onclick="toggleLikeCurrent()" id="like-btn" class="ml-auto md:ml-2 text-gray-400 hover:text-white transition hidden">
-                <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
-            </button>
+    <!-- PLAYER BAR (Now with Mobile Progress Bar) -->
+    <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
+        
+        <!-- Mobile Progress Bar -->
+        <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
+            <span id="current-time-mob">0:00</span>
+            <input type="range" id="progress-bar-mob" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+            <span id="duration-mob">0:00</span>
         </div>
 
-        <div class="flex flex-col items-center justify-center w-[40%] md:w-2/4 max-w-xl">
-            <div class="flex items-center gap-4 md:gap-6 mb-0 md:mb-2">
-                <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-backward-step text-xl"></i></button>
-                <button onclick="togglePlayPause()" id="play-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow-md">
-                    <i id="play-pause-icon" class="fa-solid fa-play text-xs md:text-sm ml-0.5"></i>
+        <div class="flex items-center justify-between w-full h-full">
+            <!-- Left: Song Info -->
+            <div class="flex items-center gap-3 w-[60%] md:w-1/4 overflow-hidden">
+                <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
+                <div class="overflow-hidden">
+                    <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
+                    <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
+                </div>
+                <button onclick="toggleLikeCurrent()" id="like-btn" class="ml-auto md:ml-2 text-gray-400 hover:text-white transition hidden">
+                    <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
                 </button>
-                <button onclick="playNext()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-forward-step text-xl"></i></button>
             </div>
-            <div class="w-full hidden md:flex items-center gap-2 text-xs text-gray-400 font-medium">
-                <span id="current-time">0:00</span>
-                <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                <span id="duration">0:00</span>
-            </div>
-        </div>
 
-        <div class="hidden md:flex items-center justify-end gap-3 w-1/4 pr-4">
-            <i class="fa-solid fa-volume-high text-gray-400"></i>
-            <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+            <!-- Center: Controls & Desktop Progress Bar -->
+            <div class="flex flex-col items-center justify-center w-[40%] md:w-2/4 max-w-xl">
+                <div class="flex items-center gap-4 md:gap-6 mb-0 md:mb-2">
+                    <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-backward-step text-xl"></i></button>
+                    <button onclick="togglePlayPause()" id="play-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow-md">
+                        <i id="play-pause-icon" class="fa-solid fa-play text-xs md:text-sm ml-0.5"></i>
+                    </button>
+                    <button onclick="playNext()" class="text-gray-400 hover:text-white transition hidden md:block"><i class="fa-solid fa-forward-step text-xl"></i></button>
+                </div>
+                <!-- Desktop Progress Bar -->
+                <div class="w-full hidden md:flex items-center gap-2 text-xs text-gray-400 font-medium">
+                    <span id="current-time">0:00</span>
+                    <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <!-- Right: Volume (Desktop Only) -->
+            <div class="hidden md:flex items-center justify-end gap-3 w-1/4 pr-4">
+                <i class="fa-solid fa-volume-high text-gray-400"></i>
+                <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+            </div>
         </div>
     </footer>
 
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-gray-800 flex justify-around items-center h-[60px] z-50 pb-safe">
         <button onclick="navigate('home')" id="mnav-home" class="flex flex-col items-center text-white w-16 transition">
             <i class="fa-solid fa-house text-lg mb-1"></i>
@@ -265,11 +281,12 @@
 
         const audio = document.getElementById('audio-player');
         
+        // Added highly reliable saavn.dev API which supports better search
         const API_SERVERS = [
-            'https://jiosavan-api.vercel.app/result/?query=',
-            'https://saavnapi-nine.vercel.app/result/?query=',
+            'https://saavn.dev/api/search/songs?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
-            'https://api.saavn.dev/search/songs?query='
+            'https://jiosavan-api.vercel.app/result/?query=',
+            'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
         async function fetchWithFallback(query) {
@@ -277,19 +294,24 @@
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
-                    const res = await fetch(`${server}${encodeURIComponent(query)}`, { signal: controller.signal });
+                    // Added &limit=30 to get more songs per request
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=30`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
                     if (!res.ok) continue;
                     const data = await res.json();
                     
                     let songs = [];
-                    if (Array.isArray(data)) songs = data;
-                    else if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    // Handle saavn.dev format
+                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    // Handle other formats
+                    else if (Array.isArray(data)) songs = data;
                     else if (data.results) songs = data.results;
 
                     if (songs.length > 0) return songs;
-                } catch (e) { }
+                } catch (e) {
+                    console.log(`Server ${server} failed or timed out.`);
+                }
             }
             return [];
         }
@@ -302,20 +324,17 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // === STRICT DUPLICATE FILTER ===
         function removeDuplicates(tracks) {
             const seenIds = new Set();
             const seenUrls = new Set();
             const seenKeys = new Set();
 
             return tracks.filter(track => {
-                // 1. Check unique ID
                 if (track.id) {
                     if (seenIds.has(track.id)) return false;
                     seenIds.add(track.id);
                 }
 
-                // 2. Check Audio URL
                 let url = track.media_url;
                 if (!url && track.downloadUrl && track.downloadUrl.length > 0) {
                     url = track.downloadUrl[track.downloadUrl.length - 1].url;
@@ -325,12 +344,10 @@
                     seenUrls.add(url);
                 }
 
-                // 3. Check Clean Title + Artist
-                let rawTitle = (track.song || track.title || track.name || '').toLowerCase();
-                // Strip brackets like (Remix), [From "Movie"], etc.
+                let rawTitle = (track.song || track.name || track.title || '').toLowerCase();
                 rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '').replace(/from\s+.*/g, '').trim();
                 
-                const artist = (track.primary_artists || track.artist || '').toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                const artist = (track.primary_artists || track.artists?.primary?.map(a => a.name).join(', ') || '').toLowerCase().replace(/[^a-z0-9]/g, ''); 
                 const uniqueKey = `${rawTitle}_${artist}`;
 
                 if (seenKeys.has(uniqueKey)) return false;
@@ -342,7 +359,6 @@
 
         async function fetchTrending() {
             const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop'];
-            
             const promises = queries.map(q => fetchWithFallback(q));
             const results = await Promise.all(promises);
             
@@ -363,7 +379,7 @@
                 if (typeof track.image === 'string') return track.image;
                 if (Array.isArray(track.image) && track.image.length > 0) return track.image[track.image.length - 1].url;
             }
-            return getPlaceholderImage(track.song || track.title || track.name || 'Music');
+            return getPlaceholderImage(track.song || track.name || track.title || 'Music');
         }
 
         function getAudioUrl(track) {
@@ -383,7 +399,7 @@
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. API might be down.</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. Try a different keyword or check internet.</p></div>`;
                 return;
             }
 
@@ -491,20 +507,37 @@
             else if (activeView === 'search') renderGrid(currentPlaylist, 'searchGrid');
         }
 
+        // Update both Mobile and Desktop Seek Bars
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             const progress = (audio.currentTime / audio.duration) * 100;
+            
+            // Desktop
             document.getElementById('progress-bar').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
+            
+            // Mobile
+            document.getElementById('progress-bar-mob').value = progress;
+            document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
         });
+
         audio.addEventListener('loadedmetadata', () => {
-            document.getElementById('duration').innerText = formatTime(audio.duration);
+            const timeStr = formatTime(audio.duration);
+            document.getElementById('duration').innerText = timeStr;
+            document.getElementById('duration-mob').innerText = timeStr;
         });
+        
         audio.addEventListener('ended', playNext);
 
+        // Seek Event Listeners
         document.getElementById('progress-bar').addEventListener('input', (e) => {
             if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
         });
+        
+        document.getElementById('progress-bar-mob').addEventListener('input', (e) => {
+            if (audio.duration) audio.currentTime = (e.target.value / 100) * audio.duration;
+        });
+
         document.getElementById('volume-bar')?.addEventListener('input', (e) => {
             audio.volume = e.target.value;
         });
