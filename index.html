@@ -56,9 +56,12 @@
         .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        /* Floating Boost Button Animation */
         .boost-fab { animation: floatIn 0.3s ease-out; }
         @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Hide scrollbar for horizontal playlists */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col select-none">
@@ -152,9 +155,24 @@
 
             <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
                 <!-- HOME VIEW -->
-                <div id="view-home" class="space-y-4">
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
+                <div id="view-home" class="space-y-6">
+                    
+                    <!-- YOUR PLAYLISTS SECTION (At the Top like Spotify) -->
+                    <div id="home-playlists-section" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Your Playlists</h2>
+                            <button onclick="navigate('playlists')" class="text-xs font-bold text-spotify-textSub hover:text-white uppercase tracking-wider">Show all</button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4" id="homePlaylistsGrid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- TRENDING SECTION -->
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight mb-4">Trending Now</h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
+                    </div>
                 </div>
 
                 <!-- SEARCH VIEW -->
@@ -322,7 +340,6 @@
         </div>
     </div>
 
-    <!-- IMPORTANT: crossorigin="anonymous" is required for Web Audio API -->
     <audio id="audio-player" crossorigin="anonymous"></audio>
 
     <!-- FIREBASE SETUP -->
@@ -395,7 +412,6 @@
         let errorCount = 0;
         let currentPlaylistId = null;
         
-        // Web Audio API variables for Sound Boost
         let audioCtx = null;
         let sourceNode = null;
         let gainNode = null;
@@ -403,7 +419,6 @@
 
         const audio = document.getElementById('audio-player');
         
-        // Initialize Audio Context on first click (required by browser policies)
         function initAudioContext() {
             if (!audioCtx) {
                 try {
@@ -415,16 +430,14 @@
                     sourceNode.connect(gainNode);
                     gainNode.connect(audioCtx.destination);
                 } catch (e) {
-                    console.error("Web Audio API not supported or CORS blocked", e);
+                    console.error("Web Audio API not supported", e);
                 }
             }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function toggleBoostModal() {
-            initAudioContext(); // Ensure context is ready
+            initAudioContext();
             document.getElementById('boostModal').classList.add('active');
         }
 
@@ -435,17 +448,11 @@
 
         function updateBoost(val) {
             currentGain = parseFloat(val);
-            if (gainNode) {
-                gainNode.gain.value = currentGain;
-            }
+            if (gainNode) gainNode.gain.value = currentGain;
             document.getElementById('boost-percent').innerText = Math.round(currentGain * 100) + '%';
         }
         
-        document.getElementById('boost-slider').addEventListener('input', (e) => {
-            updateBoost(e.target.value);
-        });
-        
-        // === END SOUND BOOST LOGIC ===
+        document.getElementById('boost-slider').addEventListener('input', (e) => updateBoost(e.target.value));
 
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
@@ -519,9 +526,9 @@
 
         async function initApp() {
             document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
+            await loadPublicPlaylists(); // Load playlists first
             homeSongs = await fetchTrending();
             renderGrid(homeSongs, 'homeGrid');
-            loadPublicPlaylists(); 
         }
 
         async function fetchTrending() {
@@ -539,9 +546,52 @@
                 const snap = await window.getDocs(q);
                 allPlaylists = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPlaylistsUI();
+                renderHomePlaylists(); // Render playlists on Home page
             } catch (e) {
                 console.error("Error loading playlists", e);
             }
+        }
+
+        // Function to render playlists on Home Page
+        function renderHomePlaylists() {
+            const section = document.getElementById('home-playlists-section');
+            const grid = document.getElementById('homePlaylistsGrid');
+            
+            // Filter only current user's playlists
+            const myPlaylists = allPlaylists.filter(p => p.ownerId === window.currentUid);
+            
+            if (myPlaylists.length === 0) {
+                section.classList.add('hidden'); // Hide if no playlists
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            
+            // Show only first 5 playlists on home to save space
+            grid.innerHTML = myPlaylists.slice(0, 5).map(pl => {
+                let coverHTML = `
+                    <div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-music text-3xl text-white/80"></i>
+                    </div>
+                `;
+
+                if (pl.songs && pl.songs.length > 0) {
+                    const firstSongImg = getImage(pl.songs[0]);
+                    coverHTML = `
+                        <div class="relative w-full aspect-square mb-3">
+                            <img src="${firstSongImg}" class="w-full h-full object-cover rounded-md shadow-lg">
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="viewPlaylist('${pl.id}')">
+                        ${coverHTML}
+                        <h3 class="font-bold text-white text-sm truncate">${pl.name}</h3>
+                        <p class="text-xs text-spotify-textSub mt-1 truncate">${pl.songs ? pl.songs.length : 0} songs</p>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderPlaylistsUI() {
@@ -718,7 +768,6 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
-        // === NOTIFICATION UPDATE LOGIC ===
         function updateMediaSession(track) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -750,7 +799,6 @@
 
         function updateNotificationProgress() {
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-                // If duration is Infinity, try using the API duration or skip
                 let duration = audio.duration;
                 if (!isFinite(duration) || isNaN(duration)) return;
 
@@ -765,12 +813,10 @@
                 }
             }
         }
-        // ==================================
 
         function loadAndPlay(track) {
             if (!track) return;
             
-            // Show Floating Boost Button
             document.getElementById('boost-fab').classList.remove('hidden');
 
             const streamUrl = getAudioUrl(track);
@@ -797,7 +843,6 @@
             });
         }
 
-        // HACK TO FIX DURATION BUG (Infinity)
         let hackApplied = false;
         audio.addEventListener('durationchange', () => {
             if (audio.duration === Infinity && !hackApplied) {
@@ -806,7 +851,7 @@
                 audio.addEventListener('timeupdate', function fixDuration() {
                     audio.currentTime = 0;
                     audio.removeEventListener('timeupdate', fixDuration);
-                    updateNotificationProgress(); // Now duration should be valid
+                    updateNotificationProgress(); 
                 });
             } else if (isFinite(audio.duration)) {
                 hackApplied = false;
@@ -821,7 +866,7 @@
 
         function togglePlayPause() {
             if (!audio.src) return;
-            initAudioContext(); // Initialize Web Audio on user gesture
+            initAudioContext(); 
             
             if (isPlaying) { audio.pause(); isPlaying = false; } 
             else { audio.play(); isPlaying = true; }
@@ -930,6 +975,7 @@
             
             if (view === 'liked') renderGrid(likedSongs, 'likedGrid');
             if (view === 'playlists') loadPublicPlaylists();
+            if (view === 'home') renderHomePlaylists(); // Update playlists when going back to home
         }
 
         function switchAuthMode(mode) {
