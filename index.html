@@ -245,20 +245,24 @@
         </div>
 
         <!-- BOTTOM MINI PLAYER -->
-        <footer id="mini-player" class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg cursor-pointer hover:bg-[#282828] transition">
+        <footer id="mini-player" class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg cursor-pointer hover:bg-[#282828] transition group">
             <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
                 <span id="current-time-mob">0:00</span>
-                <input type="range" id="progress-bar-mob" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                <input type="range" id="progress-bar-mob" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer" onclick="event.stopPropagation()">
                 <span id="duration-mob">0:00</span>
             </div>
 
             <div class="flex items-center justify-between w-full h-full">
-                <div class="flex items-center gap-3 w-[50%] md:w-1/4 overflow-hidden">
+                <!-- Clicking this area opens the full player -->
+                <div class="flex items-center gap-3 w-[50%] md:w-1/4 overflow-hidden" onclick="openFullPlayer()">
                     <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
                     <div class="overflow-hidden">
                         <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
                         <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
                     </div>
+                    <button class="ml-2 text-gray-400 group-hover:text-white hidden md:block" title="Expand">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </button>
                 </div>
 
                 <div class="flex flex-col items-center justify-center w-[50%] md:w-2/4 max-w-xl">
@@ -312,11 +316,11 @@
 
         <!-- Top Bar -->
         <div class="relative z-10 flex justify-between items-center p-6 flex-shrink-0">
-            <button onclick="closeFullPlayer()" class="text-white hover:scale-110 transition">
+            <button onclick="closeFullPlayer()" class="text-white hover:scale-110 transition p-2">
                 <i class="fa-solid fa-chevron-down text-2xl"></i>
             </button>
             <div class="text-xs font-bold tracking-widest text-white/70 uppercase">Now Playing</div>
-            <button class="text-white hover:scale-110 transition">
+            <button class="text-white hover:scale-110 transition p-2">
                 <i class="fa-solid fa-ellipsis text-2xl"></i>
             </button>
         </div>
@@ -475,16 +479,18 @@
         const fullPlayer = document.getElementById('full-player');
         const miniPlayer = document.getElementById('mini-player');
 
-        // Open Full Player
-        miniPlayer.addEventListener('click', () => {
+        // Open Full Player Function
+        function openFullPlayer() {
             if (currentPlayingTrackMeta) {
-                fullPlayer.classList.add('active');
+                fullPlayer.style.transform = 'translateY(0)'; // Directly setting transform
+                fullPlayer.style.opacity = '1';
             }
-        });
+        }
 
         // Close Full Player
         function closeFullPlayer() {
-            fullPlayer.classList.remove('active');
+            fullPlayer.style.transform = 'translateY(100%)';
+            fullPlayer.style.opacity = '0';
         }
 
         // ==========================================
