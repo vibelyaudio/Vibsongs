@@ -177,20 +177,14 @@
 
                 <!-- SINGLE PLAYLIST VIEW -->
                 <div id="view-single-playlist" class="hidden-view space-y-4">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-800 pb-4">
-                        <div class="flex items-center gap-4">
-                            <button onclick="navigate('playlists')" class="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black transition flex-shrink-0">
-                                <i class="fa-solid fa-arrow-left"></i>
-                            </button>
-                            <div>
-                                <h2 class="text-xl md:text-2xl font-bold text-white" id="playlistTitle">Playlist Name</h2>
-                                <p class="text-sm text-spotify-textSub" id="playlistOwner">By User</p>
-                            </div>
-                        </div>
-                        <!-- AUTO-ADD BUTTON (Only visible if you own the playlist) -->
-                        <button id="bulk-add-btn" onclick="autoAddSongs()" class="hidden bg-spotify-green text-black font-bold px-4 py-2 rounded-full text-sm hover:scale-105 transition shadow-lg items-center gap-2">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Add Malayalam Hits
+                    <div class="flex items-center gap-4 mb-6 border-b border-gray-800 pb-4">
+                        <button onclick="navigate('playlists')" class="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black transition flex-shrink-0">
+                            <i class="fa-solid fa-arrow-left"></i>
                         </button>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-bold text-white" id="playlistTitle">Playlist Name</h2>
+                            <p class="text-sm text-spotify-textSub" id="playlistOwner">By User</p>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="singlePlaylistGrid"></div>
                 </div>
@@ -365,30 +359,6 @@
         let errorCount = 0;
         let currentPlaylistId = null;
 
-        // THE BIG LIST OF SONGS YOU PROVIDED
-        const BULK_SONGS_LIST = [
-            "Mazhavillaye I'M Game", "Loser Song I'M Game", "Flesh & Blood I'M Game", "High Stakes I'M Game", "Theekkali Aarambham I'M Game",
-            "Ninmizhiyithalo Nigoodam", "Premavathi Athi Bheekara Kaamukan", "Delulu Delulu Athi Bheekara Kaamukan", "Sundariye Athi Bheekara Kaamukan", "Nanavekathe Athi Bheekara Kaamukan",
-            "Chaayangal FACES", "Duppattawaali Odum Kuthira Chaadum Kuthira", "IYKYK Athiradi", "Patti Show Athiradi", "Chatha Pacha Title Track",
-            "Naattile Rowdies Chatha Pacha", "Anjanamani Innocent", "Mizhiyethetho Jagala", "Thalava Prathichaya", "Onam Mood Sahasam",
-            "Kaadhal Ponmaan Nellikkampoyil Night Riders", "Neon Ride Officer On Duty", "Mellave Mellave Madhuvidhu", "Amsham Pop Hits", "Belyol",
-            "Kinginichar", "Kaattuchembakam", "Asalayavale Khalifa", "Makane Makane Balan The Boy", "Thaakkol Balan The Boy",
-            "Lilly Malarey Varavu", "Entha Haal Kerala Underground", "Thamburaan BarFeast", "Jeevamshamayi Theevandi", "Thiruvaavaniraavu Jacobinte Swargarajyam",
-            "Manikya Malaraya Poovi Oru Adaar Love", "Malare Premam", "Lailakame Ezra", "Kannil Neeye Hridayam", "Darshana Hridayam",
-            "Nagumo Hridayam", "Onakka Nenji Hridayam", "Munthiri Hridayam", "Kanneer Pookkal Hridayam", "Pularikalo Kombaan Koode",
-            "Aararo Koode", "Koode Title Track", "Anuraaga Vilochananaayi Neelakasham Pachakadal Chuvanna Bhoomi", "Aluva Puzha Premam", "Ranam Title Track",
-            "Azhalinte Azhangalil Mayaanadhi", "Uyire Mayaanadhi", "Mizhiyil Mizhiyil Mayaanadhi", "Kaanunna Daivame Mayaanadhi", "Raavukal Aarkkariyam",
-            "Neeye Lukku Chuppi", "Paranne Solo", "Siva Sivasthuthi Malikappuram", "Oru Thean Malikappuram", "Chaleya Jawan",
-            "Not Ramaiya Vastavaiya Jawan", "Hrudayam Vastham Thallumaala", "Kannil Petta Thooval Thallumaala", "Ole Melody Thallumaala", "Podimas Thallumaala",
-            "Neela Nilave RDX", "Vermilla RDX", "RDX Theme Song", "Kurchi Madathapetti", "Paththampoo Aavesham",
-            "Illuminati Aavesham", "Galatta Aavesham", "Jaada Aavesham", "Santhosham Bramayugam", "Bhoothathankettu Bramayugam",
-            "Periyone Aadujeevitham", "Hope Song Aadujeevitham", "Oombatha Aadujeevitham", "Kuthira Chuvadu Aadujeevitham", "Pookkaalam Title Track",
-            "Lokame ARM", "Ajnaabee ARM", "Kiliye ARM", "Theevandi Track", "Harivarasanam",
-            "Karutha Penne Thenmavin Kombath", "Ponveene Thalavattam", "Pathiramazhayetho Ulladakkam", "Minnaminni Ezra", "Neermathalappoo Aanandham",
-            "Jimikki Kammal Velipadinte Pusthakam", "Entammede Jimikki Kammal", "Doore Doore Njan Prakashan", "Pavizha Mazha Oru Vadakkan Selfie", "En Jeevan Theri",
-            "Premam Mashup Mix", "Keralam Bhasha Ganam", "Naadan Pattu Mix", "DJ Party Remix Malayalam Non-Stop"
-        ];
-
         const audio = document.getElementById('audio-player');
         
         const API_SERVERS = [
@@ -558,88 +528,8 @@
             document.getElementById('playlistTitle').innerText = pl.name;
             document.getElementById('playlistOwner').innerText = `By ${pl.ownerName} • ${currentViewPlaylistSongs.length} songs`;
             
-            // SHOW AUTO-ADD BUTTON IF CURRENT USER IS OWNER
-            const autoAddBtn = document.getElementById('bulk-add-btn');
-            if (pl.ownerId === window.currentUid) {
-                autoAddBtn.classList.remove('hidden');
-                autoAddBtn.classList.add('flex');
-            } else {
-                autoAddBtn.classList.add('hidden');
-                autoAddBtn.classList.remove('flex');
-            }
-            
             navigate('single-playlist');
             renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
-        }
-
-        // === AUTO-ADD FUNCTION ===
-        async function autoAddSongs() {
-            if (!currentPlaylistId) return;
-            const pl = allPlaylists.find(p => p.id === currentPlaylistId);
-            if (!pl) return;
-
-            if (!confirm(`This will search and add approx ${BULK_SONGS_LIST.length} songs automatically to "${pl.name}".\n\nThis might take 2-3 minutes. Please do not close the page. Continue?`)) return;
-
-            const btn = document.getElementById('bulk-add-btn');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Adding 0/${BULK_SONGS_LIST.length}...`;
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-            let currentSongs = pl.songs || [];
-            let addedCount = 0;
-            let notFoundCount = 0;
-
-            // Loop through the list
-            for (let i = 0; i < BULK_SONGS_LIST.length; i++) {
-                const query = BULK_SONGS_LIST[i];
-                
-                // Update Button Text
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i+1}/${BULK_SONGS_LIST.length}...`;
-
-                try {
-                    const results = await fetchWithFallback(query);
-                    if (results && results.length > 0) {
-                        // Extract the best match (usually the first one)
-                        const track = results[0];
-                        
-                        // Check if it already exists in the playlist
-                        if (!currentSongs.some(s => String(s.id) === String(track.id))) {
-                            currentSongs.push({
-                                id: String(track.id),
-                                song: getSongName(track),
-                                primary_artists: getArtistName(track),
-                                image: getImage(track),
-                                media_url: getAudioUrl(track),
-                                downloadUrl: track.downloadUrl || []
-                            });
-                            addedCount++;
-                        }
-                    } else {
-                        notFoundCount++;
-                    }
-                } catch (e) {
-                    notFoundCount++;
-                }
-
-                // Small delay to prevent API rate-limiting
-                await new Promise(r => setTimeout(r, 400)); 
-            }
-
-            // Save to Firebase
-            try {
-                await window.updateDoc(window.doc(window.db, "public_playlists", pl.id), { songs: currentSongs });
-                alert(`Success! Added ${addedCount} songs. (${notFoundCount} couldn't be found on the API).`);
-                loadPublicPlaylists(); // Reload data
-                viewPlaylist(pl.id); // Refresh view
-            } catch (e) {
-                alert("Error saving to database. Check console.");
-                console.error(e);
-            }
-
-            // Reset Button
-            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Add Malayalam Hits`;
-            btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
         function showAddToPlaylistModal() {
