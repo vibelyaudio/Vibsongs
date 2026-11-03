@@ -173,7 +173,7 @@
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
+                <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24" id="main-scroll-container">
                     <!-- HOME VIEW -->
                     <div id="view-home" class="space-y-6">
                         <div id="home-playlists-section" class="hidden">
@@ -186,11 +186,8 @@
 
                         <div>
                             <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight mb-4">Trending Now</h2>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid">
-                                <div class="col-span-full text-center py-10">
-                                    <i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i>
-                                </div>
-                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
+                            <div id="homeLoader" class="hidden text-center py-6"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>
                         </div>
                     </div>
 
@@ -203,6 +200,7 @@
                         </div>
                         <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight" id="searchHeading">Search Results</h2>
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="searchGrid"></div>
+                        <div id="searchLoader" class="hidden text-center py-6"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>
                     </div>
 
                     <!-- PLAYLISTS VIEW -->
@@ -415,10 +413,18 @@
         let currentPlayingTrackMeta = null; 
         let mediaSessionInterval = null;
 
+        // *** INFINITE SCROLL VARIABLES ***
+        let currentPage = 1;
+        let isLoadingMore = false;
+        let hasMoreSongs = true;
+        let currentSearchQuery = 'trending songs';
+        let isSearchView = false;
+
         const audio = document.getElementById('audio-player');
+        const scrollContainer = document.getElementById('main-scroll-container');
 
         // ==========================================
-        // JIOSAAVN API LOGIC (100% Stable for Audio)
+        // JIOSAAVN API LOGIC 
         // ==========================================
         
         const SAAVN_SERVERS = [
@@ -427,12 +433,12 @@
             'https://saavn.dev/api/search/songs?query='
         ];
 
-        async function fetchSaavn(query, limit = 50) {
+        async function fetchSaavn(query, limit = 20, page = 1) {
             for (let server of SAAVN_SERVERS) {
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 6000);
-                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}&page=${page}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
                     if (!res.ok) continue;
@@ -449,13 +455,39 @@
             return [];
         }
 
-        async function fetchTrending() {
-            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop', 'punjabi hits'];
-            const promises = queries.map(q => fetchSaavn(q, 20)); 
-            const results = await Promise.all(promises);
-            let allTracks = results.flat();
-            return removeDuplicates(allTracks).slice(0, 100);
-        }
+        // ==========================================
+        // INFINITE SCROLL LOGIC
+        // ==========================================
+        scrollContainer.addEventListener('scroll', async () => {
+            // Check if scrolled near bottom (100px from bottom)
+            if (scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100) {
+                if (isLoadingMore || !hasMoreSongs) return;
+                
+                isLoadingMore = true;
+                currentPage++;
+                
+                const loader = isSearchView ? document.getElementById('searchLoader') : document.getElementById('homeLoader');
+                if (loader) loader.classList.remove('hidden');
+
+                let newSongs = await fetchSaavn(currentSearchQuery, 20, currentPage);
+
+                if (newSongs.length === 0) {
+                    hasMoreSongs = false;
+                } else {
+                    let uniqueNewSongs = removeDuplicates(newSongs);
+                    if (isSearchView) {
+                        searchSongs = [...searchSongs, ...uniqueNewSongs];
+                        renderGrid(searchSongs, 'searchGrid');
+                    } else {
+                        homeSongs = [...homeSongs, ...uniqueNewSongs];
+                        renderGrid(homeSongs, 'homeGrid');
+                    }
+                }
+
+                if (loader) loader.classList.add('hidden');
+                isLoadingMore = false;
+            }
+        });
 
         // ==========================================
 
@@ -502,18 +534,17 @@
 
         async function initApp() {
             try {
-                document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
+                document.getElementById('homeGrid').innerHTML = '';
+                isSearchView = false;
+                currentPage = 1;
+                hasMoreSongs = true;
+                currentSearchQuery = 'trending songs';
+
                 await loadPublicPlaylists(); 
-                homeSongs = await fetchTrending();
-                
-                if(homeSongs.length === 0) {
-                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><p class="text-red-400">No songs found. Please refresh.</p></div>`;
-                } else {
-                    renderGrid(homeSongs, 'homeGrid');
-                }
+                homeSongs = await fetchSaavn(currentSearchQuery, 20, currentPage);
+                renderGrid(homeSongs, 'homeGrid');
             } catch(e) {
                 console.error(e);
-                document.getElementById('homeGrid').innerHTML = `<p class="text-red-500 text-center col-span-full">Error loading songs. Please refresh.</p>`;
             }
         }
 
@@ -835,10 +866,16 @@
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
+            
+            isSearchView = true;
+            currentPage = 1;
+            hasMoreSongs = true;
+            currentSearchQuery = query;
+            
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            let results = await fetchSaavn(query, 50); 
+            let results = await fetchSaavn(query, 20, currentPage); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
@@ -868,6 +905,9 @@
             if (view === 'liked') renderGrid(likedSongs, 'likedGrid');
             if (view === 'playlists') loadPublicPlaylists();
             if (view === 'home') renderHomePlaylists();
+            
+            // Reset scroll to top when navigating
+            scrollContainer.scrollTop = 0;
         }
 
         function switchAuthMode(mode) {
