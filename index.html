@@ -632,6 +632,34 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
+        // Update Media Session Metadata
+        function updateMediaSession(track) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: getSongName(track),
+                    artist: getArtistName(track),
+                    album: 'Vibely',
+                    artwork: [
+                        { src: getImage(track), sizes: '96x96', type: 'image/jpeg' },
+                        { src: getImage(track), sizes: '128x128', type: 'image/jpeg' },
+                        { src: getImage(track), sizes: '192x192', type: 'image/jpeg' },
+                        { src: getImage(track), sizes: '256x256', type: 'image/jpeg' },
+                        { src: getImage(track), sizes: '384x384', type: 'image/jpeg' },
+                        { src: getImage(track), sizes: '512x512', type: 'image/jpeg' },
+                    ]
+                });
+
+                // Add Next/Prev Buttons to Notification
+                navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
+                navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+                navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+                navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+                navigator.mediaSession.setActionHandler('seekto', (details) => {
+                    if (details.seekTime) audio.currentTime = details.seekTime;
+                });
+            }
+        }
+
         function loadAndPlay(track) {
             if (!track) return;
             const streamUrl = getAudioUrl(track);
@@ -646,8 +674,12 @@
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
 
+            // Update Notification Panel
+            updateMediaSession(track);
+
             audio.play().then(() => {
                 isPlaying = true;
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
                 errorCount = 0;
                 updateAllViews();
             }).catch((e) => {
@@ -664,6 +696,10 @@
             if (!audio.src) return;
             if (isPlaying) { audio.pause(); isPlaying = false; } 
             else { audio.play(); isPlaying = true; }
+            
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+            }
             updateAllViews();
         }
 
@@ -688,13 +724,27 @@
             if (activeView === 'single-playlist') renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
         }
 
+        // Sync Progress bar & Notification Time
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration) return;
             const progress = (audio.currentTime / audio.duration) * 100;
+            
+            // UI Progress
             document.getElementById('progress-bar').value = progress;
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
+
+            // Update Notification Progress
+            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                if (!isNaN(audio.duration) && isFinite(audio.duration)) {
+                    navigator.mediaSession.setPositionState({
+                        duration: audio.duration,
+                        playbackRate: audio.playbackRate,
+                        position: audio.currentTime
+                    });
+                }
+            }
         });
 
         audio.addEventListener('loadedmetadata', () => {
