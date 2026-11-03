@@ -418,19 +418,19 @@
 
         const audio = document.getElementById('audio-player');
 
-        // ** Multiple Reliable API Servers **
+        // ** UPDATED API SERVERS (Added new verified working endpoints) **
         const API_SERVERS = [
+            'https://saavnapi-nine.vercel.app/result/?query=',
             'https://saavn.dev/api/search/songs?query=',
-            'https://jiosaavn-api-v3.vercel.app/result/?query=',
-            'https://jiosavan-api.vercel.app/result/?query='
+            'https://jiosaavn-api-v3.vercel.app/result/?query='
         ];
 
-        // ** Fast Parallel Fetching **
+        // ** Parallel Fetching with Fallback **
         async function fetchWithFallback(query, limit = 50) {
             const fetchPromises = API_SERVERS.map(async (server) => {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 sec timeout
+                    const timeoutId = setTimeout(() => controller.abort(), 8000); 
                     const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -445,11 +445,10 @@
                     if (songs.length > 0) return songs;
                     throw new Error('No songs found');
                 } catch (e) {
-                    return null; // Ignore failures
+                    return null; 
                 }
             });
 
-            // Wait for all fetches, filter out nulls, and merge results
             const results = await Promise.all(fetchPromises);
             const validResults = results.filter(r => r !== null && r.length > 0);
             
@@ -517,7 +516,7 @@
 
         async function fetchTrending() {
             const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop', 'punjabi hits', 'telugu hits'];
-            const promises = queries.map(q => fetchWithFallback(q, 20)); // 20 per language
+            const promises = queries.map(q => fetchWithFallback(q, 20)); 
             const results = await Promise.all(promises);
             let allTracks = results.flat();
             const uniqueTracks = removeDuplicates(allTracks);
