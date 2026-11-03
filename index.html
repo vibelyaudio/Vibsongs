@@ -302,18 +302,40 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // === SMART DUPLICATE FILTER ===
+        // === STRICT DUPLICATE FILTER ===
         function removeDuplicates(tracks) {
-            const seen = new Set();
+            const seenIds = new Set();
+            const seenUrls = new Set();
+            const seenKeys = new Set();
+
             return tracks.filter(track => {
-                const title = (track.song || track.title || track.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
-                const artist = (track.primary_artists || track.artist || '').toLowerCase().replace(/\s+/g, ' ').trim();
+                // 1. Check unique ID
+                if (track.id) {
+                    if (seenIds.has(track.id)) return false;
+                    seenIds.add(track.id);
+                }
+
+                // 2. Check Audio URL
+                let url = track.media_url;
+                if (!url && track.downloadUrl && track.downloadUrl.length > 0) {
+                    url = track.downloadUrl[track.downloadUrl.length - 1].url;
+                }
+                if (url) {
+                    if (seenUrls.has(url)) return false;
+                    seenUrls.add(url);
+                }
+
+                // 3. Check Clean Title + Artist
+                let rawTitle = (track.song || track.title || track.name || '').toLowerCase();
+                // Strip brackets like (Remix), [From "Movie"], etc.
+                rawTitle = rawTitle.replace(/\(.*?\)|\[.*?\]/g, '').replace(/from\s+.*/g, '').trim();
                 
-                // Key based on Title + Artist
-                const uniqueKey = `${title}___${artist}`;
-                
-                if (seen.has(uniqueKey)) return false;
-                seen.add(uniqueKey);
+                const artist = (track.primary_artists || track.artist || '').toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                const uniqueKey = `${rawTitle}_${artist}`;
+
+                if (seenKeys.has(uniqueKey)) return false;
+                seenKeys.add(uniqueKey);
+
                 return true;
             });
         }
@@ -325,7 +347,6 @@
             const results = await Promise.all(promises);
             
             let allTracks = results.flat();
-            // Apply Smart Duplicate Filter
             const uniqueTracks = removeDuplicates(allTracks);
             
             return uniqueTracks.slice(0, 30);
@@ -502,7 +523,6 @@
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
             let results = await fetchWithFallback(query);
-            // Apply Smart Duplicate Filter for search as well
             results = removeDuplicates(results);
             
             currentPlaylist = results;
