@@ -70,6 +70,15 @@
         }
         .splash-logo-anim { animation: splash-logo 1.5s ease-out forwards; }
         .splash-text-anim { animation: splash-text 1s ease-out forwards; animation-delay: 0.5s; opacity: 0; }
+        
+        /* Full Screen Player Animation */
+        #full-player {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%);
+        }
+        #full-player.active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col select-none">
@@ -142,7 +151,7 @@
                     <button onclick="navigate('search')" id="nav-search" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
                         <i class="fa-solid fa-magnifying-glass text-xl"></i> Search
                     </button>
-                    <button onclick="navigate('playlists')" id="nav-playlists" class="w-full flex items-center gap-4 px-4 py-2 text-spotify-textSub hover:text-white font-bold transition">
+                    <button onclick="navigate('playlists')" id="nav-playlists" class="w-full flex items-center gap-4 py-2 text-spotify-textSub hover:text-white font-bold transition px-4">
                         <i class="fa-solid fa-list-ul text-xl"></i> Playlists
                     </button>
                 </nav>
@@ -235,8 +244,8 @@
             </main>
         </div>
 
-        <!-- PLAYER BAR -->
-        <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
+        <!-- BOTTOM MINI PLAYER -->
+        <footer id="mini-player" class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg cursor-pointer hover:bg-[#282828] transition">
             <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
                 <span id="current-time-mob">0:00</span>
                 <input type="range" id="progress-bar-mob" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
@@ -250,40 +259,32 @@
                         <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
                         <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
                     </div>
-                    <div class="ml-auto md:ml-2 flex gap-3 pr-2">
-                        <button onclick="toggleLikeCurrent()" id="like-btn" class="text-gray-400 hover:text-white transition hidden">
-                            <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
-                        </button>
-                        <button onclick="showAddToPlaylistModal()" id="add-btn" class="text-gray-400 hover:text-white transition hidden" title="Add to Playlist">
-                            <i class="fa-solid fa-circle-plus text-lg"></i>
-                        </button>
-                    </div>
                 </div>
 
                 <div class="flex flex-col items-center justify-center w-[50%] md:w-2/4 max-w-xl">
                     <div class="flex items-center gap-3 md:gap-6 mb-0 md:mb-2">
-                        <button onclick="playPrevious()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-backward-step text-lg md:text-xl"></i></button>
-                        <button onclick="togglePlayPause()" id="play-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow-md">
+                        <button onclick="event.stopPropagation(); playPrevious()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-backward-step text-lg md:text-xl"></i></button>
+                        <button onclick="event.stopPropagation(); togglePlayPause()" id="play-btn" class="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition shadow-md">
                             <i id="play-pause-icon" class="fa-solid fa-play text-xs md:text-sm ml-0.5"></i>
                         </button>
-                        <button onclick="playNext()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-forward-step text-lg md:text-xl"></i></button>
+                        <button onclick="event.stopPropagation(); playNext()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-forward-step text-lg md:text-xl"></i></button>
                     </div>
                     <div class="w-full hidden md:flex items-center gap-2 text-xs text-gray-400 font-medium">
                         <span id="current-time">0:00</span>
-                        <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer" onclick="event.stopPropagation()">
                         <span id="duration">0:00</span>
                     </div>
                 </div>
 
                 <div class="hidden md:flex items-center justify-end gap-3 w-1/4 pr-4">
                     <i class="fa-solid fa-volume-high text-gray-400"></i>
-                    <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="volume-bar" value="1" min="0" max="1" step="0.01" class="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer" onclick="event.stopPropagation()">
                 </div>
             </div>
         </footer>
 
         <!-- MOBILE BOTTOM NAVIGATION BAR -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-gray-800 flex justify-around items-center h-[60px] z-50 pb-safe">
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-gray-800 flex justify-around items-center h-[60px] z-40 pb-safe">
             <button onclick="navigate('home')" id="mnav-home" class="flex flex-col items-center text-white w-16 transition">
                 <i class="fa-solid fa-house text-lg mb-1"></i>
                 <span class="text-[10px] font-semibold">Home</span>
@@ -301,7 +302,65 @@
                 <span class="text-[10px] font-semibold">Liked</span>
             </button>
         </nav>
+    </div>
 
+    <!-- FULL SCREEN PLAYER (Spotify Style) -->
+    <div id="full-player" class="fixed inset-0 bg-black z-[150] flex flex-col justify-between overflow-hidden">
+        <!-- Blurred Background -->
+        <div id="full-player-bg" class="absolute inset-0 bg-cover bg-center opacity-40 blur-3xl scale-110"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black"></div>
+
+        <!-- Top Bar -->
+        <div class="relative z-10 flex justify-between items-center p-6 flex-shrink-0">
+            <button onclick="closeFullPlayer()" class="text-white hover:scale-110 transition">
+                <i class="fa-solid fa-chevron-down text-2xl"></i>
+            </button>
+            <div class="text-xs font-bold tracking-widest text-white/70 uppercase">Now Playing</div>
+            <button class="text-white hover:scale-110 transition">
+                <i class="fa-solid fa-ellipsis text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-8 sm:px-12 w-full max-w-lg mx-auto">
+            <img id="fp-thumb" src="" class="w-full aspect-square object-cover rounded-lg shadow-2xl mb-8">
+            
+            <div class="w-full flex justify-between items-center mb-6">
+                <div class="overflow-hidden pr-4">
+                    <h2 id="fp-title" class="text-2xl sm:text-3xl font-bold text-white truncate mb-1">Song Title</h2>
+                    <p id="fp-artist" class="text-lg text-white/70 truncate">Artist Name</p>
+                </div>
+                <button onclick="toggleLikeCurrent()" id="fp-like-btn" class="text-white/70 hover:text-white transition flex-shrink-0">
+                    <i id="fp-like-icon" class="fa-regular fa-heart text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Progress -->
+            <div class="w-full mb-8">
+                <input type="range" id="fp-progress-bar" value="0" min="0" max="100" step="0.1" class="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white">
+                <div class="flex justify-between text-xs text-white/50 mt-2 font-medium">
+                    <span id="fp-current-time">0:00</span>
+                    <span id="fp-duration">0:00</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="w-full flex items-center justify-between mb-8">
+                <button class="text-white/70 hover:text-white transition"><i class="fa-solid fa-shuffle text-xl"></i></button>
+                <button onclick="playPrevious()" class="text-white hover:scale-105 transition"><i class="fa-solid fa-backward-step text-4xl"></i></button>
+                <button onclick="togglePlayPause()" class="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition">
+                    <i id="fp-play-icon" class="fa-solid fa-play text-3xl ml-1"></i>
+                </button>
+                <button onclick="playNext()" class="text-white hover:scale-105 transition"><i class="fa-solid fa-forward-step text-4xl"></i></button>
+                <button class="text-white/70 hover:text-white transition"><i class="fa-solid fa-repeat text-xl"></i></button>
+            </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="relative z-10 p-6 flex justify-center items-center gap-8 text-white/70 pb-12 flex-shrink-0">
+            <button onclick="showAddToPlaylistModal()" class="hover:text-white transition"><i class="fa-solid fa-circle-plus text-2xl"></i></button>
+            <button class="hover:text-white transition"><i class="fa-solid fa-share-nodes text-2xl"></i></button>
+        </div>
     </div>
 
     <!-- MODALS -->
@@ -413,6 +472,20 @@
         let mediaSessionInterval = null;
 
         const audio = document.getElementById('audio-player');
+        const fullPlayer = document.getElementById('full-player');
+        const miniPlayer = document.getElementById('mini-player');
+
+        // Open Full Player
+        miniPlayer.addEventListener('click', () => {
+            if (currentPlayingTrackMeta) {
+                fullPlayer.classList.add('active');
+            }
+        });
+
+        // Close Full Player
+        function closeFullPlayer() {
+            fullPlayer.classList.remove('active');
+        }
 
         // ==========================================
         // 30+ JIOSAAVN API SERVERS (Parallel Fetching)
@@ -451,15 +524,11 @@
             'https://jiosaavn-api-mu.vercel.app/result/?query='
         ];
 
-        // ==========================================
-        // PARALLEL FETCHING LOGIC (Fastest API wins)
-        // ==========================================
-
         async function fetchFromAllAPIs(query, limit = 20) {
             const fetchPromises = API_SERVERS.map(async (server) => {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 sec timeout
+                    const timeoutId = setTimeout(() => controller.abort(), 4000); 
                     const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
@@ -478,7 +547,6 @@
                 }
             });
 
-            // Wait for the FIRST successful response
             const results = await Promise.allSettled(fetchPromises);
             for (const result of results) {
                 if (result.status === 'fulfilled' && result.value !== null && result.value.length > 0) {
@@ -489,11 +557,9 @@
         }
 
         async function fetchTrending() {
-            // Fetch latest songs
             let songs = await fetchFromAllAPIs('latest songs', 50);
             if (songs.length > 0) return songs;
             
-            // Fallback
             const queries = ['malayalam hits', 'tamil hits', 'hindi hits'];
             const promises = queries.map(q => fetchFromAllAPIs(q, 20));
             const results = await Promise.all(promises);
@@ -795,13 +861,23 @@
             const streamUrl = getAudioUrl(track);
             if(!streamUrl) { playNext(); return; }
             audio.src = streamUrl;
+            
+            // Update Mini Player
             document.getElementById('player-title').innerText = getSongName(track);
             document.getElementById('player-artist').innerText = getArtistName(track);
             document.getElementById('player-thumb').src = getImage(track);
+            
+            // Update Full Player
+            document.getElementById('fp-title').innerText = getSongName(track);
+            document.getElementById('fp-artist').innerText = getArtistName(track);
+            document.getElementById('fp-thumb').src = getImage(track);
+            document.getElementById('full-player-bg').style.backgroundImage = `url(${getImage(track)})`;
+
             document.getElementById('like-btn').classList.remove('hidden');
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
             updateMediaSession(track);
+            
             audio.play().then(() => {
                 isPlaying = true;
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
@@ -813,8 +889,10 @@
         }
 
         audio.addEventListener('loadedmetadata', () => {
-            document.getElementById('duration').innerText = formatTime(audio.duration);
-            document.getElementById('duration-mob').innerText = formatTime(audio.duration);
+            const timeStr = formatTime(audio.duration);
+            document.getElementById('duration').innerText = timeStr;
+            document.getElementById('duration-mob').innerText = timeStr;
+            document.getElementById('fp-duration').innerText = timeStr;
             updateNotificationProgress(); 
         });
         
@@ -845,8 +923,14 @@
         }
 
         function updateAllViews() {
+            // Update Mini Player Icon
             const icon = document.getElementById('play-pause-icon');
             icon.className = isPlaying ? "fa-solid fa-pause text-xs md:text-sm" : "fa-solid fa-play text-xs md:text-sm ml-0.5";
+            
+            // Update Full Player Icon
+            const fpIcon = document.getElementById('fp-play-icon');
+            fpIcon.className = isPlaying ? "fa-solid fa-pause text-3xl" : "fa-solid fa-play text-3xl ml-1";
+
             renderGrid(homeSongs, 'homeGrid');
             renderGrid(searchSongs, 'searchGrid');
             renderGrid(likedSongs, 'likedGrid');
@@ -856,16 +940,30 @@
         audio.addEventListener('timeupdate', () => {
             if (!audio.duration || !isFinite(audio.duration)) return;
             const progress = (audio.currentTime / audio.duration) * 100;
+            
+            // Update Mini Player
             document.getElementById('progress-bar').value = progress;
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
+            
+            // Update Full Player
+            document.getElementById('fp-progress-bar').value = progress;
+            document.getElementById('fp-current-time').innerText = formatTime(audio.currentTime);
+            document.getElementById('fp-duration').innerText = formatTime(audio.duration);
+
             if (isPlaying) updateNotificationProgress();
         });
 
         audio.addEventListener('ended', playNext);
+        
+        // Mini Player Seek
         document.getElementById('progress-bar').addEventListener('input', (e) => { if (isFinite(audio.duration)) { audio.currentTime = (e.target.value / 100) * audio.duration; updateNotificationProgress(); } });
         document.getElementById('progress-bar-mob').addEventListener('input', (e) => { if (isFinite(audio.duration)) { audio.currentTime = (e.target.value / 100) * audio.duration; updateNotificationProgress(); } });
+        
+        // Full Player Seek
+        document.getElementById('fp-progress-bar').addEventListener('input', (e) => { if (isFinite(audio.duration)) { audio.currentTime = (e.target.value / 100) * audio.duration; updateNotificationProgress(); } });
+        
         document.getElementById('volume-bar')?.addEventListener('input', (e) => { audio.volume = e.target.value; });
 
         function formatTime(seconds) {
@@ -967,7 +1065,18 @@
 
         function updateLikeIcon(trackId) {
             const isLiked = likedSongs.some(t => String(t.id) === String(trackId));
-            document.getElementById('like-icon').className = isLiked ? "fa-solid fa-heart text-lg text-spotify-green" : "fa-regular fa-heart text-lg";
+            
+            // Update Mini Player
+            const miniIcon = document.getElementById('like-icon');
+            if (miniIcon) {
+                miniIcon.className = isLiked ? "fa-solid fa-heart text-lg text-spotify-green" : "fa-regular fa-heart text-lg";
+            }
+            
+            // Update Full Player
+            const fpIcon = document.getElementById('fp-like-icon');
+            if (fpIcon) {
+                fpIcon.className = isLiked ? "fa-solid fa-heart text-2xl text-spotify-green" : "fa-regular fa-heart text-2xl";
+            }
         }
     </script>
 </body>
