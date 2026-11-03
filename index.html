@@ -56,9 +56,6 @@
         .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        .boost-fab { animation: floatIn 0.3s ease-out; }
-        @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -113,7 +110,7 @@
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER (Hidden until login) -->
+    <!-- MAIN APP WRAPPER -->
     <div id="app-content" class="hidden h-full flex flex-col">
 
         <!-- TOP HEADER -->
@@ -239,11 +236,6 @@
             </main>
         </div>
 
-        <!-- FLOATING VOLUME BOOST BUTTON -->
-        <button id="boost-fab" onclick="toggleBoostModal()" class="hidden fixed bottom-[150px] right-4 md:bottom-28 md:right-8 w-12 h-12 bg-spotify-green text-black rounded-full flex items-center justify-center shadow-2xl z-40 hover:scale-110 transition boost-fab" title="Volume Boost">
-            <i class="fa-solid fa-bolt text-xl"></i>
-        </button>
-
         <!-- PLAYER BAR -->
         <footer class="fixed bottom-[60px] md:bottom-0 left-0 right-0 bg-[#181818] md:bg-black border-t border-gray-800 px-3 md:px-4 py-2 flex flex-col justify-center z-40 h-[80px] md:h-24 md:mx-2 md:mb-2 md:rounded-lg">
             <div class="w-full flex md:hidden items-center gap-2 text-[10px] text-gray-400 font-medium mb-1">
@@ -311,7 +303,7 @@
             </button>
         </nav>
 
-    </div> <!-- END MAIN APP WRAPPER -->
+    </div>
 
     <!-- MODALS -->
     <div id="createPlaylistModal" class="modal">
@@ -331,32 +323,6 @@
             <div id="playlistOptions" class="max-h-60 overflow-y-auto custom-scroll mb-4 space-y-2"></div>
             <div class="flex justify-end">
                 <button onclick="closeModal('addToPlaylistModal')" class="text-gray-400 font-bold hover:text-white">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- VOLUME BOOST MODAL -->
-    <div id="boostModal" class="modal">
-        <div class="bg-[#282828] p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
-            <div class="w-16 h-16 bg-spotify-green text-black rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <i class="fa-solid fa-bolt text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2">Extra Sound Boost</h3>
-            <p class="text-xs text-gray-400 mb-6">Increase volume up to 300%</p>
-            
-            <div class="flex items-center gap-4 mb-6">
-                <i class="fa-solid fa-volume-low text-gray-400"></i>
-                <input type="range" id="boost-slider" value="1" min="1" max="3" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-spotify-green">
-                <i class="fa-solid fa-volume-high text-spotify-green"></i>
-            </div>
-            
-            <div class="flex justify-between items-center px-2 mb-6">
-                <span class="text-sm font-bold text-white" id="boost-percent">100%</span>
-                <button onclick="resetBoost()" class="text-xs text-spotify-green hover:underline">Reset</button>
-            </div>
-            
-            <div class="flex justify-end">
-                <button onclick="closeModal('boostModal')" class="bg-spotify-green text-black font-bold px-6 py-2 rounded-full hover:scale-105 transition">Done</button>
             </div>
         </div>
     </div>
@@ -389,7 +355,6 @@
         window.doc = doc; window.setDoc = setDoc; window.getDoc = getDoc; window.updateDoc = updateDoc;
         window.collection = collection; window.addDoc = addDoc; window.getDocs = getDocs; window.query = query; window.orderBy = orderBy;
 
-        // Hide Splash Screen after animation (approx 2s)
         setTimeout(() => {
             document.getElementById('splash-screen').style.opacity = '0';
             setTimeout(() => {
@@ -444,49 +409,9 @@
         let errorCount = 0;
         let currentPlaylistId = null;
         let currentPlayingTrackMeta = null; 
-        
-        let audioCtx = null;
-        let sourceNode = null;
-        let gainNode = null;
-        let currentGain = 1.0;
         let mediaSessionInterval = null;
 
         const audio = document.getElementById('audio-player');
-        
-        function initAudioContext() {
-            if (!audioCtx) {
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    audioCtx = new AudioContext();
-                    sourceNode = audioCtx.createMediaElementSource(audio);
-                    gainNode = audioCtx.createGain();
-                    
-                    sourceNode.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                } catch (e) {
-                    console.error("Web Audio API not supported", e);
-                }
-            }
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function toggleBoostModal() {
-            initAudioContext();
-            document.getElementById('boostModal').classList.add('active');
-        }
-
-        function resetBoost() {
-            document.getElementById('boost-slider').value = 1;
-            updateBoost(1);
-        }
-
-        function updateBoost(val) {
-            currentGain = parseFloat(val);
-            if (gainNode) gainNode.gain.value = currentGain;
-            document.getElementById('boost-percent').innerText = Math.round(currentGain * 100) + '%';
-        }
-        
-        document.getElementById('boost-slider').addEventListener('input', (e) => updateBoost(e.target.value));
 
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
@@ -495,7 +420,7 @@
             'https://saavnapi-nine.vercel.app/result/?query='
         ];
 
-        // *** UPDATED: fetchWithFallback with custom limit ***
+        // Updated Search function
         async function fetchWithFallback(query, limit = 50) {
             for (let server of API_SERVERS) {
                 try {
@@ -526,7 +451,6 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // *** UPDATED: Less strict duplicate removal (Allows multiple songs from same artist) ***
         function removeDuplicates(tracks) {
             const seen = new Set();
             return tracks.filter(track => {
@@ -567,7 +491,6 @@
             renderGrid(homeSongs, 'homeGrid');
         }
 
-        // *** UPDATED: Fetch more songs per category (30 per query) ***
         async function fetchTrending() {
             const queries = ['malayalam hits 2024', 'tamil hits 2024', 'hindi hits 2024', 'english pop hits', 'punjabi hits', 'telugu hits'];
             const promises = queries.map(q => fetchWithFallback(q, 30));
@@ -592,32 +515,20 @@
         function renderHomePlaylists() {
             const section = document.getElementById('home-playlists-section');
             const grid = document.getElementById('homePlaylistsGrid');
-            
             const myPlaylists = allPlaylists.filter(p => p.ownerId === window.currentUid);
             
             if (myPlaylists.length === 0) {
                 section.classList.add('hidden'); 
                 return;
             }
-            
             section.classList.remove('hidden');
             
             grid.innerHTML = myPlaylists.slice(0, 10).map(pl => {
-                let coverHTML = `
-                    <div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3">
-                        <i class="fa-solid fa-music text-3xl text-white/80"></i>
-                    </div>
-                `;
-
+                let coverHTML = `<div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3"><i class="fa-solid fa-music text-3xl text-white/80"></i></div>`;
                 if (pl.songs && pl.songs.length > 0) {
                     const firstSongImg = getImage(pl.songs[0]);
-                    coverHTML = `
-                        <div class="relative w-full aspect-square mb-3">
-                            <img src="${firstSongImg}" class="w-full h-full object-cover rounded-md shadow-lg">
-                        </div>
-                    `;
+                    coverHTML = `<div class="relative w-full aspect-square mb-3"><img src="${firstSongImg}" class="w-full h-full object-cover rounded-md shadow-lg"></div>`;
                 }
-
                 return `
                     <div class="flex-shrink-0 w-32 md:w-40 snap-start cursor-pointer group" onclick="viewPlaylist('${pl.id}')">
                         <div class="relative">
@@ -639,26 +550,12 @@
                 grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-list text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No playlists created yet. Create one!</p></div>`;
                 return;
             }
-
             grid.innerHTML = allPlaylists.map(pl => {
-                let coverHTML = `
-                    <div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3">
-                        <i class="fa-solid fa-music text-4xl text-white/80"></i>
-                    </div>
-                `;
-
+                let coverHTML = `<div class="w-full aspect-square bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-md shadow-lg flex items-center justify-center mb-3"><i class="fa-solid fa-music text-4xl text-white/80"></i></div>`;
                 if (pl.songs && pl.songs.length > 0) {
                     const firstSongImg = getImage(pl.songs[0]);
-                    coverHTML = `
-                        <div class="relative w-full aspect-square mb-3">
-                            <img src="${firstSongImg}" class="w-full h-full object-cover rounded-md shadow-lg">
-                            <div class="absolute inset-0 bg-black/40 rounded-md flex items-center justify-center">
-                                <i class="fa-solid fa-music text-3xl text-white/80"></i>
-                            </div>
-                        </div>
-                    `;
+                    coverHTML = `<div class="relative w-full aspect-square mb-3"><img src="${firstSongImg}" class="w-full h-full object-cover rounded-md shadow-lg"><div class="absolute inset-0 bg-black/40 rounded-md flex items-center justify-center"><i class="fa-solid fa-music text-3xl text-white/80"></i></div></div>`;
                 }
-
                 return `
                     <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="viewPlaylist('${pl.id}')">
                         ${coverHTML}
@@ -677,49 +574,36 @@
         async function createPlaylist() {
             const name = document.getElementById('newPlaylistName').value.trim();
             if (!name) return alert("Enter a name!");
-
             try {
                 await window.addDoc(window.collection(window.db, "public_playlists"), {
-                    name: name,
-                    ownerId: window.currentUid,
-                    ownerName: window.currentUserName,
-                    songs: [],
-                    createdAt: new Date()
+                    name: name, ownerId: window.currentUid, ownerName: window.currentUserName, songs: [], createdAt: new Date()
                 });
                 closeModal('createPlaylistModal');
                 loadPublicPlaylists(); 
-            } catch (e) {
-                alert("Error creating playlist. Ensure Firebase rules allow write access.");
-            }
+            } catch (e) { alert("Error creating playlist. Ensure Firebase rules allow write access."); }
         }
 
         async function viewPlaylist(playlistId) {
             const pl = allPlaylists.find(p => p.id === playlistId);
             if (!pl) return;
-
             currentPlaylistId = playlistId;
             currentViewPlaylistSongs = pl.songs || [];
-            
             document.getElementById('playlistTitle').innerText = pl.name;
             document.getElementById('playlistOwner').innerText = `${currentViewPlaylistSongs.length} songs`;
-            
             navigate('single-playlist');
             renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
         }
 
         function showAddToPlaylistModal() {
             if (currentIndex === -1 || !playQueue[currentIndex]) return;
-            
             const myPlaylists = allPlaylists.filter(p => p.ownerId === window.currentUid);
             const container = document.getElementById('playlistOptions');
-            
             if (myPlaylists.length === 0) {
                 container.innerHTML = `<p class="text-sm text-gray-400">You haven't created any playlists yet.</p>`;
             } else {
                 container.innerHTML = myPlaylists.map(pl => `
                     <div class="flex items-center gap-3 p-2 hover:bg-[#3E3E3E] rounded cursor-pointer transition" onclick="addSongToPlaylist('${pl.id}')">
-                        <i class="fa-solid fa-music text-gray-400"></i>
-                        <span class="font-semibold text-white">${pl.name}</span>
+                        <i class="fa-solid fa-music text-gray-400"></i><span class="font-semibold text-white">${pl.name}</span>
                     </div>
                 `).join('');
             }
@@ -730,34 +614,22 @@
             const track = playQueue[currentIndex];
             const pl = allPlaylists.find(p => p.id === playlistId);
             if (!pl) return;
-
             if (pl.songs.some(s => String(s.id) === String(track.id))) {
                 alert("Song is already in this playlist!");
                 closeModal('addToPlaylistModal');
                 return;
             }
-
             const trackToSave = {
-                id: String(track.id),
-                song: getSongName(track),
-                primary_artists: getArtistName(track),
-                image: getImage(track),
-                media_url: getAudioUrl(track),
-                downloadUrl: track.downloadUrl || []
+                id: String(track.id), song: getSongName(track), primary_artists: getArtistName(track),
+                image: getImage(track), media_url: getAudioUrl(track), downloadUrl: track.downloadUrl || []
             };
-
             const updatedSongs = [...(pl.songs || []), trackToSave];
-
             try {
-                await window.updateDoc(window.doc(window.db, "public_playlists", playlistId), {
-                    songs: updatedSongs
-                });
+                await window.updateDoc(window.doc(window.db, "public_playlists", playlistId), { songs: updatedSongs });
                 alert("Added to playlist!");
                 closeModal('addToPlaylistModal');
                 loadPublicPlaylists(); 
-            } catch (e) {
-                alert("Error adding song.");
-            }
+            } catch (e) { alert("Error adding song."); }
         }
 
         function closeModal(id) {
@@ -770,17 +642,14 @@
                 grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found.</p></div>`;
                 return;
             }
-
             grid.innerHTML = tracks.map((track, index) => {
                 const cover = getImage(track);
                 const songName = getSongName(track);
                 const artist = getArtistName(track);
                 const isCurrent = playQueue[currentIndex] && String(playQueue[currentIndex].id) === String(track.id);
-                
                 const playIconHTML = (isCurrent && isPlaying) 
                     ? `<div class="eq-container"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`
                     : `<i class="fa-solid fa-play text-sm ml-0.5"></i>`;
-
                 return `
                     <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="playTrack('${containerId}', ${index})">
                         <div class="relative mb-3">
@@ -802,19 +671,15 @@
             else if (containerId === 'searchGrid') playQueue = [...searchSongs];
             else if (containerId === 'likedGrid') playQueue = [...likedSongs];
             else if (containerId === 'singlePlaylistGrid') playQueue = [...currentViewPlaylistSongs];
-            
             currentIndex = index;
             loadAndPlay(playQueue[currentIndex]);
         }
 
         function updateMediaSession(track) {
             currentPlayingTrackMeta = track; 
-            
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: getSongName(track),
-                    artist: getArtistName(track),
-                    album: 'Vibely',
+                    title: getSongName(track), artist: getArtistName(track), album: 'Vibely',
                     artwork: [
                         { src: getImage(track), sizes: '96x96', type: 'image/jpeg' },
                         { src: getImage(track), sizes: '128x128', type: 'image/jpeg' },
@@ -824,29 +689,12 @@
                         { src: getImage(track), sizes: '512x512', type: 'image/jpeg' },
                     ]
                 });
-
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { 
-                    initAudioContext();
-                    audio.play(); 
-                    isPlaying = true; 
-                    navigator.mediaSession.playbackState = 'playing';
-                    updateAllViews(); 
-                    startMediaSessionTracker(); 
-                });
-                navigator.mediaSession.setActionHandler('pause', () => { 
-                    audio.pause(); 
-                    isPlaying = false; 
-                    navigator.mediaSession.playbackState = 'paused';
-                    updateAllViews(); 
-                    stopMediaSessionTracker(); 
-                });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; navigator.mediaSession.playbackState = 'playing'; updateAllViews(); startMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; navigator.mediaSession.playbackState = 'paused'; updateAllViews(); stopMediaSessionTracker(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
-                    if (details.seekTime !== undefined && isFinite(details.seekTime)) {
-                        audio.currentTime = details.seekTime;
-                        updateNotificationProgress(); 
-                    }
+                    if (details.seekTime !== undefined && isFinite(details.seekTime)) { audio.currentTime = details.seekTime; updateNotificationProgress(); }
                 });
             }
         }
@@ -854,29 +702,20 @@
         function updateNotificationProgress() {
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
                 let duration = audio.duration;
-                
                 if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
                     duration = currentPlayingTrackMeta?.duration || 0;
                     if (typeof duration === 'string') {
                         if (duration.includes(':')) {
                             const parts = duration.split(':');
                             duration = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
-                        } else {
-                            duration = parseInt(duration);
-                        }
+                        } else { duration = parseInt(duration); }
                     }
                 }
-                
                 let position = audio.currentTime;
                 if (!isFinite(position) || isNaN(position) || position < 0) position = 0;
-
                 if (duration > 0 && isFinite(duration)) {
                     try {
-                        navigator.mediaSession.setPositionState({
-                            duration: duration,
-                            playbackRate: audio.playbackRate || 1,
-                            position: Math.min(position, duration)
-                        });
+                        navigator.mediaSession.setPositionState({ duration: duration, playbackRate: audio.playbackRate || 1, position: Math.min(position, duration) });
                     } catch (e) { }
                 }
             }
@@ -884,9 +723,7 @@
 
         function startMediaSessionTracker() {
             if (mediaSessionInterval) clearInterval(mediaSessionInterval);
-            mediaSessionInterval = setInterval(() => {
-                if (isPlaying) updateNotificationProgress();
-            }, 1000); 
+            mediaSessionInterval = setInterval(() => { if (isPlaying) updateNotificationProgress(); }, 1000); 
         }
 
         function stopMediaSessionTracker() {
@@ -895,23 +732,16 @@
 
         function loadAndPlay(track) {
             if (!track) return;
-            
-            document.getElementById('boost-fab').classList.remove('hidden');
-
             const streamUrl = getAudioUrl(track);
             if(!streamUrl) { playNext(); return; }
-
             audio.src = streamUrl;
             document.getElementById('player-title').innerText = getSongName(track);
             document.getElementById('player-artist').innerText = getArtistName(track);
             document.getElementById('player-thumb').src = getImage(track);
-            
             document.getElementById('like-btn').classList.remove('hidden');
             document.getElementById('add-btn').classList.remove('hidden'); 
             updateLikeIcon(track.id);
-
             updateMediaSession(track);
-
             audio.play().then(() => {
                 isPlaying = true;
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
@@ -919,9 +749,7 @@
                 updateAllViews();
                 startMediaSessionTracker();
                 updateNotificationProgress(); 
-            }).catch((e) => {
-                if(errorCount < 3) { errorCount++; playNext(); }
-            });
+            }).catch((e) => { if(errorCount < 3) { errorCount++; playNext(); } });
         }
 
         audio.addEventListener('loadedmetadata', () => {
@@ -930,10 +758,7 @@
             updateNotificationProgress(); 
         });
         
-        audio.addEventListener('durationchange', () => {
-            updateNotificationProgress();
-        });
-
+        audio.addEventListener('durationchange', () => { updateNotificationProgress(); });
         audio.addEventListener('error', () => {
             if (errorCount < 3 && playQueue.length > 1) { errorCount++; setTimeout(playNext, 1000); } 
             else { isPlaying = false; updateAllViews(); }
@@ -941,14 +766,9 @@
 
         function togglePlayPause() {
             if (!audio.src) return;
-            initAudioContext(); 
-            
             if (isPlaying) { audio.pause(); isPlaying = false; stopMediaSessionTracker(); } 
             else { audio.play(); isPlaying = true; startMediaSessionTracker(); updateNotificationProgress(); }
-            
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
-            }
+            if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused"; }
             updateAllViews();
         }
 
@@ -980,25 +800,12 @@
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
-            
             if (isPlaying) updateNotificationProgress();
         });
 
         audio.addEventListener('ended', playNext);
-
-        document.getElementById('progress-bar').addEventListener('input', (e) => { 
-            if (isFinite(audio.duration)) {
-                audio.currentTime = (e.target.value / 100) * audio.duration; 
-                updateNotificationProgress();
-            }
-        });
-        document.getElementById('progress-bar-mob').addEventListener('input', (e) => { 
-            if (isFinite(audio.duration)) {
-                audio.currentTime = (e.target.value / 100) * audio.duration; 
-                updateNotificationProgress();
-            }
-        });
-        
+        document.getElementById('progress-bar').addEventListener('input', (e) => { if (isFinite(audio.duration)) { audio.currentTime = (e.target.value / 100) * audio.duration; updateNotificationProgress(); } });
+        document.getElementById('progress-bar-mob').addEventListener('input', (e) => { if (isFinite(audio.duration)) { audio.currentTime = (e.target.value / 100) * audio.duration; updateNotificationProgress(); } });
         document.getElementById('volume-bar')?.addEventListener('input', (e) => { audio.volume = e.target.value; });
 
         function formatTime(seconds) {
@@ -1008,14 +815,14 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        // *** UPDATED: handleSearch fetches up to 50 songs ***
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            let results = await fetchWithFallback(query, 50); // 50 limit
+            // Limit increased to 100 to get all songs of the artist
+            let results = await fetchWithFallback(query, 100); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
@@ -1026,7 +833,6 @@
                 document.getElementById(`view-${v}`).classList.add('hidden-view');
                 const dNav = document.getElementById(`nav-${v}`);
                 if(dNav) { dNav.classList.remove('text-white'); dNav.classList.add('text-spotify-textSub'); }
-                
                 const mNav = document.getElementById(`mnav-${v}`);
                 if(mNav) {
                     mNav.classList.remove('text-white');
@@ -1034,19 +840,15 @@
                     if(v === 'liked') mNav.querySelector('i').className = "fa-regular fa-heart text-lg mb-1";
                 }
             });
-
             document.getElementById(`view-${view}`).classList.remove('hidden-view');
-            
             const activeDNav = document.getElementById(`nav-${view}`);
             if(activeDNav) { activeDNav.classList.remove('text-spotify-textSub'); activeDNav.classList.add('text-white'); }
-
             const activeMNav = document.getElementById(`mnav-${view}`);
             if(activeMNav) {
                 activeMNav.classList.remove('text-spotify-textSub');
                 activeMNav.classList.add('text-white');
                 if(view === 'liked') activeMNav.querySelector('i').className = "fa-solid fa-heart text-lg mb-1";
             }
-            
             if (view === 'liked') renderGrid(likedSongs, 'likedGrid');
             if (view === 'playlists') loadPublicPlaylists();
             if (view === 'home') renderHomePlaylists();
@@ -1063,7 +865,6 @@
             const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value.trim();
             if (!name || !email || !password) return alert("Please fill all fields");
-
             try {
                 const userCred = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 await window.setDoc(window.doc(window.db, "users", userCred.user.uid), { name: name, email: email, favorites: [] });
@@ -1095,14 +896,11 @@
                     image: getImage(track), media_url: getAudioUrl(track), downloadUrl: track.downloadUrl || []
                 });
             }
-            
             updateLikeIcon(trackId);
             updateAllViews();
-
             if (window.currentUid) {
-                try {
-                    await window.setDoc(window.doc(window.db, "users", window.currentUid), { favorites: likedSongs }, { merge: true });
-                } catch (e) { console.error("Database Error:", e); }
+                try { await window.setDoc(window.doc(window.db, "users", window.currentUid), { favorites: likedSongs }, { merge: true }); } 
+                catch (e) { console.error("Database Error:", e); }
             }
         }
 
