@@ -413,40 +413,33 @@
 
         const audio = document.getElementById('audio-player');
 
-        // ** CRITICAL FIX: Multiple APIs + Offset Pagination **
+        // ** SUPER FAST SEARCH LOGIC (Tries servers one by one) **
         const API_SERVERS = [
             'https://saavn.dev/api/search/songs?query=',
             'https://jiosaavn-api-v3.vercel.app/result/?query=',
-            'https://jiosavan-api.vercel.app/result/?query=',
-            'https://saavnapi-nine.vercel.app/result/?query='
+            'https://jiosavan-api.vercel.app/result/?query='
         ];
 
         async function fetchWithFallback(query, limit = 50) {
-            let allSongs = [];
-            const seenIds = new Set();
+            for (let server of API_SERVERS) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 സെക്കൻഡിൽ മറുപടി ഇല്ലെങ്കിൽ അടുത്തതിലേക്ക്
+                    const res = await fetch(`${server}${encodeURIComponent(query)}&limit=${limit}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    
+                    let songs = [];
+                    if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    else if (Array.isArray(data)) songs = data;
+                    else if (data.results) songs = data.results;
 
-            // Try multiple search queries and pages to get more songs
-            const searchTerms = [query, `${query} songs`, `${query} audio`, `${query} Malayalam`];
-            
-            for (let term of searchTerms) {
-                for (let server of API_SERVERS) {
-                    try {
-                        // Fetch page 1
-                        const url1 = `${server}${encodeURIComponent(term)}&limit=${limit}&offset=0`;
-                        const res1 = await fetch(url1);
-                        if (res1.ok) {
-                            const data1 = await res1.json();
-                            let songs1 = data1.data?.results || data1.results || (Array.isArray(data1) ? data1 : []);
-                            songs1.forEach(s => {
-                                const id = String(s.id || s.media_url);
-                                if (!seenIds.has(id)) { seenIds.add(id); allSongs.push(s); }
-                            });
-                        }
-                    } catch (e) { }
-                }
+                    if (songs.length > 0) return songs;
+                } catch (e) { }
             }
-            
-            return allSongs;
+            return [];
         }
 
         function getPlaceholderImage(title) {
@@ -826,14 +819,14 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        // ** CRITICAL FIX: handleSearch now fetches from multiple terms **
         async function handleSearch(query) {
             if (!query.trim()) return;
             navigate('search');
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            let results = await fetchWithFallback(query, 100); 
+            // Fast fetch - 50 limit
+            let results = await fetchWithFallback(query, 50); 
             searchSongs = removeDuplicates(results);
             renderGrid(searchSongs, 'searchGrid');
         }
