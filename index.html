@@ -141,7 +141,7 @@
 
             <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 pb-40 md:pb-24">
                 <div id="view-home" class="space-y-4">
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now (100+ Songs)</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
                 </div>
 
@@ -253,12 +253,13 @@
                 const userSnap = await getDoc(doc(db, "users", user.uid));
                 
                 let name = "User";
-                // FIX 1: Load Favorites from Firestore into memory on login/refresh
                 if (userSnap.exists()) {
                     const data = userSnap.data();
                     name = data.name || "User";
                     likedSongs = data.favorites || []; 
                 } else {
+                    // Create document if it doesn't exist (fixes older accounts)
+                    await setDoc(doc(db, "users", user.uid), { name: "User", email: user.email, favorites: [] });
                     likedSongs = [];
                 }
                 
@@ -275,10 +276,15 @@
     </script>
 
     <script>
-        let currentPlaylist = [];
+        // ACTIVE QUEUE (Independent of which view you are looking at)
+        let playQueue = [];
         let currentIndex = -1;
         let isPlaying = false;
-        let likedSongs = []; // This will now hold the songs loaded from DB
+        let likedSongs = []; 
+        
+        // View Data
+        let homeSongs = [];
+        let searchSongs = [];
         let activeView = 'home';
         let errorCount = 0;
 
@@ -349,9 +355,9 @@
         }
 
         async function initApp() {
-            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i><p class="text-gray-400 mt-2 text-sm">Loading 100+ songs...</p></div>`;
-            currentPlaylist = await fetchTrending();
-            renderGrid(currentPlaylist, 'homeGrid');
+            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i><p class="text-gray-400 mt-2 text-sm">Loading songs...</p></div>`;
+            homeSongs = await fetchTrending();
+            renderGrid(homeSongs, 'homeGrid');
         }
 
         function getImage(track) {
@@ -387,15 +393,16 @@
                 const cover = getImage(track);
                 const songName = getSongName(track);
                 const artist = getArtistName(track);
-                // Use string comparison for IDs to be safe
-                const isCurrent = currentPlaylist[currentIndex]?.id === track.id;
+                
+                // Check if this specific track is the currently playing one
+                const isCurrent = playQueue[currentIndex] && String(playQueue[currentIndex].id) === String(track.id);
                 
                 const playIconHTML = (isCurrent && isPlaying) 
                     ? `<div class="eq-container"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`
                     : `<i class="fa-solid fa-play text-sm ml-0.5"></i>`;
 
                 return `
-                    <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="playFromQueue('${containerId}', ${index})">
+                    <div class="bg-[#181818] hover:bg-[#282828] p-3 md:p-4 rounded-md transition duration-200 cursor-pointer group relative" onclick="playTrack('${containerId}', ${index})">
                         <div class="relative mb-3">
                             <img src="${cover}" class="w-full aspect-square object-cover rounded-md shadow-lg">
                             <div class="absolute bottom-2 right-2 w-10 h-10 rounded-full flex items-center justify-center shadow-xl transition-all duration-200 
@@ -410,11 +417,14 @@
             }).join('');
         }
 
-        function playFromQueue(containerId, index) {
-            if (containerId === 'homeGrid') currentPlaylist = currentPlaylist;
-            else if (containerId === 'likedGrid') currentPlaylist = likedSongs;
+        // FIX: Set up the playQueue correctly based on where the user clicked
+        function playTrack(containerId, index) {
+            if (containerId === 'homeGrid') playQueue = [...homeSongs];
+            else if (containerId === 'searchGrid') playQueue = [...searchSongs];
+            else if (containerId === 'likedGrid') playQueue = [...likedSongs];
+            
             currentIndex = index;
-            loadAndPlay(currentPlaylist[index]);
+            loadAndPlay(playQueue[currentIndex]);
         }
 
         function loadAndPlay(track) {
@@ -438,7 +448,7 @@
             audio.play().then(() => {
                 isPlaying = true;
                 errorCount = 0;
-                updateUI();
+                updateAllViews(); // Update UI on all tabs
             }).catch((e) => {
                 if(errorCount < 3) {
                     errorCount++;
@@ -448,12 +458,12 @@
         }
 
         audio.addEventListener('error', (e) => {
-            if (errorCount < 3 && currentPlaylist.length > 1) {
+            if (errorCount < 3 && playQueue.length > 1) {
                 errorCount++;
                 setTimeout(playNext, 1000); 
             } else {
                 isPlaying = false;
-                updateUI();
+                updateAllViews();
             }
         });
 
@@ -461,28 +471,29 @@
             if (!audio.src) return;
             if (isPlaying) { audio.pause(); isPlaying = false; } 
             else { audio.play(); isPlaying = true; }
-            updateUI();
+            updateAllViews();
         }
 
         function playNext() {
-            if (currentPlaylist.length === 0) return;
-            currentIndex = (currentIndex + 1) % currentPlaylist.length;
-            loadAndPlay(currentPlaylist[currentIndex]);
+            if (playQueue.length === 0) return;
+            currentIndex = (currentIndex + 1) % playQueue.length;
+            loadAndPlay(playQueue[currentIndex]);
         }
 
         function playPrevious() {
-            if (currentPlaylist.length === 0) return;
-            currentIndex = (currentIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
-            loadAndPlay(currentPlaylist[currentIndex]);
+            if (playQueue.length === 0) return;
+            currentIndex = (currentIndex - 1 + playQueue.length) % playQueue.length;
+            loadAndPlay(playQueue[currentIndex]);
         }
 
-        function updateUI() {
+        // Update UI for whatever tab is visible
+        function updateAllViews() {
             const icon = document.getElementById('play-pause-icon');
             icon.className = isPlaying ? "fa-solid fa-pause text-xs md:text-sm" : "fa-solid fa-play text-xs md:text-sm ml-0.5";
             
-            if (activeView === 'home') renderGrid(currentPlaylist, 'homeGrid');
-            else if (activeView === 'liked') renderGrid(likedSongs, 'likedGrid');
-            else if (activeView === 'search') renderGrid(currentPlaylist, 'searchGrid');
+            renderGrid(homeSongs, 'homeGrid');
+            renderGrid(searchSongs, 'searchGrid');
+            renderGrid(likedSongs, 'likedGrid');
         }
 
         audio.addEventListener('timeupdate', () => {
@@ -530,10 +541,8 @@
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
             let results = await fetchWithFallback(query);
-            results = removeDuplicates(results);
-            
-            currentPlaylist = results;
-            renderGrid(results, 'searchGrid');
+            searchSongs = removeDuplicates(results);
+            renderGrid(searchSongs, 'searchGrid');
         }
 
         function navigate(view) {
@@ -601,45 +610,43 @@
             location.reload();
         }
 
-        // === FIX 2: PROPER SAVING LOGIC ===
+        // === FIXED SAVING LOGIC ===
         async function toggleLikeCurrent() {
-            if (currentIndex === -1 || !currentPlaylist[currentIndex]) return;
+            if (currentIndex === -1 || !playQueue[currentIndex]) return;
             
-            const track = currentPlaylist[currentIndex];
-            const trackId = String(track.id); // Ensure string comparison
-            
+            const track = playQueue[currentIndex];
+            const trackId = String(track.id);
             const isLiked = likedSongs.some(t => String(t.id) === trackId);
             
             if (isLiked) {
                 likedSongs = likedSongs.filter(t => String(t.id) !== trackId);
             } else {
-                // Save only necessary fields to save database space
+                // Remove undefined properties which cause Firebase errors
                 const trackToSave = {
                     id: trackId,
                     song: getSongName(track),
-                    name: getSongName(track), // Compatibility
+                    name: getSongName(track),
                     primary_artists: getArtistName(track),
-                    artists: track.artists,
                     image: getImage(track),
                     media_url: getAudioUrl(track),
-                    downloadUrl: track.downloadUrl
+                    downloadUrl: track.downloadUrl || []
                 };
                 likedSongs.push(trackToSave);
             }
             
             updateLikeIcon(trackId);
-            if(activeView === 'liked') renderGrid(likedSongs, 'likedGrid');
+            updateAllViews(); // Update the grids so hearts change color instantly
 
-            // Save to Firebase Firestore
+            // Save to Firebase Firestore securely
             if (window.currentUid) {
                 try {
-                    await window.updateDoc(window.doc(window.db, "users", window.currentUid), { 
+                    await window.setDoc(window.doc(window.db, "users", window.currentUid), { 
                         favorites: likedSongs 
-                    });
+                    }, { merge: true }); // Merge is safer than updateDoc
                     console.log("Successfully saved to database!");
                 } catch (e) {
                     console.error("Database Error:", e);
-                    alert("Error saving to database. Please check console.");
+                    alert("Failed to save to database: " + e.message);
                 }
             }
         }
