@@ -792,8 +792,21 @@
 
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); updateNotificationProgress(); });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); stopMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('play', () => { 
+                    initAudioContext();
+                    audio.play(); 
+                    isPlaying = true; 
+                    navigator.mediaSession.playbackState = 'playing';
+                    updateAllViews(); 
+                    startMediaSessionTracker(); 
+                });
+                navigator.mediaSession.setActionHandler('pause', () => { 
+                    audio.pause(); 
+                    isPlaying = false; 
+                    navigator.mediaSession.playbackState = 'paused';
+                    updateAllViews(); 
+                    stopMediaSessionTracker(); 
+                });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     if (details.seekTime !== undefined && isFinite(details.seekTime)) {
                         audio.currentTime = details.seekTime;
@@ -807,7 +820,7 @@
             if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
                 let duration = audio.duration;
                 
-                // If audio.duration is invalid (Infinity/NaN), use the API duration
+                // FORCE API Duration if browser fails
                 if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
                     duration = currentPlayingTrackMeta?.duration || 0;
                     if (typeof duration === 'string') {
@@ -839,7 +852,7 @@
             if (mediaSessionInterval) clearInterval(mediaSessionInterval);
             mediaSessionInterval = setInterval(() => {
                 if (isPlaying) updateNotificationProgress();
-            }, 1000);
+            }, 1000); // Update every second
         }
 
         function stopMediaSessionTracker() {
@@ -873,15 +886,11 @@
                 updateAllViews();
                 startMediaSessionTracker();
                 updateNotificationProgress(); // Force sync immediately
-                
-                // Hack to force Android to read duration correctly on initial play
-                setTimeout(updateNotificationProgress, 500);
             }).catch((e) => {
                 if(errorCount < 3) { errorCount++; playNext(); }
             });
         }
 
-        // Directly handle duration parsing when metadata loads
         audio.addEventListener('loadedmetadata', () => {
             document.getElementById('duration').innerText = formatTime(audio.duration);
             document.getElementById('duration-mob').innerText = formatTime(audio.duration);
@@ -938,7 +947,9 @@
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
-            updateNotificationProgress();
+            
+            // Optional: update notification here as well for smoothness
+            if (isPlaying) updateNotificationProgress();
         });
 
         audio.addEventListener('ended', playNext);
