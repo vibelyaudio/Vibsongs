@@ -430,6 +430,17 @@
         let progressInterval = null;
 
         // ==========================================
+        // STATIC FALLBACK SONGS (If API fails)
+        // ==========================================
+        const FALLBACK_SONGS = [
+            { id: 'dQw4w9WgXcQ', videoId: 'dQw4w9WgXcQ', song: 'Never Gonna Give You Up', primary_artists: 'Rick Astley', image: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', duration: 213 },
+            { id: '9bZkp7q19f0', videoId: '9bZkp7q19f0', song: 'Gangnam Style', primary_artists: 'PSY', image: 'https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg', duration: 253 },
+            { id: 'kJQP7kiw5Fk', videoId: 'kJQP7kiw5Fk', song: 'Despacito', primary_artists: 'Luis Fonsi', image: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg', duration: 282 },
+            { id: 'JGwWNGJdvx8', videoId: 'JGwWNGJdvx8', song: 'Shape of You', primary_artists: 'Ed Sheeran', image: 'https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg', duration: 263 },
+            { id: 'OPf0YbXqDm0', videoId: 'OPf0YbXqDm0', song: 'Uptown Funk', primary_artists: 'Mark Ronson', image: 'https://i.ytimg.com/vi/OPf0YbXqDm0/hqdefault.jpg', duration: 270 }
+        ];
+
+        // ==========================================
         // YOUTUBE PLAYER SETUP
         // ==========================================
         let ytPlayer;
@@ -446,7 +457,6 @@
                     'fs': 0,
                     'modestbranding': 1,
                     'rel': 0,
-                    // FIX: Add referrerpolicy to solve Error 153
                     'origin': window.location.origin
                 },
                 events: {
@@ -490,14 +500,16 @@
         // ==========================================
 
         // ==========================================
-        // SEARCH LOGIC (Multiple Invidious/Piped APIs)
+        // MULTIPLE SEARCH APIs (Invidious + Piped)
         // ==========================================
         
         const SEARCH_APIS = [
             'https://invidious.nerdvpn.de/api/v1/search?q=',
             'https://yewtu.be/api/v1/search?q=',
             'https://invidious.f5.si/api/v1/search?q=',
-            'https://pipedapi.kavin.rocks/search?q='
+            'https://inv.nadeko.net/api/v1/search?q=',
+            'https://pipedapi.kavin.rocks/search?q=',
+            'https://pipedapi.adminforge.de/search?q='
         ];
 
         async function fetchSearchResults(query, limit = 50) {
@@ -519,7 +531,7 @@
                     let songs = [];
                     if (Array.isArray(data) && data.length > 0) {
                         // Invidious format
-                        songs = data.filter(i => i.type === 'video').map(item => ({
+                        songs = data.filter(i => i.videoId).map(item => ({
                             id: item.videoId,
                             videoId: item.videoId,
                             song: item.title,
@@ -586,10 +598,11 @@
                 homeSongs = await fetchSearchResults('trending music hits', 20);
                 
                 if(homeSongs.length === 0) {
-                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><p class="text-red-400">API servers are busy. Please refresh.</p></div>`;
-                } else {
-                    renderGrid(homeSongs, 'homeGrid');
+                    // Use fallback if API fails
+                    homeSongs = FALLBACK_SONGS;
+                    document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-4 text-yellow-400 text-sm">API is down. Showing fallback songs.</div>`;
                 }
+                renderGrid(homeSongs, 'homeGrid');
             } catch(e) {
                 console.error(e);
             }
@@ -734,7 +747,7 @@
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found.</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. API might be down.</p></div>`;
                 return;
             }
             grid.innerHTML = tracks.map((track, index) => {
@@ -771,9 +784,8 @@
         }
 
         function loadAndPlay(track) {
-            if (!track || !ytPlayer) return;
+            if (!track || !ytPlayer || typeof ytPlayer.loadVideoById !== 'function') return;
             
-            // Load video ID into YouTube IFrame
             ytPlayer.loadVideoById(track.videoId);
             
             document.getElementById('player-title').innerText = getSongName(track);
