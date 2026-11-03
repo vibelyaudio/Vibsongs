@@ -255,6 +255,7 @@
         });
     </script>
 
+    <!-- APP LOGIC -->
     <script>
         let currentPlaylist = [];
         let currentIndex = -1;
@@ -264,7 +265,41 @@
         let errorCount = 0;
 
         const audio = document.getElementById('audio-player');
-        const API_BASE = 'https://saavnapi-nine.vercel.app/result/';
+        
+        // Multiple reliable Saavn API endpoints (Failover System)
+        const API_SERVERS = [
+            'https://jiosavan-api.vercel.app/result/?query=',
+            'https://saavnapi-nine.vercel.app/result/?query=',
+            'https://jiosaavn-api-v3.vercel.app/result/?query=',
+            'https://api.saavn.dev/search/songs?query=' // Another reliable one
+        ];
+
+        // Fetch function that tries multiple servers if one fails
+        async function fetchWithFallback(query) {
+            for (let server of API_SERVERS) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 sec timeout per server
+                    
+                    const res = await fetch(`${server}${encodeURIComponent(query)}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    
+                    // Handle different API response structures
+                    let songs = [];
+                    if (Array.isArray(data)) songs = data;
+                    else if (data.data && Array.isArray(data.data.results)) songs = data.data.results;
+                    else if (data.results) songs = data.results;
+
+                    if (songs.length > 0) return songs;
+                } catch (e) {
+                    console.log(`Server failed: ${server}`);
+                }
+            }
+            return [];
+        }
 
         // Generate dynamic placeholder image based on song title
         function getPlaceholderImage(title) {
@@ -275,32 +310,19 @@
             return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${color1}"/><stop offset="100%" stop-color="${color2}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">${title.substring(0, 20)}</text></svg>`)}`;
         }
 
-        // Fetch multiple categories for a richer "Trending" list
+        // Fetch trending using Promise.all for MAX SPEED
         async function fetchTrending() {
-            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop', 'punjabi hits'];
-            let allTracks = [];
+            const queries = ['malayalam hits', 'tamil hits', 'hindi hits', 'english pop'];
             
-            for (const q of queries) {
-                try {
-                    const res = await fetch(`${API_BASE}?query=${encodeURIComponent(q)}`);
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        allTracks = allTracks.concat(data);
-                    }
-                } catch (e) { console.error(`Error fetching ${q}:`, e); }
-            }
+            // Fire all requests at the same time
+            const promises = queries.map(q => fetchWithFallback(q));
+            const results = await Promise.all(promises);
             
-            // Remove duplicates by ID and limit
+            // Flatten and remove duplicates
+            let allTracks = results.flat();
             const uniqueTracks = Array.from(new Map(allTracks.map(t => [t.id, t])).values());
-            return uniqueTracks.slice(0, 30); // Show 30 songs
-        }
-
-        async function searchTracks(query) {
-            try {
-                const res = await fetch(`${API_BASE}?query=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                return data || [];
-            } catch (e) { return []; }
+            
+            return uniqueTracks.slice(0, 30); // Show top 30 songs
         }
 
         async function initApp() {
@@ -309,29 +331,40 @@
             renderGrid(currentPlaylist, 'homeGrid');
         }
 
-        // Extract data with fallback for images
+        // Safe Data Extractors (Handles different API structures)
         function getImage(track) {
-            // If track has a specific image URL, use it. Otherwise, generate a placeholder.
-            return track.image || getPlaceholderImage(track.song || 'Music');
+            if (track.image) {
+                if (typeof track.image === 'string') return track.image;
+                if (Array.isArray(track.image) && track.image.length > 0) return track.image[track.image.length - 1].url;
+            }
+            return getPlaceholderImage(track.song || track.title || track.name || 'Music');
         }
 
         function getAudioUrl(track) {
-            return track.media_url || null;
+            if (track.media_url) return track.media_url;
+            if (track.downloadUrl && track.downloadUrl.length > 0) return track.downloadUrl[track.downloadUrl.length - 1].url;
+            return null;
         }
 
         function getArtistName(track) {
-            return track.primary_artists || "Unknown Artist";
+            return track.primary_artists || track.artists?.primary?.map(a => a.name).join(', ') || "Unknown Artist";
+        }
+
+        function getSongName(track) {
+            return track.song || track.name || track.title || "Unknown Song";
         }
 
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. Try another search.</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i><p class="text-gray-400">No songs found. API might be down.</p></div>`;
                 return;
             }
 
             grid.innerHTML = tracks.map((track, index) => {
                 const cover = getImage(track);
+                const songName = getSongName(track);
+                const artist = getArtistName(track);
                 const isCurrent = currentPlaylist[currentIndex]?.id === track.id;
                 
                 const playIconHTML = (isCurrent && isPlaying) 
@@ -347,8 +380,8 @@
                                 ${playIconHTML}
                             </div>
                         </div>
-                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${track.song}</h3>
-                        <p class="text-spotify-textSub text-xs mt-1 truncate">${getArtistName(track)}</p>
+                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${songName}</h3>
+                        <p class="text-spotify-textSub text-xs mt-1 truncate">${artist}</p>
                     </div>
                 `;
             }).join('');
@@ -373,7 +406,7 @@
 
             audio.src = streamUrl;
             
-            document.getElementById('player-title').innerText = track.song;
+            document.getElementById('player-title').innerText = getSongName(track);
             document.getElementById('player-artist').innerText = getArtistName(track);
             document.getElementById('player-thumb').src = getImage(track);
             
@@ -463,7 +496,7 @@
             document.getElementById('searchHeading').innerText = `Results for "${query}"`;
             document.getElementById('searchGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             
-            const results = await searchTracks(query);
+            const results = await fetchWithFallback(query);
             currentPlaylist = results;
             renderGrid(results, 'searchGrid');
         }
