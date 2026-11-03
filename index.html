@@ -358,6 +358,10 @@
         let activeView = 'home';
         let errorCount = 0;
         let currentPlaylistId = null;
+        
+        // Variables for Notification Tracking
+        let currentPlayingTrackMeta = null;
+        let mediaSessionInterval = null;
 
         const audio = document.getElementById('audio-player');
         
@@ -632,8 +636,9 @@
             loadAndPlay(playQueue[currentIndex]);
         }
 
-        // Update Media Session (Notification)
+        // === NOTIFICATION UPDATE LOGIC ===
         function updateMediaSession(track) {
+            currentPlayingTrackMeta = track; // Save metadata for the interval
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: getSongName(track),
@@ -651,15 +656,53 @@
 
                 navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
                 navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); isPlaying = true; updateAllViews(); startMediaSessionTracker(); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); isPlaying = false; updateAllViews(); stopMediaSessionTracker(); });
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     if (details.seekTime !== undefined && isFinite(details.seekTime)) {
                         audio.currentTime = details.seekTime;
+                        updateNotificationProgress(); // Force UI update on seek
                     }
                 });
             }
         }
+
+        function updateNotificationProgress() {
+            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                let duration = audio.duration;
+                // If the browser cannot read the stream's duration, use the one from API metadata
+                if (!isFinite(duration) || duration <= 0 || isNaN(duration)) {
+                    duration = currentPlayingTrackMeta?.duration || 0;
+                }
+                
+                let position = audio.currentTime;
+
+                if (duration > 0 && isFinite(duration) && position >= 0 && isFinite(position)) {
+                    try {
+                        navigator.mediaSession.setPositionState({
+                            duration: Math.max(duration, position), 
+                            playbackRate: audio.playbackRate,
+                            position: Math.min(position, duration)
+                        });
+                    } catch (e) {
+                        console.warn("MediaSession Error:", e);
+                    }
+                }
+            }
+        }
+
+        function startMediaSessionTracker() {
+            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
+            // Update every 1 second to prevent UI glitches
+            mediaSessionInterval = setInterval(() => {
+                if (isPlaying) updateNotificationProgress();
+            }, 1000);
+        }
+
+        function stopMediaSessionTracker() {
+            if (mediaSessionInterval) clearInterval(mediaSessionInterval);
+        }
+        // ==================================
 
         function loadAndPlay(track) {
             if (!track) return;
@@ -682,6 +725,7 @@
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
                 errorCount = 0;
                 updateAllViews();
+                startMediaSessionTracker(); // Start the 1-sec interval
             }).catch((e) => {
                 if(errorCount < 3) { errorCount++; playNext(); }
             });
@@ -694,8 +738,8 @@
 
         function togglePlayPause() {
             if (!audio.src) return;
-            if (isPlaying) { audio.pause(); isPlaying = false; } 
-            else { audio.play(); isPlaying = true; }
+            if (isPlaying) { audio.pause(); isPlaying = false; stopMediaSessionTracker(); } 
+            else { audio.play(); isPlaying = true; startMediaSessionTracker(); }
             
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
@@ -724,49 +768,26 @@
             if (activeView === 'single-playlist') renderGrid(currentViewPlaylistSongs, 'singlePlaylistGrid');
         }
 
-        // SAFE UPDATE FOR NOTIFICATION PROGRESS BAR
-        function updateNotificationProgress() {
-            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-                // Check if duration is a valid, finite number and not Infinity
-                if (isFinite(audio.duration) && audio.duration > 0 && isFinite(audio.currentTime)) {
-                    try {
-                        navigator.mediaSession.setPositionState({
-                            duration: audio.duration,
-                            playbackRate: audio.playbackRate,
-                            position: Math.min(audio.currentTime, audio.duration) // Ensure it doesn't go over
-                        });
-                    } catch (e) {
-                        // Ignore any temporary errors
-                    }
-                }
-            }
-        }
-
         audio.addEventListener('timeupdate', () => {
+            // Update only the UI Seek bars
             if (!audio.duration || !isFinite(audio.duration)) return;
-            
             const progress = (audio.currentTime / audio.duration) * 100;
-            
-            // App UI Progress
             document.getElementById('progress-bar').value = progress;
             document.getElementById('progress-bar-mob').value = progress;
             document.getElementById('current-time').innerText = formatTime(audio.currentTime);
             document.getElementById('current-time-mob').innerText = formatTime(audio.currentTime);
-
-            // Notification Progress
-            updateNotificationProgress();
         });
 
         audio.addEventListener('loadedmetadata', () => {
             document.getElementById('duration').innerText = formatTime(audio.duration);
             document.getElementById('duration-mob').innerText = formatTime(audio.duration);
-            // Force update once loaded to sync notification
+            // Force Notification sync once metadata loads
             updateNotificationProgress();
         });
         
+        audio.addEventListener('durationchange', updateNotificationProgress); // Crucial for stream URLs
         audio.addEventListener('ended', playNext);
 
-        // When user drags the app's seek bar, update the audio
         document.getElementById('progress-bar').addEventListener('input', (e) => { 
             if (isFinite(audio.duration)) {
                 audio.currentTime = (e.target.value / 100) * audio.duration; 
