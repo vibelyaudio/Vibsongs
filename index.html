@@ -151,14 +151,14 @@
                 
                 <!-- HOME VIEW -->
                 <div id="view-home" class="space-y-4">
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending on Audius</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Trending Now</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4" id="homeGrid"></div>
                 </div>
 
                 <!-- SEARCH VIEW -->
                 <div id="view-search" class="hidden-view space-y-4 pt-2 md:pt-0">
                     <div class="md:hidden mb-4">
-                        <input type="text" id="searchInputMobile" placeholder="Search independent artists, genres..." 
+                        <input type="text" id="searchInputMobile" placeholder="Search songs, artists, movies..." 
                             class="w-full bg-[#242424] text-white text-sm rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-white/20"
                             onkeypress="if(event.key === 'Enter') handleSearch(this.value)">
                     </div>
@@ -181,7 +181,7 @@
             <img id="player-thumb" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="w-10 h-10 md:w-14 md:h-14 rounded-md object-cover shadow-lg border border-gray-800 bg-[#282828]">
             <div class="overflow-hidden">
                 <h4 id="player-title" class="text-sm font-bold text-white truncate">Select a song</h4>
-                <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Audius</p>
+                <p id="player-artist" class="text-xs text-spotify-textSub truncate mt-0.5">Vibely</p>
             </div>
             <button onclick="toggleLikeCurrent()" id="like-btn" class="ml-auto md:ml-2 text-gray-400 hover:text-white transition hidden">
                 <i id="like-icon" class="fa-regular fa-heart text-lg"></i>
@@ -270,9 +270,8 @@
         });
     </script>
 
-    <!-- APP LOGIC -->
+    <!-- APP LOGIC (Using Saavn API for all songs) -->
     <script>
-        let audiusHost = 'https://discoveryprovider.audius.co';
         let currentPlaylist = [];
         let currentIndex = -1;
         let isPlaying = false;
@@ -281,56 +280,60 @@
         let errorCount = 0;
 
         const audio = document.getElementById('audio-player');
+        const API_BASE = 'https://saavn.dev/api';
 
-        // Get reliable Audius host
-        async function getAudiusHost() {
-            try {
-                const res = await fetch('https://api.audius.co');
-                const data = await res.json();
-                if (data && data.data && data.data.length > 0) {
-                    audiusHost = data.data[0]; // Use the first one, usually most reliable
-                }
-            } catch (e) { console.log("Using fallback host"); }
-        }
-
+        // Fetch trending songs (Searching for a general trending term)
         async function fetchTrending() {
             try {
-                const res = await fetch(`${audiusHost}/v1/tracks/trending?app_name=Vibely&limit=20`);
+                const res = await fetch(`${API_BASE}/search/songs?query=trending+malayalam+2024&limit=20`);
                 const data = await res.json();
-                return data.data || [];
-            } catch (e) { return []; }
+                return data.data.results || [];
+            } catch (e) { 
+                console.error("Error fetching trending", e);
+                return []; 
+            }
         }
 
+        // Search songs
         async function searchTracks(query) {
             try {
-                const res = await fetch(`${audiusHost}/v1/tracks/search?query=${encodeURIComponent(query)}&app_name=Vibely&limit=30`);
+                const res = await fetch(`${API_BASE}/search/songs?query=${encodeURIComponent(query)}&limit=30`);
                 const data = await res.json();
-                return data.data || [];
+                return data.data.results || [];
             } catch (e) { return []; }
         }
 
         async function initApp() {
-            await getAudiusHost();
+            document.getElementById('homeGrid').innerHTML = `<div class="col-span-full text-center py-10"><i class="fa-solid fa-spinner fa-spin text-spotify-green text-2xl"></i></div>`;
             currentPlaylist = await fetchTrending();
             renderGrid(currentPlaylist, 'homeGrid');
+        }
+
+        // Extract best image and audio link from Saavn data
+        function getImage(track) {
+            if(!track.image || track.image.length === 0) return 'https://via.placeholder.com/150';
+            return track.image[track.image.length - 1].url; // Highest quality
+        }
+
+        function getAudioUrl(track) {
+            if(!track.downloadUrl || track.downloadUrl.length === 0) return null;
+            return track.downloadUrl[track.downloadUrl.length - 1].url; // Highest quality (320kbps)
+        }
+
+        function getArtistName(track) {
+            if(!track.artists || !track.artists.primary) return "Unknown Artist";
+            return track.artists.primary.map(a => a.name).join(', ');
         }
 
         function renderGrid(tracks, containerId) {
             const grid = document.getElementById(containerId);
             if (!tracks || tracks.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full text-center py-12">
-                        <i class="fa-solid fa-music text-gray-600 text-4xl mb-3"></i>
-                        <p class="text-white font-semibold text-lg mb-1">No results found</p>
-                        <p class="text-gray-400 text-sm">Vibely uses Audius, which features independent music.</p>
-                        <p class="text-gray-500 text-xs mt-2">Try searching for genres like "Electronic", "Lo-Fi", or specific indie artists.</p>
-                    </div>
-                `;
+                grid.innerHTML = `<p class="text-gray-400 col-span-full text-center mt-10">No songs found.</p>`;
                 return;
             }
 
             grid.innerHTML = tracks.map((track, index) => {
-                const cover = track.artwork ? track.artwork['480x480'] : 'https://via.placeholder.com/150';
+                const cover = getImage(track);
                 const isCurrent = currentPlaylist[currentIndex]?.id === track.id;
                 
                 const playIconHTML = (isCurrent && isPlaying) 
@@ -346,8 +349,8 @@
                                 ${playIconHTML}
                             </div>
                         </div>
-                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${track.title}</h3>
-                        <p class="text-spotify-textSub text-xs mt-1 truncate">${track.user.name}</p>
+                        <h3 class="font-bold text-sm truncate ${isCurrent ? 'text-spotify-green' : 'text-white'}">${track.name}</h3>
+                        <p class="text-spotify-textSub text-xs mt-1 truncate">${getArtistName(track)}</p>
                     </div>
                 `;
             }).join('');
@@ -357,7 +360,6 @@
         function playFromQueue(containerId, index) {
             if (containerId === 'homeGrid') currentPlaylist = currentPlaylist;
             else if (containerId === 'likedGrid') currentPlaylist = likedSongs;
-            // For search, currentPlaylist is set in handleSearch
 
             currentIndex = index;
             loadAndPlay(currentPlaylist[index]);
@@ -365,13 +367,19 @@
 
         function loadAndPlay(track) {
             if (!track) return;
-            const streamUrl = `${audiusHost}/v1/tracks/${track.id}/stream?app_name=Vibely`;
+            const streamUrl = getAudioUrl(track);
             
+            if(!streamUrl) {
+                console.log("No audio URL for this track, skipping...");
+                playNext();
+                return;
+            }
+
             audio.src = streamUrl;
             
-            document.getElementById('player-title').innerText = track.title;
-            document.getElementById('player-artist').innerText = track.user.name;
-            document.getElementById('player-thumb').src = track.artwork ? track.artwork['480x480'] : 'https://via.placeholder.com/60';
+            document.getElementById('player-title').innerText = track.name;
+            document.getElementById('player-artist').innerText = getArtistName(track);
+            document.getElementById('player-thumb').src = getImage(track);
             
             document.getElementById('like-btn').classList.remove('hidden');
             updateLikeIcon(track.id);
@@ -384,12 +392,11 @@
                 console.error("Play error:", e);
                 if(errorCount < 3) {
                     errorCount++;
-                    playNext(); // Auto skip if failed to play
+                    playNext();
                 }
             });
         }
 
-        // Handle audio errors (e.g. track deleted or region locked)
         audio.addEventListener('error', (e) => {
             console.log("Audio error occurred, skipping track...");
             if (errorCount < 3 && currentPlaylist.length > 1) {
